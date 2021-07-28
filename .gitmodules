@@ -1,0 +1,3 @@
+[submodule "InMemoryClusteringAPI"]
+	path = InMemoryClusteringAPI
+	url = git@github.com:ParAlg/InMemoryClusteringAPI.git
