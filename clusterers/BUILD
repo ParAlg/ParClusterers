@@ -9,6 +9,7 @@ cc_library(
     deps = [
         "//clusterers/affinity:parallel-affinity",
         "//clusterers/example_clusterer:example-clusterer",
+        "//clusterers/ldd_clusterer:ldd-clusterer",
     ],
     alwayslink = 1,
 )

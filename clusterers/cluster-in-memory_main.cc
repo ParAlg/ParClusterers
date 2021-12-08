@@ -27,6 +27,8 @@
 
 #include "clusterers/affinity/parallel-affinity.h"
 #include "clusterers/example_clusterer/example-clusterer.h"
+#include "clusterers/ldd_clusterer/ldd-clusterer.h"
+
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -74,11 +76,11 @@ void PrintTime(std::chrono::steady_clock::time_point begin,
             << std::endl;
 }
 
-double DoubleFromWeight(gbbs::empty weight) { return 1; }
+double DoubleFromWeight(gbbs::empty weight) { return static_cast<double>(1); }
 double DoubleFromWeight(double weight) { return weight; }
 
 float FloatFromWeight(float weight) { return weight; }
-float FloatFromWeight(gbbs::empty weight) { return 1; }
+float FloatFromWeight(gbbs::empty weight) { return static_cast<float>(1); }
 
 template <class Graph>
 absl::Status GbbsGraphToInMemoryClustererGraph(InMemoryClusterer::Graph* graph,
@@ -202,6 +204,8 @@ absl::Status Main() {
     clusterer.reset(new ParallelAffinityClusterer);
   } else if (clusterer_name == "ExampleClusterer") {
     clusterer.reset(new ExampleClusterer);
+  } else if (clusterer_name == "LDDClusterer") {
+    clusterer.reset(new LDDClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
@@ -212,20 +216,17 @@ absl::Status Main() {
   // bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph); //
   // Assume symmetric
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
-  std::size_t n = 0;
 
   gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> g;
   if (float_weighted) {
     auto G = gbbs::gbbs_io::read_weighted_symmetric_graph<float>(
         input_file.c_str(), false, false);
     // Transform to pointer graph
-    n = G.n;
     g = CopyGraph(G);
   } else {
     auto G = gbbs::gbbs_io::read_unweighted_symmetric_graph(input_file.c_str(),
                                                             false, false);
     // Transform to pointer graph
-    n = G.n;
     g = CopyGraph(G);
   }
   clusterer->MutableGraph()->graph_ = absl::make_unique<
