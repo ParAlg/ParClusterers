@@ -1,0 +1,290 @@
+Loading: 
+Loading: 0 packages loaded
+Analyzing: 6 targets (0 packages loaded, 0 targets configured)
+INFO: Analyzed 6 targets (0 packages loaded, 0 targets configured).
+INFO: Found 6 targets...
+[0 / 14] [Prepa] BazelWorkspaceStatusAction stable-status.txt
+[7 / 30] Compiling external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc; 1s local ... (10 actions running)
+INFO: From Compiling clusterers/affinity/parallel-affinity.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/affinity/parallel-affinity.cc:15:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+INFO: From Compiling clusterers/affinity/parallel-affinity.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/affinity/parallel-affinity.cc:15:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+INFO: From Compiling clusterers/example_clusterer/example-clusterer.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from external/parcluster/parcluster/api/gbbs-graph.h:10,
+                 from ./clusterers/example_clusterer/example-clusterer.h:25,
+                 from clusterers/example_clusterer/example-clusterer.cc:1:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+clusterers/example_clusterer/example-clusterer.cc: In member function 'virtual absl::StatusOr<std::vector<std::vector<unsigned int> > > research_graph::in_memory::ExampleClusterer::Cluster(const research_graph::in_memory::ClustererConfig&) const':
+clusterers/example_clusterer/example-clusterer.cc:28:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+In file included from ./clusterers/example_clusterer/example-clusterer.h:27:0,
+                 from clusterers/example_clusterer/example-clusterer.cc:1:
+external/parcluster/parcluster/api/parallel/parallel-graph-utils.h: In instantiation of 'std::vector<std::vector<A> > research_graph::DenseClusteringToNestedClustering(const DenseClustering&) [with NodeId = unsigned int; DenseClustering = parlay::sequence<unsigned int>]':
+clusterers/example_clusterer/example-clusterer.cc:26:88:   required from here
+external/parcluster/parcluster/api/parallel/parallel-graph-utils.h:120:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (long i=0; i<pairs.size(); ++i) {
+[13 / 30] Compiling external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc; 5s local ... (8 actions, 7 running)
+INFO: From Compiling clusterers/example_clusterer/example-clusterer.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from external/parcluster/parcluster/api/gbbs-graph.h:10,
+                 from ./clusterers/example_clusterer/example-clusterer.h:25,
+                 from clusterers/example_clusterer/example-clusterer.cc:1:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+clusterers/example_clusterer/example-clusterer.cc: In member function 'virtual absl::StatusOr<std::vector<std::vector<unsigned int> > > research_graph::in_memory::ExampleClusterer::Cluster(const research_graph::in_memory::ClustererConfig&) const':
+clusterers/example_clusterer/example-clusterer.cc:28:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+In file included from ./clusterers/example_clusterer/example-clusterer.h:27:0,
+                 from clusterers/example_clusterer/example-clusterer.cc:1:
+external/parcluster/parcluster/api/parallel/parallel-graph-utils.h: In instantiation of 'std::vector<std::vector<A> > research_graph::DenseClusteringToNestedClustering(const DenseClustering&) [with NodeId = unsigned int; DenseClustering = parlay::sequence<unsigned int>]':
+clusterers/example_clusterer/example-clusterer.cc:26:88:   required from here
+external/parcluster/parcluster/api/parallel/parallel-graph-utils.h:120:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (long i=0; i<pairs.size(); ++i) {
+INFO: From Compiling clusterers/cluster-in-memory_main.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/cluster-in-memory_main.cc:28:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+clusterers/cluster-in-memory_main.cc: In function 'absl::Status research_graph::in_memory::{anonymous}::Main()':
+clusterers/cluster-in-memory_main.cc:251:51: warning: ignoring returned value of type 'absl::Status', declared with attribute nodiscard [-Wunused-result]
+   WriteClustering(output_file.c_str(), clustering);
+                                                   ^
+clusterers/cluster-in-memory_main.cc:132:14: note: in call to 'absl::Status research_graph::in_memory::{anonymous}::WriteClustering(const char*, research_graph::in_memory::InMemoryClusterer::Clustering)', declared here
+ absl::Status WriteClustering(const char* filename,
+              ^~~~~~~~~~~~~~~
+In file included from clusterers/cluster-in-memory_main.cc:23:0:
+external/com_google_absl/absl/status/status.h:424:7: note: 'absl::Status' declared here
+ class Status final {
+       ^~~~~~
+clusterers/cluster-in-memory_main.cc:215:15: warning: variable 'n' set but not used [-Wunused-but-set-variable]
+   std::size_t n = 0;
+               ^
+In file included from external/gbbs/gbbs/graph_io.h:34:0,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/cluster-in-memory_main.cc:28:
+external/gbbs/gbbs/graph.h: In instantiation of 'gbbs::symmetric_ptr_graph<vertex_type, W>& gbbs::symmetric_ptr_graph<vertex_type, W>::operator=(gbbs::symmetric_ptr_graph<vertex_type, W>&&) [with vertex_type = gbbs::symmetric_vertex; W = float]':
+clusterers/cluster-in-memory_main.cc:223:20:   required from here
+external/gbbs/gbbs/graph.h:289:3: warning: no return statement in function returning non-void [-Wreturn-type]
+   }
+   ^
+clusterers/cluster-in-memory_main.cc: At global scope:
+clusterers/cluster-in-memory_main.cc:147:6: warning: 'void research_graph::in_memory::{anonymous}::split(const string&, char, std::vector<unsigned int>&)' defined but not used [-Wunused-function]
+ void split(const std::string& s, char delim, std::vector<gbbs::uintE>& elems) {
+      ^~~~~
+clusterers/cluster-in-memory_main.cc:78:8: warning: 'double research_graph::in_memory::{anonymous}::DoubleFromWeight(double)' defined but not used [-Wunused-function]
+ double DoubleFromWeight(double weight) { return weight; }
+        ^~~~~~~~~~~~~~~~
+clusterers/cluster-in-memory_main.cc:77:8: warning: 'double research_graph::in_memory::{anonymous}::DoubleFromWeight(gbbs::empty)' defined but not used [-Wunused-function]
+ double DoubleFromWeight(gbbs::empty weight) { return 1; }
+        ^~~~~~~~~~~~~~~~
+INFO: From Compiling clusterers/cluster-in-memory_main.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/cluster-in-memory_main.cc:28:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+clusterers/cluster-in-memory_main.cc: In function 'absl::Status research_graph::in_memory::{anonymous}::Main()':
+clusterers/cluster-in-memory_main.cc:251:51: warning: ignoring returned value of type 'absl::Status', declared with attribute nodiscard [-Wunused-result]
+   WriteClustering(output_file.c_str(), clustering);
+                                                   ^
+clusterers/cluster-in-memory_main.cc:132:14: note: in call to 'absl::Status research_graph::in_memory::{anonymous}::WriteClustering(const char*, research_graph::in_memory::InMemoryClusterer::Clustering)', declared here
+ absl::Status WriteClustering(const char* filename,
+              ^~~~~~~~~~~~~~~
+In file included from clusterers/cluster-in-memory_main.cc:23:0:
+external/com_google_absl/absl/status/status.h:424:7: note: 'absl::Status' declared here
+ class Status final {
+       ^~~~~~
+clusterers/cluster-in-memory_main.cc:215:15: warning: variable 'n' set but not used [-Wunused-but-set-variable]
+   std::size_t n = 0;
+               ^
+In file included from external/gbbs/gbbs/graph_io.h:34:0,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from ./clusterers/affinity/parallel-affinity.h:24,
+                 from clusterers/cluster-in-memory_main.cc:28:
+external/gbbs/gbbs/graph.h: In instantiation of 'gbbs::symmetric_ptr_graph<vertex_type, W>& gbbs::symmetric_ptr_graph<vertex_type, W>::operator=(gbbs::symmetric_ptr_graph<vertex_type, W>&&) [with vertex_type = gbbs::symmetric_vertex; W = float]':
+clusterers/cluster-in-memory_main.cc:223:20:   required from here
+external/gbbs/gbbs/graph.h:289:3: warning: no return statement in function returning non-void [-Wreturn-type]
+   }
+   ^
+clusterers/cluster-in-memory_main.cc: At global scope:
+clusterers/cluster-in-memory_main.cc:147:6: warning: 'void research_graph::in_memory::{anonymous}::split(const string&, char, std::vector<unsigned int>&)' defined but not used [-Wunused-function]
+ void split(const std::string& s, char delim, std::vector<gbbs::uintE>& elems) {
+      ^~~~~
+clusterers/cluster-in-memory_main.cc:78:8: warning: 'double research_graph::in_memory::{anonymous}::DoubleFromWeight(double)' defined but not used [-Wunused-function]
+ double DoubleFromWeight(double weight) { return weight; }
+        ^~~~~~~~~~~~~~~~
+clusterers/cluster-in-memory_main.cc:77:8: warning: 'double research_graph::in_memory::{anonymous}::DoubleFromWeight(gbbs::empty)' defined but not used [-Wunused-function]
+ double DoubleFromWeight(gbbs::empty weight) { return 1; }
+        ^~~~~~~~~~~~~~~~
+INFO: From Compiling external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/parallel/parallel-graph-utils.h:6,
+                 from external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc:1:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+INFO: From Compiling external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/parallel/parallel-graph-utils.h:6,
+                 from external/parcluster/parcluster/api/parallel/parallel-graph-utils.cc:1:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+[24 / 30] Compiling clusterers/affinity/parallel-affinity-internal.cc; 6s local ... (2 actions running)
+[24 / 30] Compiling clusterers/affinity/parallel-affinity-internal.cc; 17s local ... (2 actions running)
+INFO: From Compiling clusterers/affinity/parallel-affinity-internal.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from clusterers/affinity/parallel-affinity-internal.cc:15:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+INFO: From Compiling clusterers/affinity/parallel-affinity-internal.cc:
+In file included from external/parlaylib/parlay/internal/../sequence.h:35:0,
+                 from external/parlaylib/parlay/internal/sequence_ops.h:10,
+                 from external/parlaylib/parlay/internal/counting_sort.h:11,
+                 from external/parlaylib/parlay/internal/integer_sort.h:9,
+                 from external/parlaylib/parlay/primitives.h:15,
+                 from external/parlaylib/parlay/io.h:16,
+                 from external/gbbs/gbbs/bridge.h:12,
+                 from external/gbbs/gbbs/graph.h:33,
+                 from external/gbbs/gbbs/graph_io.h:34,
+                 from external/gbbs/gbbs/benchmark.h:5,
+                 from external/gbbs/gbbs/gbbs.h:3,
+                 from external/parcluster/parcluster/api/in-memory-clusterer-base.h:12,
+                 from ./clusterers/affinity/parallel-affinity-internal.h:24,
+                 from clusterers/affinity/parallel-affinity-internal.cc:15:
+external/parlaylib/parlay/internal/../internal/sequence_base.h:226:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+ #pragma GCC diagnostic ignored "-Wclass-memaccess"
+                                ^~~~~~~~~~~~~~~~~~~
+INFO: Elapsed time: 20.555s, Critical Path: 20.13s
+INFO: 14 processes: 14 local.
+INFO: Build completed successfully, 15 total actions
+INFO: Build completed successfully, 15 total actions
