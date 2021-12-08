@@ -21,12 +21,12 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "InternalClustering/parallel-affinity-internal.h"
-#include "include/parcluster/config.pb.h"
-#include "include/parcluster/gbbs-graph.h"
-#include "include/parcluster/clusterer.h"
-#include "include/parcluster/parallel/parallel-graph-utils.h"
-#include "include/parcluster/status_macros.h"
+#include "clusterers/affinity/parallel-affinity-internal.h"
+#include "parcluster/api/config.pb.h"
+#include "parcluster/api/gbbs-graph.h"
+#include "parcluster/api/in-memory-clusterer-base.h"
+#include "parcluster/api/parallel/parallel-graph-utils.h"
+#include "parcluster/api/status_macros.h"
 
 namespace research_graph {
 namespace in_memory {

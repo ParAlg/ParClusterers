@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "InternalClustering/parallel-affinity.h"
+#include "clusterers/affinity/parallel-affinity.h"
 
 #include <algorithm>
 #include <iterator>
@@ -20,12 +20,12 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "InternalClustering/parallel-affinity-internal.h"
-#include "include/parcluster/config.pb.h"
-#include "include/parcluster/gbbs-graph.h"
-#include "include/parcluster/clusterer.h"
-#include "include/parcluster/parallel/parallel-graph-utils.h"
-#include "include/parcluster/status_macros.h"
+#include "clusterers/affinity/parallel-affinity-internal.h"
+#include "parcluster/api/config.pb.h"
+#include "parcluster/api/gbbs-graph.h"
+#include "parcluster/api/in-memory-clusterer-base.h"
+#include "parcluster/api/parallel/parallel-graph-utils.h"
+#include "parcluster/api/status_macros.h"
 
 namespace research_graph {
 namespace in_memory {
@@ -36,6 +36,7 @@ void AddNewClusters(ParallelAffinityClusterer::Clustering new_clusters,
   clustering->reserve(clustering->size() + new_clusters.size());
   std::move(new_clusters.begin(), new_clusters.end(),
             std::back_inserter(*clustering));
+  std::cout << "Added new clusters." << std::endl;
 }
 
 double GetDynamicWeightThreshold(const AffinityClustererConfig& affinity_config, int iteration) {
@@ -43,11 +44,15 @@ double GetDynamicWeightThreshold(const AffinityClustererConfig& affinity_config,
   auto config = affinity_config.dynamic_weight_threshold_config();
   if (num_iterations == 1) return config.upper_bound();
   auto weight_decay_function = config.weight_decay_function();
-  if (weight_decay_function == DynamicWeightThresholdConfig::LINEAR_DECAY)
+  if (weight_decay_function == DynamicWeightThresholdConfig::LINEAR_DECAY) {
     return config.upper_bound() - ((config.upper_bound() - config.lower_bound()) / (num_iterations - 1)) * iteration;
-  if (weight_decay_function == DynamicWeightThresholdConfig::EXPONENTIAL_DECAY)
+  } else if (weight_decay_function == DynamicWeightThresholdConfig::EXPONENTIAL_DECAY) {
     return config.upper_bound() * std::pow(config.lower_bound() / config.upper_bound(),
       (double) iteration / ((double) num_iterations - 1.0));
+  } else {
+    std::cout << "Unknown weight decay function" << std::endl;
+    exit(-1);
+  }
 }
 
 double GetAffinityWeightThreshold(const AffinityClustererConfig& affinity_config, int iteration) {
@@ -69,7 +74,7 @@ ParallelAffinityClusterer::Cluster(const ClustererConfig& config) const {
 
   // Initially each vertex is its own cluster.
   std::vector<gbbs::uintE> cluster_ids(n);
-  pbbs::parallel_for(0, n, [&](std::size_t i) { cluster_ids[i] = i; });
+  parlay::parallel_for(0, n, [&](std::size_t i) { cluster_ids[i] = i; });
 
   // The output (flat) clustering to emit.
   ParallelAffinityClusterer::Clustering clustering;
@@ -91,12 +96,9 @@ ParallelAffinityClusterer::Cluster(const ClustererConfig& config) const {
       NearestNeighborLinkage(*current_graph,
                             weight_threshold));
 
-    std::cout << "n = " << (*current_graph).n << " m = " << (*current_graph).m << std::endl;
-    std::cout << "compressed_cluster_ids.size = " << compressed_cluster_ids.size() << std::endl;
+    std::cout << "Iteration: " << i << " n = " << (*current_graph).n << " m = " << (*current_graph).m << std::endl;
 
     cluster_ids = FlattenClustering(cluster_ids, compressed_cluster_ids);
-
-    std::cout << "cluster_ids.size = " << cluster_ids.size() << std::endl;
 
     // TODO(jeshi): Performance can be improved by not finding finished
     // clusters on the last round
@@ -106,12 +108,12 @@ ParallelAffinityClusterer::Cluster(const ClustererConfig& config) const {
     AddNewClusters(std::move(new_clusters), &clustering);
 
     // Exit if all clusters are finished
-    pbbs::sequence<bool> exit_seq = pbbs::sequence<bool>(
+    auto exit_seq = parlay::sequence<bool>::from_function(
         cluster_ids.size(),
         [&](std::size_t i) { return (cluster_ids[i] == UINT_E_MAX); });
-    bool to_exit = pbbs::reduce(
+    bool to_exit = parlay::reduce(
         exit_seq,
-        pbbs::make_monoid([](bool a, bool b) { return a && b; }, true));
+        parlay::make_monoid([](bool a, bool b) { return a && b; }, true));
     if (to_exit || i == affinity_config.num_iterations() - 1) break;
 
     GraphWithWeights<gbbs::uintE> new_compressed_graph;
@@ -119,13 +121,11 @@ ParallelAffinityClusterer::Cluster(const ClustererConfig& config) const {
       new_compressed_graph,
       CompressGraph(*current_graph, node_weights, compressed_cluster_ids, affinity_config));
     compressed_graph.swap(new_compressed_graph.graph);
-    if (new_compressed_graph.graph) new_compressed_graph.graph->del();
     node_weights = new_compressed_graph.node_weights;
   }
-  if (compressed_graph) compressed_graph->del();
 
   std::unique_ptr<bool[]> finished_vertex(new bool[n]);
-  pbbs::parallel_for(0, n, [&](std::size_t i) {
+  parlay::parallel_for(0, n, [&](std::size_t i) {
     finished_vertex[i] = (cluster_ids[i] != UINT_E_MAX);
   });
   auto new_clusters = ComputeClusters(cluster_ids, std::move(finished_vertex));

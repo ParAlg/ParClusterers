@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "InternalClustering/parallel-affinity-internal.h"
+#include "clusterers/affinity/parallel-affinity-internal.h"
 
 #include <stdlib.h>
 
@@ -22,17 +22,13 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "include/parcluster/config.pb.h"
+#include "parcluster/api/config.pb.h"
 #include "external/gbbs/benchmarks/Connectivity/WorkEfficientSDB14/Connectivity.h"
 #include "external/gbbs/gbbs/bridge.h"
 #include "external/gbbs/gbbs/gbbs.h"
 #include "external/gbbs/gbbs/macros.h"
-#include "external/gbbs/pbbslib/sample_sort.h"
-#include "external/gbbs/pbbslib/seq.h"
-#include "external/gbbs/pbbslib/sequence_ops.h"
-#include "external/gbbs/pbbslib/utilities.h"
-#include "include/parcluster/parallel/parallel-graph-utils.h"
-#include "include/parcluster/parallel/parallel-sequence-ops.h"
+#include "parcluster/api/parallel/parallel-graph-utils.h"
+#include "parcluster/api/parallel/parallel-sequence-ops.h"
 
 namespace {
 
@@ -63,10 +59,10 @@ std::vector<ClusterStats> ComputeFinishedClusterStats(
   auto sum_map_f = [&](gbbs::uintE u, gbbs::uintE v, float weight) -> float {
     return weight;
   };
-  pbbs::parallel_for(0, n, [&](std::size_t i) {
+  parlay::parallel_for(0, n, [&](std::size_t i) {
     gbbs::uintE cluster_id_i = cluster_ids[i];
-    auto add_m = pbbslib::addm<float>();
-    auto volume = G.get_vertex(i).reduceOutNgh<float>(i, sum_map_f, add_m);
+    auto add_m = parlay::addm<float>();
+    auto volume = G.get_vertex(i).out_neighbors().reduce(sum_map_f, add_m);
     if (cluster_id_i == UINT_E_MAX) {
       cluster_stats[i] =
           PerVertexClusterStats{cluster_id_i, volume, float{0}, float{0}};
@@ -81,10 +77,10 @@ std::vector<ClusterStats> ComputeFinishedClusterStats(
         if (cluster_id_i != cluster_ids[v]) return weight;
         return 0;
       };
-      auto intra_cluster_weight = G.get_vertex(i).reduceOutNgh<float>(
-          i, intra_cluster_sum_map_f, add_m);
-      auto inter_cluster_weight = G.get_vertex(i).reduceOutNgh<float>(
-          i, inter_cluster_sum_map_f, add_m);
+      auto intra_cluster_weight = G.get_vertex(i).out_neighbors().reduce(
+          intra_cluster_sum_map_f, add_m);
+      auto inter_cluster_weight = G.get_vertex(i).out_neighbors().reduce(
+          inter_cluster_sum_map_f, add_m);
       cluster_stats[i] = PerVertexClusterStats{
           cluster_id_i, volume, intra_cluster_weight, inter_cluster_weight};
     }
@@ -120,7 +116,7 @@ std::vector<ClusterStats> ComputeFinishedClusterStats(
   std::size_t num_filtered_mark_ids = filtered_mark_ids.size() - 1;
 
   // Compute aggregate statistics by cluster id
-  pbbs::parallel_for(0, num_filtered_mark_ids, [&](size_t i) {
+  parlay::parallel_for(0, num_filtered_mark_ids, [&](size_t i) {
     // Combine cluster statistics from start_id_index to end_id_index
     gbbs::uintE start_id_index = filtered_mark_ids[i];
     gbbs::uintE end_id_index = filtered_mark_ids[i + 1];
@@ -167,7 +163,7 @@ absl::StatusOr<std::vector<gbbs::uintE>> NearestNeighborLinkage(
   // marked_neighbors
   std::vector<std::tuple<gbbs::uintE, gbbs::uintE>> marked_neighbors(2 * n);
   const gbbs::uintE undefined_neighbor = n;
-  pbbs::parallel_for(0, n, [&](std::size_t i) {
+  parlay::parallel_for(0, n, [&](std::size_t i) {
     auto vertex = G.get_vertex(i);
     float max_weight = weight_threshold;
     gbbs::uintE max_neighbor = undefined_neighbor;
@@ -179,7 +175,7 @@ absl::StatusOr<std::vector<gbbs::uintE>> NearestNeighborLinkage(
         max_neighbor = v;
       }
     };
-    vertex.mapOutNgh(i, find_max_neighbor_func, false);
+    vertex.out_neighbors().map(find_max_neighbor_func, false);
     marked_neighbors[i] = std::make_tuple(i, max_neighbor);
     marked_neighbors[i + n] = std::make_tuple(max_neighbor, i);
   });
@@ -198,7 +194,7 @@ absl::StatusOr<std::vector<gbbs::uintE>> NearestNeighborLinkage(
 
   if (num_filtered_edges == 0) {
     std::vector<gbbs::uintE> labels(n);
-    pbbs::parallel_for(0, n, [&](std::size_t i) { labels[i] = i; });
+    parlay::parallel_for(0, n, [&](std::size_t i) { labels[i] = i; });
     return labels;
   }
 
@@ -219,22 +215,21 @@ absl::StatusOr<std::vector<gbbs::uintE>> NearestNeighborLinkage(
       num_filtered_edges, n);
 
   // Compute edges array from filtered_edges
-  std::unique_ptr<std::tuple<gbbs::uintE, pbbs::empty>[]> cc_edges(
-      new std::tuple<gbbs::uintE, pbbs::empty>[num_filtered_edges]);
+  std::unique_ptr<std::tuple<gbbs::uintE, parlay::empty>[]> cc_edges(
+      new std::tuple<gbbs::uintE, parlay::empty>[num_filtered_edges]);
 
-  pbbs::parallel_for(0, num_filtered_edges, [&](std::size_t i) {
+  parlay::parallel_for(0, num_filtered_edges, [&](std::size_t i) {
     cc_edges[i] =
-        std::make_tuple(std::get<1>(filtered_edges_sort[i]), pbbs::empty());
+        std::make_tuple(std::get<1>(filtered_edges_sort[i]), parlay::empty());
   });
 
   // Construct an unweighted symmetric graph from cc_offsets and cc_edges
-  auto G_cc = MakeGbbsGraph<pbbs::empty>(cc_offsets, n, std::move(cc_edges),
+  auto G_cc = MakeGbbsGraph<parlay::empty>(cc_offsets, n, std::move(cc_edges),
                                          num_filtered_edges);
 
   // Perform connected components on G_cc
-  pbbs::sequence<gbbs::uintE> labels = gbbs::workefficient_cc::CC(*G_cc);
+  parlay::sequence<gbbs::uintE> labels = gbbs::workefficient_cc::CC(*G_cc);
 
-  G_cc->del();
   auto labels_vector = std::vector<gbbs::uintE>(labels.begin(), labels.end());
   return labels_vector;
 }
@@ -277,7 +272,7 @@ CompressGraph(
   // Compute new inter cluster edges using sorting
   // TODO(jeshi): Allow optionality to choose between aggregation methods
   std::function<float(float, float)> edge_aggregation_func;
-  std::function<float(std::tuple<gbbs::uintE, gbbs::uintE, float>)> scale_func = 
+  std::function<float(std::tuple<gbbs::uintE, gbbs::uintE, float>)> scale_func =
     [](std::tuple<gbbs::uintE, gbbs::uintE, float> v) {
       return std::get<2>(v);
     };
@@ -325,7 +320,7 @@ CompressGraph(
   }
 
   // Scale edge weights
-  pbbs::parallel_for(0, num_compressed_vertices, [&](std::size_t i) {
+  parlay::parallel_for(0, num_compressed_vertices, [&](std::size_t i) {
     auto offset = offsets[i];
     auto degree = offsets[i + 1] - offset;
     for (std::size_t j = 0; j < degree; j++) {
@@ -386,10 +381,9 @@ InMemoryClusterer::Clustering FindFinishedClusters(
 
   // Check for finished clusters
   // TODO(jeshi): Use a unique ptr here
-  auto finished = pbbs::sequence<bool>(num_compressed_vertices, true);
-  pbbs::parallel_for(0, num_compressed_vertices, [&](std::size_t i) {
-    for (std::size_t j = 0;
-         j < affinity_config.active_cluster_conditions().size(); j++) {
+  auto finished = parlay::sequence<bool>(num_compressed_vertices, true);
+  parlay::parallel_for(0, num_compressed_vertices, [&](std::size_t i) {
+    for (long j = 0; j < affinity_config.active_cluster_conditions().size(); j++) {
       bool satisfied = true;
       auto condition = affinity_config.active_cluster_conditions().Get(j);
       if (condition.has_min_density() &&
@@ -407,7 +401,7 @@ InMemoryClusterer::Clustering FindFinishedClusters(
 
   // Mark vertices belonging to finished clusters
   std::unique_ptr<bool[]> finished_vertex(new bool[n]);
-  pbbs::parallel_for(0, n, [&](std::size_t i) {
+  parlay::parallel_for(0, n, [&](std::size_t i) {
     finished_vertex[i] =
         cluster_ids[i] == UINT_E_MAX ? false : finished[cluster_ids[i]];
   });
@@ -417,7 +411,7 @@ InMemoryClusterer::Clustering FindFinishedClusters(
       ComputeClusters(cluster_ids, std::move(finished_vertex));
 
   // Update the cluster ids for vertices belonging to finished clusters
-  pbbs::parallel_for(0, n, [&](size_t i) {
+  parlay::parallel_for(0, n, [&](size_t i) {
     if (cluster_ids[i] != UINT_E_MAX && finished[cluster_ids[i]])
       cluster_ids[i] = UINT_E_MAX;
   });

@@ -20,17 +20,13 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "include/parcluster/config.pb.h"
-#include "include/parcluster/clusterer.h"
-#include "include/parcluster/parallel/parallel-graph-utils.h"
+#include "parcluster/api/config.pb.h"
+#include "parcluster/api/in-memory-clusterer-base.h"
+#include "parcluster/api/parallel/parallel-graph-utils.h"
 #include "external/gbbs/gbbs/bridge.h"
 #include "external/gbbs/gbbs/gbbs.h"
 #include "external/gbbs/gbbs/macros.h"
-#include "external/gbbs/pbbslib/sample_sort.h"
-#include "external/gbbs/pbbslib/seq.h"
-#include "external/gbbs/pbbslib/sequence_ops.h"
-#include "external/gbbs/pbbslib/utilities.h"
-#include "include/parcluster/parallel/parallel-sequence-ops.h"
+#include "parcluster/api/parallel/parallel-sequence-ops.h"
 
 namespace research_graph {
 namespace in_memory {
