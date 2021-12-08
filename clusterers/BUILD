@@ -8,6 +8,7 @@ cc_library(
     name = "all-clusterers",
     deps = [
         "//clusterers/affinity:parallel-affinity",
+        "//clusterers/connectivity_clusterer:connectivity-clusterer",
         "//clusterers/example_clusterer:example-clusterer",
         "//clusterers/ldd_clusterer:ldd-clusterer",
     ],

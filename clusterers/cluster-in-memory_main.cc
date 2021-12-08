@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 
 #include "clusterers/affinity/parallel-affinity.h"
+#include "clusterers/connectivity_clusterer/connectivity-clusterer.h"
 #include "clusterers/example_clusterer/example-clusterer.h"
 #include "clusterers/ldd_clusterer/ldd-clusterer.h"
 
@@ -206,6 +207,8 @@ absl::Status Main() {
     clusterer.reset(new ExampleClusterer);
   } else if (clusterer_name == "LDDClusterer") {
     clusterer.reset(new LDDClusterer);
+  }  else if (clusterer_name == "ConnectivityClusterer") {
+    clusterer.reset(new ConnectivityClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
