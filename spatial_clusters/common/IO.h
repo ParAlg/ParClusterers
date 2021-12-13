@@ -22,15 +22,20 @@
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
 
+<<<<<<< HEAD
 // #include "geometry.h"
 #include "symmatrix.h"
 
+=======
+#include "geometry.h"
+>>>>>>> general hac starter
 
 namespace research_graph {
 namespace in_memory {
 namespace IO {
   using namespace std;
   // modified from pbbsbench  https://github.com/cmuparlay/pbbsbench/blob/37df3e14c7f3d738500e06840874a1505944598d/common/geometryIO.h
+<<<<<<< HEAD
 
   auto is_space = [] (char c) {
     switch (c)  {
@@ -44,6 +49,8 @@ namespace IO {
   };
 
 
+=======
+>>>>>>> general hac starter
   parlay::sequence<char> readStringFromFile(char const *fileName) {
     ifstream file (fileName, ios::in | ios::binary | ios::ate);
     if (!file.is_open()) {
@@ -82,6 +89,7 @@ namespace IO {
     return SA;
   }
 
+<<<<<<< HEAD
   // template <class T, class Seq>
   // pointset<T> parsePoints(Seq W, int d) {
   //   size_t n = W.size()/d;
@@ -120,12 +128,26 @@ namespace IO {
   // read a symmatric matrix from file
   template <class T>
   SymMatrix<T> readSymMatrixFromFile(char const *fname, std::size_t n) {
+=======
+  template <class T>
+  pointset<T> parsePoints(Seq W, int d) {
+    size_t n = W.size()/d;
+    pointset<T> points = pointset<T>(n,d);
+    parlay::parallel_for(d * n, [&] (size_t i){
+	    points.set(i, (T)atof(W[i]));});
+    return points;
+  }
+
+  template <class T>
+  pointset<T> readPointsFromFile(char const *fname, int d) {
+>>>>>>> general hac starter
     parlay::sequence<char> S = readStringFromFile(fname);
     parlay::sequence<char*> W = stringToWords(S);
     if (W.size() == 0) {
       cout << "readPointsFromFile empty file" << endl;
       abort();
     }
+<<<<<<< HEAD
     if (W.size() % n != 0) {
       cout << "readPointsFromFile wrong file type or wrong dimension" << endl;
       abort();
@@ -134,6 +156,15 @@ namespace IO {
   }
 
 
+=======
+    if (W.size() % d != 0) {
+      cout << "readPointsFromFile wrong file type or wrong dimension" << endl;
+      abort();
+    }
+    return parsePoints<T>(W.cut(1,W.size()));
+  }
+
+>>>>>>> general hac starter
 }  // namespace IO
 }  // namespace in_memory
 }  // namespace research_graph
