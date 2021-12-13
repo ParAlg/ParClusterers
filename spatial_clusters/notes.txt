@@ -1,0 +1,25 @@
+- how to represent the point dataset in memory? 
+
+current idea:
+
+template <class T>
+struct pointset{
+    int getDim(){return dim;}
+
+    T *getPoint(size_t i){
+        return points[i*dim];
+    }
+
+    double getDist(size_t i, size_t j){
+        ...
+    }
+
+
+    private:
+    T *points;
+    int dim;
+
+}
+
+- need a separate InMemmoryClusterAPI for spatial ones?
+- use "parcluster/api" instead of parlay directly?
