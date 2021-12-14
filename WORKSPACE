@@ -34,6 +34,46 @@ bind(
     actual = "@com_github_gflags_gflags//:gflags",
 )
 
+# rules_proto defines abstract rules for building Protocol Buffers.
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1",
+    strip_prefix = "rules_proto-4.0.0",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
+    ],
+)
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+rules_proto_dependencies()
+rules_proto_toolchains()
+
+
+##http_archive(
+#git_repository(
+#    name = "rules_proto",
+##    sha256 = "37d32b789be90fead9ab108dbe4fe4df463d26c122dc896dc1bf134252d3c49a",
+##    strip_prefix = "rules_proto-40298556293ae502c66579620a7ce867d5f57311",
+#    commit = "cfdc2fa31879c0aebe31ce7702b1a9c8a4be02d2",
+#    remote = "https://github.com/bazelbuild/rules_proto.git",
+##    urls = [
+##        "https://github.com/bazelbuild/rules_proto/archive/40298556293ae502c66579620a7ce867d5f57311.zip",
+##    ],
+#)
+#load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+#protobuf_deps()
+
+load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies")
+
+rules_cc_dependencies()
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
+rules_proto_dependencies()
+
+rules_proto_toolchains()
+
 #http_archive(
 #    name = "com_google_absl",
 #    strip_prefix = "abseil-cpp-master",
@@ -104,43 +144,3 @@ http_archive(
         "https://github.com/bazelbuild/rules_cc/archive/02becfef8bc97bda4f9bb64e153f1b0671aec4ba.zip",
     ],
 )
-
-# rules_proto defines abstract rules for building Protocol Buffers.
-
-http_archive(
-    name = "rules_proto",
-    sha256 = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1",
-    strip_prefix = "rules_proto-4.0.0",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
-        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/4.0.0.tar.gz",
-    ],
-)
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-rules_proto_dependencies()
-rules_proto_toolchains()
-
-
-##http_archive(
-#git_repository(
-#    name = "rules_proto",
-##    sha256 = "37d32b789be90fead9ab108dbe4fe4df463d26c122dc896dc1bf134252d3c49a",
-##    strip_prefix = "rules_proto-40298556293ae502c66579620a7ce867d5f57311",
-#    commit = "cfdc2fa31879c0aebe31ce7702b1a9c8a4be02d2",
-#    remote = "https://github.com/bazelbuild/rules_proto.git",
-##    urls = [
-##        "https://github.com/bazelbuild/rules_proto/archive/40298556293ae502c66579620a7ce867d5f57311.zip",
-##    ],
-#)
-#load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-#protobuf_deps()
-
-load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies")
-
-rules_cc_dependencies()
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-
-rules_proto_dependencies()
-
-rules_proto_toolchains()
