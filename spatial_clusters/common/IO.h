@@ -22,13 +22,28 @@
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
 
-#include "geometry.h"
+// #include "geometry.h"
+#include "symmatrix.h"
+
 
 namespace research_graph {
 namespace in_memory {
 namespace IO {
   using namespace std;
   // modified from pbbsbench  https://github.com/cmuparlay/pbbsbench/blob/37df3e14c7f3d738500e06840874a1505944598d/common/geometryIO.h
+
+  auto is_space = [] (char c) {
+    switch (c)  {
+    case '\r': 
+    case '\t': 
+    case '\n': 
+    case 0:
+    case ' ' : return true;
+    default : return false;
+    }
+  };
+
+
   parlay::sequence<char> readStringFromFile(char const *fileName) {
     ifstream file (fileName, ios::in | ios::binary | ios::ate);
     if (!file.is_open()) {
@@ -67,29 +82,57 @@ namespace IO {
     return SA;
   }
 
-  template <class T>
-  pointset<T> parsePoints(Seq W, int d) {
-    size_t n = W.size()/d;
-    pointset<T> points = pointset<T>(n,d);
-    parlay::parallel_for(d * n, [&] (size_t i){
-	    points.set(i, (T)atof(W[i]));});
-    return points;
+  // template <class T, class Seq>
+  // pointset<T> parsePoints(Seq W, int d) {
+  //   size_t n = W.size()/d;
+  //   pointset<T> points = pointset<T>(n,d);
+  //   parlay::parallel_for(d * n, [&] (size_t i){
+	//     points.set(i, (T)atof(W[i]));});
+  //   return points;
+  // }
+
+  // template <class T>
+  // pointset<T> readPointsFromFile(char const *fname, int d) {
+  //   parlay::sequence<char> S = readStringFromFile(fname);
+  //   parlay::sequence<char*> W = stringToWords(S);
+  //   if (W.size() == 0) {
+  //     cout << "readPointsFromFile empty file" << endl;
+  //     abort();
+  //   }
+  //   if (W.size() % d != 0) {
+  //     cout << "readPointsFromFile wrong file type or wrong dimension" << endl;
+  //     abort();
+  //   }
+  //   return parsePoints<T>(W.cut(0,W.size()), d);
+  // }
+
+  template <class T, class Seq>
+  SymMatrix<T> parseSymMatrix(Seq W, std::size_t n) {
+    SymMatrix<T> matrix = SymMatrix<T>(n);
+    parlay::parallel_for(0, n, [&](size_t i){
+        parlay::parallel_for(i+1, n,[&] (size_t j){
+	        matrix.update(i, j, (T)atof(W[i*n + j]));
+        });
+    });
+    return matrix;
   }
 
+  // read a symmatric matrix from file
   template <class T>
-  pointset<T> readPointsFromFile(char const *fname, int d) {
+  SymMatrix<T> readSymMatrixFromFile(char const *fname, std::size_t n) {
     parlay::sequence<char> S = readStringFromFile(fname);
     parlay::sequence<char*> W = stringToWords(S);
     if (W.size() == 0) {
       cout << "readPointsFromFile empty file" << endl;
       abort();
     }
-    if (W.size() % d != 0) {
+    if (W.size() % n != 0) {
       cout << "readPointsFromFile wrong file type or wrong dimension" << endl;
       abort();
     }
-    return parsePoints<T>(W.cut(1,W.size()));
+    return parseSymMatrix<T>(W.cut(0,W.size()), n);
   }
+
 
 }  // namespace IO
 }  // namespace in_memory
