@@ -276,7 +276,11 @@ inline void link_terminal_nodes(TF *finder, TreeChainInfo *info, std::size_t rou
 
 
 template<class T, class distT>
+<<<<<<< HEAD
 vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
+=======
+dendroLine * chain_linkage_matrix(SymMatrix<T>* M){
+>>>>>>> hac copmile
   std::size_t n = M->n;
   auto info = TreeChainInfo(n);
   auto finder = MatrixNNFinder<T, distT>(n, M);
@@ -298,9 +302,22 @@ vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
     info.next(&finder);
     chainNum = info.chainNum;
   }
+<<<<<<< HEAD
   return formatDendrogram(finder.nodes, n, 0);
 }
 
+=======
+  dendroLine *dendro = formatDendrogram(finder.nodes, n, 0);
+  return dendro;
+}
+
+// updates SP
+template<class T> 
+dendroLine* completeLinkage(SymMatrix<T>* M){
+    using distT = distComplete<T>;
+    return chain_linkage_matrix<T, distT>(M);
+}
+>>>>>>> hac copmile
 
 }  // namespace in_memory
 }  // namespace research_graph
