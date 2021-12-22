@@ -28,6 +28,7 @@
 // #include "parcluster/api/parallel/parallel-graph-utils.h"
 // #include "parcluster/api/status_macros.h"
 
+#include "linkage.h"
 #include "../common/common.h"
 
 namespace research_graph {
@@ -35,7 +36,7 @@ namespace in_memory {
 
 class GeneralHACClusterer {
  public:
-  using PointId = unsigned int;
+  using PointId = std::size_t;
   // Represents clustering: each element of the vector contains the set of
   // PointIds in one cluster. We call a clustering non-overlapping if the
   // elements of the clustering are nonempty vectors that together contain each
@@ -44,7 +45,7 @@ class GeneralHACClusterer {
   
   // Represents hierarhical clustering: each element of the vector
   // contains the set of 4 numbers: <id1, id2, size, height>
-  using HierarchicalClustering = std::vector<std::tuple<PointId, PointId, std::size_t, double>>;
+  using HierarchicalClustering = std::vector<dendroLine>;
 
   absl::StatusOr<HierarchicalClustering> HierarchicalCluster(
       const ClustererConfig& config) const;
@@ -54,6 +55,7 @@ class GeneralHACClusterer {
 
  private:
   SymMatrix<double> matrix_;
+  Method method_;
 };
 
 }  // namespace in_memory

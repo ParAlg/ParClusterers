@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 #include "linkage.h"
 #include "../common/common.h"
@@ -16,7 +17,8 @@ int main(int argc, char *argv[]) {
     cout << "num workers: " << parlay::num_workers() << endl;
 
     research_graph::in_memory::SymMatrix<double> W = research_graph::in_memory::IO::readSymMatrixFromFile<double>(filename, n); 
-    research_graph::in_memory::dendroLine* dendro = research_graph::in_memory::completeLinkage(&W);
+    using distT = research_graph::in_memory::distComplete<double>;
+    vector<research_graph::in_memory::dendroLine> dendro = research_graph::in_memory::chain_linkage_matrix<double, distT>(&W);
 
     ofstream file_obj;
     file_obj.open(output); 
