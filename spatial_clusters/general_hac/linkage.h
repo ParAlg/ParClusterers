@@ -195,14 +195,14 @@ class MatrixNNFinder {
 }; // finder end
 
 
-dendroLine* formatDendrogram(parlay::sequence<Node> &nodes, std::size_t n, double eps){
+vector<dendroLine> formatDendrogram(parlay::sequence<Node> &nodes, std::size_t n, double eps){
     auto sorted_nodes = parlay::sort(parlay::make_slice(nodes).cut(n,2*n-1), nodeComparator(eps));
 
     auto map = parlay::sequence<std::size_t>(n);
     parlay::parallel_for(0, n-1, [&](std::size_t i){
         map[sorted_nodes[i].getIdx() - n] = i+n;
     });
-    dendroLine* dendrogram = (dendroLine *)malloc(sizeof(dendroLine)*(n-1));//newA(dendroLine, n-1);
+    vector<dendroLine> dendrogram = vector<dendroLine>(n-1);//(dendroLine *)malloc(sizeof(dendroLine)*(n-1));
     parlay::parallel_for(0, n-1, [&](std::size_t i){
         std::size_t left = sorted_nodes[i].left->getIdx();
         std::size_t right = sorted_nodes[i].right->getIdx();
@@ -276,7 +276,7 @@ inline void link_terminal_nodes(TF *finder, TreeChainInfo *info, std::size_t rou
 
 
 template<class T, class distT>
-dendroLine * chain_linkage_matrix(SymMatrix<T>* M){
+vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
   std::size_t n = M->n;
   auto info = TreeChainInfo(n);
   auto finder = MatrixNNFinder<T, distT>(n, M);
@@ -298,16 +298,9 @@ dendroLine * chain_linkage_matrix(SymMatrix<T>* M){
     info.next(&finder);
     chainNum = info.chainNum;
   }
-  dendroLine *dendro = formatDendrogram(finder.nodes, n, 0);
-  return dendro;
+  return formatDendrogram(finder.nodes, n, 0);
 }
 
-// updates SP
-template<class T> 
-dendroLine* completeLinkage(SymMatrix<T>* M){
-    using distT = distComplete<T>;
-    return chain_linkage_matrix<T, distT>(M);
-}
 
 }  // namespace in_memory
 }  // namespace research_graph
