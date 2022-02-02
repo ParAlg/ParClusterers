@@ -9,6 +9,7 @@ cc_library(
     deps = [
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
+        "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:in-memory-metric-clusterer-base",
         "@parcluster//parcluster/api:status_macros",
         "@com_google_absl//absl/base",
