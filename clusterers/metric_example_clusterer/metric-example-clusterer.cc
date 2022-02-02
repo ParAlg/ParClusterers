@@ -16,7 +16,7 @@ namespace research_graph {
 namespace in_memory {
 
 absl::StatusOr<std::vector<int64_t>> MetricExampleClusterer::Cluster(
-      absl::Span<DataPoint> datapoints,
+      absl::Span<const DataPoint> datapoints,
       const MetricClustererConfig& config) const {
   std::size_t n = datapoints.size();
 

@@ -32,7 +32,7 @@ namespace in_memory {
 class MetricExampleClusterer : public InMemoryMetricClusterer {
  public:
     absl::StatusOr<std::vector<int64_t>> Cluster(
-      absl::Span<DataPoint> datapoints,
+      absl::Span<const DataPoint> datapoints,
       const MetricClustererConfig& config) const override;
 };
 
