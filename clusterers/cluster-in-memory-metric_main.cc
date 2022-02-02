@@ -105,7 +105,7 @@ absl::Status Main() {
   // Read input points
   std::vector<DataPoint> points;
   auto begin_read = std::chrono::steady_clock::now();
-  std::string input_file = absl::GetFlag(FLAGS_input_graph);
+  std::string input_file = absl::GetFlag(FLAGS_input_points);
   ASSIGN_OR_RETURN(points, ReadDataPoints(input_file.c_str()));
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read");
