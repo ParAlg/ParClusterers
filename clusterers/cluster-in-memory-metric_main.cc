@@ -63,7 +63,7 @@ absl::Status WriteClustering(const char* filename,
 
 absl::StatusOr<std::vector<DataPoint>> ReadDataPoints(const char* filename) {
   std::vector<DataPoint> points;
-  std::ofstream file{filename};
+  std::ifstream file{filename};
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
   }
