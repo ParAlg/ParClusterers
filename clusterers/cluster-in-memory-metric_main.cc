@@ -26,9 +26,9 @@ ABSL_FLAG(std::string, clusterer_name, "",
 ABSL_FLAG(std::string, clusterer_config, "",
           "Text-format research_graph.in_memory.MetricClustererConfig proto.");
 
-ABSL_FLAG(std::string, input_graph, "",
-          "Input file pattern of a graph. Should be in edge list format "
-          "(SNAP format).");
+ABSL_FLAG(std::string, input_points, "",
+          "Input file pattern of a set of points. Each point should be on a new "
+          "line, with floats per dimension separated by spaces.");
 
 ABSL_FLAG(std::string, output_clustering, "",
           "Output filename of a clustering.");
