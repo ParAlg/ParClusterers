@@ -67,8 +67,9 @@ absl::StatusOr<std::vector<DataPoint>> ReadDataPoints(const char* filename) {
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
   }
+  std::string line;
   while (std::getline(file, line)){
-    stringstream line_stream(line);
+    std::stringstream line_stream(line);
     DataPoint point;
     float coordinate;
     while (line_stream >> coordinate) point.coordinates.push_back(coordinate);

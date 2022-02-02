@@ -17,7 +17,7 @@ namespace in_memory {
 
 absl::StatusOr<std::vector<int64_t>> MetricExampleClusterer::Cluster(
       absl::Span<DataPoint> datapoints,
-      const ClustererConfig& config) const {
+      const MetricClustererConfig& config) const {
   std::size_t n = datapoints.size();
 
   // Initially each vertex is its own cluster.
