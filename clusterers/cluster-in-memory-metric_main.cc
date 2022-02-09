@@ -61,22 +61,25 @@ absl::Status WriteClustering(const char* filename,
   return absl::OkStatus();
 }
 
-absl::StatusOr<std::vector<DataPoint>> ReadDataPoints(const char* filename) {
+absl::StatusOr<std::tuple<std::vector<DataPoint>, std::vector<std::vector<float>>>>
+  ReadDataPoints(const char* filename) {
   std::vector<DataPoint> points;
   std::ifstream file{filename};
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
   }
   std::string line;
+  std::vector<std::vector<float>> point_vectors;
   while (std::getline(file, line)){
     std::stringstream line_stream(line);
-    DataPoint point;
+    point_vectors.push_back(std::vector<float>());
     float coordinate;
-    while (line_stream >> coordinate) point.coordinates.push_back(coordinate);
+    while (line_stream >> coordinate) point_vectors.back().push_back(coordinate);
+    DataPoint point(absl::MakeConstSpan(point_vectors.back()));
     points.push_back(point);
   }
   file.close();
-  return points;
+  return std::make_tuple(points, std::move(point_vectors));
 }
 
 absl::Status Main() {
@@ -103,12 +106,14 @@ absl::Status Main() {
   }
 
   // Read input points
-  std::vector<DataPoint> points;
+  std::tuple<std::vector<DataPoint>, std::vector<std::vector<float>>> points_and_data;
   auto begin_read = std::chrono::steady_clock::now();
   std::string input_file = absl::GetFlag(FLAGS_input_points);
-  ASSIGN_OR_RETURN(points, ReadDataPoints(input_file.c_str()));
+  ASSIGN_OR_RETURN(points_and_data, ReadDataPoints(input_file.c_str()));
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read");
+
+  std::vector<DataPoint> points = std::get<0>(points_and_data);
 
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Point set: " << input_file << std::endl;
