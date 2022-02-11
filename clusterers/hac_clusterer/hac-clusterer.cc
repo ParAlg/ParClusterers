@@ -7,10 +7,10 @@
 
 #include "absl/status/statusor.h"
 #include "parcluster/api/config.pb.h"
-#include "parcluster/api/gbbs-graph.h"
-#include "parcluster/api/in-memory-clusterer-base.h"
-#include "parcluster/api/parallel/parallel-graph-utils.h"
+#include "parcluster/api/in-memory-metric-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
+
+#include "linkage.h"
 
 namespace research_graph {
 namespace in_memory {
@@ -18,18 +18,36 @@ namespace in_memory {
 absl::StatusOr<std::vector<int64_t>> HACClusterer::Cluster(
       absl::Span<const DataPoint> datapoints,
       const MetricClustererConfig& config) const {
+  
   const HACClustererConfig& hac_config = config.hac_clusterer_config();
-
   const HACClustererConfig_LinkageMethod linkage_method = hac_config.linkage_method();
+  std::size_t n = datapoints.size();
+      
+  using T=double;
+
+  internal::SymMatrix<T> W = internal::getDistanceMatrix<T>(datapoints); 
+  vector<internal::dendroLine> dendro;
+
+
   if(linkage_method== HACClustererConfig::COMPLETE){
-
+    std::cout << "Linkage method: " << "complete linkage" << std::endl;
+    using distT = internal::distComplete<T>;
+    dendro = internal::chain_linkage_matrix<T, distT>(&W);
   }else if(linkage_method== HACClustererConfig::AVERAGE){
-
+    std::cout << "Linkage method: " << "average linkage" << std::endl;
+    using distT = internal::distAverage<T>;
+    dendro = internal::chain_linkage_matrix<T, distT>(&W);
   }else{ //should not reach here if all methods in proto are implemented
     std::cerr << "Linkage method = " << linkage_method << std::endl;
     return absl::UnimplementedError("Unknown linkage method.");
   }
-  std::size_t n = datapoints.size();
+
+  // ofstream file_obj;
+  // file_obj.open(output); 
+  // for(size_t i=0;i<n-1;i++){
+  //     dendro[i].print(file_obj);
+  // }
+  // file_obj.close();
 
   // Initially each vertex is its own cluster.
   std::vector<int64_t> cluster_ids(n);

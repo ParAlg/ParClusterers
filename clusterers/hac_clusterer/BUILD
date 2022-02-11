@@ -7,6 +7,11 @@ cc_library(
     srcs = ["hac-clusterer.cc"],
     hdrs = ["hac-clusterer.h"],
     deps = [
+        ':linkage',
+        ':common',
+        ':unionfind',
+        ':atomics',
+        ':linkage_types',
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -17,4 +22,39 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
     ],
     alwayslink = 1,
+)
+
+cc_library(
+    name = "linkage",
+    hdrs = ["linkage.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "common",
+    hdrs = ["common.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "unionfind",
+    hdrs = ["unionfind.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "atomics",
+    hdrs = ["atomics.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "linkage_types",
+    hdrs = ["linkage_types.h"],
+    deps = [
+    ],
 )
