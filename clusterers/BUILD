@@ -20,6 +20,7 @@ cc_library(
     name = "all-metric-clusterers",
     deps = [
         "//clusterers/metric_example_clusterer:metric-example-clusterer",
+        "//clusterers/hac_clusterer:hac-clusterer",
     ],
     alwayslink = 1,
 )
