@@ -18,6 +18,17 @@ namespace in_memory {
 absl::StatusOr<std::vector<int64_t>> HACClusterer::Cluster(
       absl::Span<const DataPoint> datapoints,
       const MetricClustererConfig& config) const {
+  const HACClustererConfig& hac_config = config.hac_clusterer_config();
+
+  const HACClustererConfig_LinkageMethod linkage_method = hac_config.linkage_method();
+  if(linkage_method== HACClustererConfig::COMPLETE){
+
+  }else if(linkage_method== HACClustererConfig::AVERAGE){
+
+  }else{ //should not reach here if all methods in proto are implemented
+    std::cerr << "Linkage method = " << linkage_method << std::endl;
+    return absl::UnimplementedError("Unknown linkage method.");
+  }
   std::size_t n = datapoints.size();
 
   // Initially each vertex is its own cluster.
