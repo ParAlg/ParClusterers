@@ -1,6 +1,9 @@
 #pragma once
 
-#include "common.h"
+#include <atomic>
+#include "unionfind.h"
+#include "linkage_types.h"
+#include "matrix.h"
 
 #include "parlay/sequence.h"
 #include "parlay/parallel.h"
@@ -33,7 +36,7 @@ class MatrixNNFinder {
   
   parlay::sequence<std::size_t> rootIdx;
   parlay::sequence<Node> nodes; // preallocated space to store tree nodes
-  atomic<std::size_t> nodeIdx; // the index of next node to use for cluster trees
+  std::atomic<std::size_t> nodeIdx; // the index of next node to use for cluster trees
 
   
 

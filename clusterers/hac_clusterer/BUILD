@@ -8,9 +8,8 @@ cc_library(
     hdrs = ["hac-clusterer.h"],
     deps = [
         ':linkage',
-        ':common',
+        ':matrix',
         ':unionfind',
-        ':atomics',
         ':linkage_types',
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
@@ -32,8 +31,8 @@ cc_library(
 )
 
 cc_library(
-    name = "common",
-    hdrs = ["common.h"],
+    name = "matrix",
+    hdrs = ["matrix.h"],
     deps = [
     ],
 )
@@ -41,13 +40,6 @@ cc_library(
 cc_library(
     name = "unionfind",
     hdrs = ["unionfind.h"],
-    deps = [
-    ],
-)
-
-cc_library(
-    name = "atomics",
-    hdrs = ["atomics.h"],
     deps = [
     ],
 )

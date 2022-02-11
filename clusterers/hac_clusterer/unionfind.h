@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "parlay/primitives.h"
 #include "parlay/sequence.h"
@@ -162,10 +163,10 @@ namespace UnionFind {
 		return result;
 	}
 
-	IntType *fcluster(double eps, bool output = false, string fileName = "./cluster.txt"){
+	vector<int64_t> fcluster(double eps, bool output = false, string fileName = "./cluster.txt"){
 
      	 UnionFind::ParUF<IntType> *uf2 = new UnionFind::ParUF<IntType>(m_n, false);
-	 	 IntType *clusters = (IntType *)malloc(sizeof(IntType) * m_n);
+	 	 vector<int64_t> clusters(m_n);
 
 	  	parlay::parallel_for(0, m_n, [&](IntType i){
    		  if(get_edge(i).first < m_n && values[i] <= eps){
