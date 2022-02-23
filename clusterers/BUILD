@@ -19,6 +19,7 @@ cc_library(
     name = "all-metric-clusterers",
     deps = [
         "//clusterers/metric_example_clusterer:metric-example-clusterer",
+        "//clusterers/dbscan_clusterer:dbscan-clusterer",
     ],
     alwayslink = 1,
 )
