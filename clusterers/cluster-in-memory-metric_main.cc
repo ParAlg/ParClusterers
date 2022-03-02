@@ -13,6 +13,7 @@
 #include "absl/strings/string_view.h"
 
 #include "clusterers/metric_example_clusterer/metric-example-clusterer.h"
+#include "clusterers/dbscan_clusterer/dbscan-clusterer.h"
 
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"
@@ -99,6 +100,9 @@ absl::Status Main() {
   std::unique_ptr<InMemoryMetricClusterer> clusterer;
   if (clusterer_name == "MetricExampleClusterer") {
     clusterer.reset(new MetricExampleClusterer);
+  }
+  else if (clusterer_name == "MetricDBSCANClusterer") {
+    clusterer.reset(new MetricDBSCANClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;

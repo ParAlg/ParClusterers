@@ -19,6 +19,8 @@ absl::StatusOr<std::vector<int64_t>> MetricDBSCANClusterer::Cluster(
       absl::Span<const DataPoint> datapoints,
       const MetricClustererConfig& config) const {
   std::size_t n = datapoints.size();
+  double eps = config.metric_dbscan_clusterer_config().epsilon();
+  long minPts = config.metric_dbscan_clusterer_config().min_pts();
 
   // Initially each vertex is its own cluster.
   std::vector<int64_t> cluster_ids(n);
