@@ -13,7 +13,7 @@
 #include "absl/strings/string_view.h"
 
 #include "clusterers/metric_example_clusterer/metric-example-clusterer.h"
-#include "clusterers/dbscan_clusterer/dbscan-clusterer.h"
+#include "clusterers/metric_dbscan_clusterer/metric-dbscan-clusterer.h"
 
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"

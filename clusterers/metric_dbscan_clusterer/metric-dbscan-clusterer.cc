@@ -1,4 +1,4 @@
-#include "clusterers/dbscan_clusterer/dbscan-clusterer.h"
+#include "clusterers/metric_dbscan_clusterer/metric-dbscan-clusterer.h"
 
 #include <algorithm>
 #include <iterator>

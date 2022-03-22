@@ -3,9 +3,9 @@ licenses(["notice"])
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "dbscan-clusterer",
-    srcs = ["dbscan-clusterer.cc"],
-    hdrs = ["dbscan-clusterer.h"],
+    name = "metric-dbscan-clusterer",
+    srcs = ["metric-dbscan-clusterer.cc"],
+    hdrs = ["metric-dbscan-clusterer.h"],
     deps = [
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
