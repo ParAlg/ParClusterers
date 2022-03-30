@@ -21,7 +21,7 @@ absl::StatusOr<KCoreClusterer::Clustering>
 KCoreClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
   int threshold = config.kcore_clusterer_config().threshold();
-  auto cores = gbbs::KCore(&(graph_.Graph()));
+  auto cores = gbbs::KCore(*(graph_.Graph()));
 
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   parlay::parallel_for(0, n, [&] (size_t i) {
