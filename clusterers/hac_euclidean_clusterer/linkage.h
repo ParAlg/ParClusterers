@@ -15,10 +15,10 @@ namespace research_graph {
 namespace in_memory {
 namespace internal {
 
-template<class T, class distF>
+template<int dim, class T, class distF>
 class MatrixNNFinder {
   public:
-  typedef Node nodeT;
+  typedef Node<dim> nodeT;
 
   std::size_t n;// number of points
   std::size_t C;// number of clusters
@@ -35,7 +35,7 @@ class MatrixNNFinder {
   parlay::sequence<EDGE> edges; //edges[i] stores the min neigh of cluster i
   
   parlay::sequence<std::size_t> rootIdx;
-  parlay::sequence<Node> nodes; // preallocated space to store tree nodes
+  parlay::sequence<nodeT> nodes; // preallocated space to store tree nodes
   std::atomic<std::size_t> nodeIdx; // the index of next node to use for cluster trees
 
   
@@ -53,10 +53,10 @@ class MatrixNNFinder {
     activeClusters = parlay::sequence<std::size_t>(n);
     activeClustersCopy = parlay::sequence<std::size_t>(n);
     rootIdx = parlay::sequence<std::size_t>(n);
-    nodes = parlay::sequence<Node>(2*n);
+    nodes = parlay::sequence<nodeT>(2*n);
     
     parlay::parallel_for(0,n,[&](std::size_t i){
-        nodes[i] = Node(i);
+        nodes[i] = nodeT(i, point<dim>());
         rootIdx[i] = i;
         edges[i] = EDGE(NO_NEIGH,NO_NEIGH,numeric_limits<double>::max());
         activeClusters[i] = i;
@@ -155,13 +155,13 @@ class MatrixNNFinder {
 
     // merge two tree nodes with cID u and v into a new tree node with cId newc
     // u, v are cluster ids
-  inline void merge(std::size_t u, std::size_t v, std::size_t newc, std::size_t round, double height){
+  inline void merge(std::size_t u, std::size_t v, std::size_t newc, int round, double height){
     std::size_t rootNodeIdx = nodeIdx.fetch_add(1);
     nodes[rootNodeIdx] = nodeT(newc, round, rootNodeIdx, getNode(u), getNode(v), height);
     rootIdx[newc] = rootNodeIdx;
   }
 
-  inline void updateDist(std::size_t newc, std::size_t round){
+  inline void updateDist(std::size_t newc, int round){
     // std::size_t idx1 = leftIdx(newc);
     // std::size_t idx2 = rightIdx(newc);
     std::size_t cid1 = getNode(newc)->left->cId;
@@ -196,9 +196,9 @@ class MatrixNNFinder {
   }
 }; // finder end
 
-
-vector<dendroLine> formatDendrogram(parlay::sequence<Node> &nodes, std::size_t n, double eps){
-    auto sorted_nodes = parlay::sort(parlay::make_slice(nodes).cut(n,2*n-1), nodeComparator(eps));
+template<int dim>
+vector<dendroLine> formatDendrogram(parlay::sequence<Node<dim>> &nodes, std::size_t n, double eps){
+    auto sorted_nodes = parlay::sort(parlay::make_slice(nodes).cut(n,2*n-1), nodeComparator<dim>(eps));
 
     auto map = parlay::sequence<std::size_t>(n);
     parlay::parallel_for(0, n-1, [&](std::size_t i){
@@ -281,7 +281,7 @@ template<class T, class distT>
 vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
   std::size_t n = M->n;
   auto info = TreeChainInfo(n);
-  auto finder = MatrixNNFinder<T, distT>(n, M);
+  auto finder = MatrixNNFinder<2, T, distT>(n, M);
   std::size_t chainNum = info.chainNum;
   int round = 0;
   auto flags = parlay::sequence<std::size_t>(n);
@@ -294,13 +294,13 @@ vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
     }
 #endif
     chain_find_nn(chainNum, &finder, &info);
-    link_terminal_nodes<MatrixNNFinder<T, distT>>(&finder, &info, round, flags);
+    link_terminal_nodes<MatrixNNFinder<2, T, distT>>(&finder, &info, round, flags);
     // get ready for next round
     finder.updateActiveClusters(round);
     info.next(&finder);
     chainNum = info.chainNum;
   }
-  return formatDendrogram(finder.nodes, n, 0);
+  return formatDendrogram<2>(finder.nodes, n, 0);
 }
 
 }  // namespace internal

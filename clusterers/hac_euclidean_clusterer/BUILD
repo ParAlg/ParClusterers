@@ -11,6 +11,7 @@ cc_library(
         ':matrix',
         ':unionfind',
         ':linkage_types',
+        ':point',
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -47,6 +48,13 @@ cc_library(
 cc_library(
     name = "linkage_types",
     hdrs = ["linkage_types.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "point",
+    hdrs = ["point.h"],
     deps = [
     ],
 )
