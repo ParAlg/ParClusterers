@@ -15,8 +15,8 @@
 using namespace std;
 namespace research_graph {
 namespace in_memory {
-
-namespace HACDIST{
+namespace internal {
+namespace HACTree{
 template<class pointT>
 inline double pointDist(pointT* p, pointT* q){
   return p->pointDist(q);
@@ -113,7 +113,36 @@ inline double getPointId(pointT p){
         int n2 = jnode->n;
         return FINDNN::bruteForceAverage<pointT, pointT*>(P1, P2, n1, n2, true);
     }
-}
+
+    template<class _objT>
+    inline pair<pair<int, int>, double> bruteForceNearest(parlay::slice<_objT **, _objT **> P1, parlay::slice<_objT **, _objT **> P2){
+        pair<int, int> result;
+        double mind = numeric_limits<double>::max();
+        for(intT i=0; i< P1.size(); ++i){
+            for(intT j=0;j<P2.size(); ++j){
+            double d = P1[i].pointDist(P2[j]);
+            if(d < mind){
+                result = make_pair(P1[i].idx(),P2[j].idx());
+                mind = d;
+            }else if(d==mind && P2[j].idx()<result.second){
+                result = make_pair(P1[i].idx(),P2[j].idx());
+                mind = d;
+            }
+            }
+        }
+        return make_pair(result, mind);
+    }
+
+
+
+    //find the farthest pair of points in t1 and t2
+    template<int dim, class nodeT, class _objT>
+    inline pair<pair<int, int>, double> bruteForceNearest(nodeT *t1, nodeT *t2){
+        parlay::slice<_objT **, _objT **> P1 = t1->items;
+        parlay::slice<_objT **, _objT **> P2 = t2->items;
+        return bruteForceNearest(P1, P2);
+    }
+
 
 enum Method { WARD, COMP, AVG, SINGLE };
 
@@ -121,18 +150,47 @@ enum Method { WARD, COMP, AVG, SINGLE };
 // same as distComplete1, uses array instead of cache
 template<int dim>
 struct distComplete {
-    typedef node<dim, iPoint<dim>, kdNodeInfo> kdnodeT;
-  static const Method method = COMP;
-
+  using nodeT = node<dim>;
+  typedef node<dim, iPoint<dim>, kdNodeInfo> kdnodeT;
+  typedef tree<dim, iPoint<dim>, kdNodeInfo> kdtreeT;
   using M = FINDNN::MarkClusterId<dim, Fr>; //mark the all points kdtree
+  typedef tuple<int, int, long> countCacheT;//(round, count, cid), use long to pack to 2^i bytes
 
+  static const Method method = COMP;
   M marker;
+  int round = 0;
+  kdtreeT **kdtrees;
+  countCacheT *countTbs; // cluster to count
+  paraly::sequence<int> clusterOffsets;  
+  parlay::sequence<bool> flags;
+
   distComplete(UnionFind::ParUF<int> *t_uf){
       marker = M(t_uf);
+      kdtrees = (kdtreeT **) malloc(n*sizeof(kdtreeT *));
+      parlay::parallel_for(0,n,[&](int i){
+        kdtrees[i] = build(parlay::make_slice(PP, PP+1), false);//new kdtreeT(PP + i, 1, false);
+      });
+
+      int PNum =  parlay::num_workers();
+      countTbs = (countCacheT *)malloc(static_cast<size_t>(sizeof(clusterCacheT)) * PNum * n);
+      parlay::parallel_for(0, static_cast<size_t>(n) * PNum,[&](size_t i){
+        countTbs[i] = make_tuple(1, 0, (long)-1);
+      });
+      clusterOffsets = paraly::sequence<int>(n+1, [&](int i){return i;});
+      flags = parlay::sequence<bool>(n);
   }
+
+  ~distComplete(){
+    free(kdtrees);
+    free(countTbs);   
+  }
+
   inline static void printName(){
     cout << "distComplete" << endl;
   }
+
+  countCacheT *initClusterTb(int pid, int C){return countTbs+(n*pid);}
+
   inline static bool doRebuild(){return false;}
   inline double updateDistO(double d1, double d2, double nql, double nqr, double nr, double dij){
     return max(d1,d2);
@@ -144,6 +202,36 @@ struct distComplete {
     return max(max(max(d1,d2), d3), d4);
   }
 
+  double getDistNaive(int cid1, int cid2, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){ 
+    double result;
+    if(kdtrees[cid1]->getN() + kdtrees[cid2]->getN() < 200){
+      pair<pair<int, int>, double> result = bruteForceFarthest(kdtrees[cid1], kdtrees[cid2]);
+      return result.second;
+    }
+
+    EDGE e;
+    if(lb == -1){
+        lb = kdtrees[cid1]->items[0]->pointDist(kdtrees[cid2]->items[0]);
+        e = EDGE(kdtrees[cid1]->items[0]->idx(),kdtrees[cid2]->items[0]->idx(),lb);
+        if(lb > ub) return LARGER_THAN_UB;
+    }else{
+        e = EDGE(-1,-1,lb);
+    }
+
+    FComp fComp = FComp(e, ub);//FComp(LDS::EDGE(cid1,cid2, result));
+    if(par){
+        dualtree<kdnodeT, FComp>(kdtrees[cid1]->root, kdtrees[cid2]->root, &fComp); 
+    }else{
+        dualtree_serial<kdnodeT, FComp>(kdtrees[cid1]->root, kdtrees[cid2]->root, &fComp); 
+    }    
+    result = fComp.getResultW();
+    return result;
+  }
+
+   double getDistNaive(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){ 
+    return getDistNaive(inode->cId, jnode->cId, lb, ub, par);
+  }
+
     // range query radius
     inline double getBall(Node<dim>* query, double beta){
         return beta;
@@ -152,10 +240,36 @@ struct distComplete {
     template<class F>
     inline void postProcess(F *finder){}
 
-    void update(int round, F *finder){
-        if(marker.doMark(C, round)){ //TODO: move marker to distComputation
-            HACTree::singletree<kdnodeT, M, typename M::infoT>(finder->kdtree->root, &marker, marker.initVal);
+    void update(int _round, F *finder){
+      if(C==1) return;
+      round = _round;
+
+      int *activeClusters = finder->activeClusters;
+      int  C = finder->C;
+      parlay::parallel_for(0, C, [&](int i){
+        clusterOffsets[i] = finder->getNode(activeClusters[i])->size();
+      });
+      parlay::scan_inclusive_inplace(clusterOffsets.cut(0,C));
+
+      parlay::parallel_for(0,C,[&](int i){
+        int cid  = activeClusters[i];
+        nodeT *clusterNode = finder->getNode(cid);
+        if(clusterNode->round == round){//merged this round, build new tree
+          int cid1 = clusterNode->left->cId;
+          int cid2 = clusterNode->right->cId;
+          
+          kdtreeT *new_tree = new kdtreeT(kdtrees[cid1], kdtrees[cid2], flags.cut(clusterOffsets[i],clusterOffsets[i+1]));
+          delete kdtrees[cid1];
+          delete kdtrees[cid2];
+          kdtrees[cid] = new_tree;
         }
+        
+      });
+
+      if(marker.doMark(C, round)){ 
+          HACTree::singletree<kdnodeT, M, typename M::infoT>(finder->kdtree->root, &marker, marker.initVal);
+      }
+      round++;// when using it, we want to use the next round
     }
 };
 
@@ -227,7 +341,7 @@ struct distAverage {
     parlay::parallel_for(0,n,[&](int i){
       clusteredPts1[i]=PP[i];
     });
-    clusterOffsets = paraly::sequence<int>(n, [&](int i){return i;});
+    clusterOffsets = paraly::sequence<int>(n+1, [&](int i){return i;});
   }
 
   ~distAverage(){
@@ -381,6 +495,7 @@ struct distAverageSq {
         parallel_for(int i=0; i<finder->n; ++i) {finder->uf->values[i] = finder->uf->values[i]  * finder->uf->values[i];}
     }
 };
-
+}
+}
 }
 }
