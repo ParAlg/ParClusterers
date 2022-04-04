@@ -354,18 +354,18 @@ namespace HACTree {
     struct RangeQueryCountF{
         typedef point<dim> pointT;
         typedef Node<dim> nodeT;
-        typedef tuple<int, int, long> clusterCacheT;
-        typedef tree<dim, pointT, nodeInfo> kdtreeT;
-        typedef node<dim, pointT, nodeInfo> kdnodeT;
+        typedef tuple<int, int, long> countCacheT;
+        typedef tree<dim, objT, nodeInfo> kdtreeT;
+        typedef node<dim, objT, nodeInfo> kdnodeT;
     
         UnionFind::ParUF<int> *uf;
         int cid;
         pair<int, double> e;
-        clusterCacheT *tb; //
+        countCacheT *tb; //
         nodeT *nodes;
         nodeT *qnode;
         int *rootIdx;
-        LDS::distCacheT **tbs; //
+        CacheTables<nodeT>* tbs; //
         int pid;
         distT *distComputer;
         edgeComparator2 EC2;
@@ -374,7 +374,7 @@ namespace HACTree {
         bool no_cache;
 
         RangeQueryCountF(UnionFind::ParUF<int> *t_uf, int t_cid, 
-            nodeT *t_nodes, intT *t_rootIdx, distCacheT **t_tbs, EDGE *t_edges,
+            nodeT *t_nodes, intT *t_rootIdx, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, int C, double _eps):
             uf(t_uf), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
             distComputer(t_distComputer), eps(_eps){
@@ -400,67 +400,16 @@ namespace HACTree {
         inline nodeT *getNode(intT cid){return nodes+rootIdx[cid];}
         inline intT idx(intT cid){return idx(getNode(cid));}
 
-        // return 0 if not found
-        // return distance if found
-        inline double find(intT qid, intT rid){
-            CHECK_NO_CACHE(-203)
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-            
-            typename LDS::distCacheT::eType result;
-            bool reach_thresh;
-            tie(result, reach_thresh) = tbs[qIdx]->find_thresh(rid);
-            if(!reach_thresh && result.idx == rIdx){
-			return result.dist;
-            }
-            
-            tie(result, reach_thresh) = tbs[rIdx]->find_thresh(qid);
-            if(!reach_thresh && result.idx == qIdx){
-			return result.dist;
-            }
-            return UNFOUND_TOKEN;
-        }
-
-        inline void insert(intT qid, intT rid, double d){
-            if(d == LARGER_THAN_UB){
-                return;
-            }
-            CHECK_NO_CACHE(-222)
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-
-            tbs[qIdx]->insert2(LDS::hashClusterAveET(rid, rIdx, d));
-            tbs[rIdx]->insert2(LDS::hashClusterAveET(qid, qIdx, d));
-        }
-
-        // return true when insert if sucussful or tables full
-        // return true means need to compute distance
-        inline bool insert_check(intT qid, intT rid){
-            CHECK_NO_CACHE(-233)
-            if(qid > rid){
-                swap(qid, rid);
-            }
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-            bool inserted; bool reach_thresh;
-            tie(inserted, reach_thresh) = tbs[qIdx]->insert_thresh(LDS::hashClusterAveET(rid, rIdx, CHECK_TOKEN));
-            if(!reach_thresh) return inserted;
-
-            tie(inserted, reach_thresh) = tbs[rIdx]->insert_thresh(LDS::hashClusterAveET(qid, qIdx, CHECK_TOKEN));
-            if(!reach_thresh) return inserted;
-            return true;
-        }
-
         inline void updateDist(intT Rid, bool reach_thresh){
             if(cid != Rid && Rid != e.first){
 
                 if(!no_cache){
-                bool success = insert_check(cid, Rid);
+                bool success = tbs->insert_check(cid, Rid, true, true);
                 if(!success){  // only compute distance once
-                    double dist = find(cid, Rid);
+                    double dist = tbs->find(cid, Rid);
                     // success = false only when insertions fail and reach_thresh is false
-                    if(dist == UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
-                    if(dist != CHECK_TOKEN){              
+                    if(dist == tbs->UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
+                    if(dist != tbs->CHECK_TOKEN){              
                         if(e.second - dist > eps){ e = make_pair(Rid, dist);}  
                         else if(abs(e.second - dist) <= eps && Rid < e.first){e = make_pair(Rid, dist); }
                     }
@@ -469,15 +418,20 @@ namespace HACTree {
                 }
                 double dist = distComputer->getDistNaive(qnode, getNode(Rid), -1, e.second, false);
                 // double dist = distComputer->getDistNaive(cid,Rid, -1, e.second, false); //, false
-                if(!no_cache) insert(cid, Rid, dist); 
+                if(!no_cache) tbs->insert(cid, Rid, dist); 
                 if(e.second - dist > eps){ e = make_pair(Rid, dist);}  
                 else if(abs(e.second - dist) <= eps && Rid < e.first){e = make_pair(Rid, dist); }
                 // tb->deleteVal(Rid); //does not support delete and insert at the same time, need to remove if parallel
             }
         }
-
-        inline tuple<intT, bool> incrementTable(intT Rid, intT a = 1){
-            return distComputer->incrementTable(tb, Rid,  cid, a);
+        
+        inline tuple<intT, bool> incrementTable(int Rid, int a = 1){
+            if(get<0>(tb[Rid]) != distComputer->round || get<2>(tb[Rid]) != cid){
+                tb[Rid] =  make_tuple(distComputer->round, a, (long)cid);//make_entry(round, cid, a);
+            }else{
+                get<1>(tb[Rid]) += a;
+            }
+            return make_tuple(get<1>(tb[Rid]), false);
         }
 
         inline bool isComplete(kdnodeT *Q){
@@ -495,9 +449,9 @@ namespace HACTree {
 
         inline bool checkComplete(objT *p){
             // if(p->pointDist(qnode->center) > r + EC2.eps) return false;
-            intT  Rid = uf->find(p->idx());
+            int  Rid = uf->find(p->idx());
             if(cid == Rid ) return false;
-            intT ct; bool reach_thresh;
+            int ct; bool reach_thresh;
             tie(ct, reach_thresh) = incrementTable(Rid);
             if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->getN()) updateDist(Rid, reach_thresh);
             return false;
@@ -516,8 +470,8 @@ namespace HACTree {
     struct RangeQueryCenterF{
         typedef point<dim> pointT;
         typedef Node<dim> nodeT;
-        typedef tree<dim, pointT, nodeInfo> kdtreeT;
-        typedef node<dim, pointT, nodeInfo> kdnodeT;
+        typedef tree<dim, objT, nodeInfo> kdtreeT;
+        typedef node<dim, objT, nodeInfo> kdnodeT;
 
         UnionFind::ParUF<int> *uf;
         int cid;
@@ -525,7 +479,8 @@ namespace HACTree {
         nodeT *nodes;
         nodeT *qnode;
         int *rootIdx;
-        distCacheT **tbs; //
+        // distCacheT **tbs; //
+        CacheTables<nodeT> *tb;
         edgeComparator2 EC2;
         distT *distComputer;
         double r;
@@ -533,14 +488,14 @@ namespace HACTree {
         const bool local = false; // writemin after
 
         RangeQueryCenterF(UnionFind::ParUF<intT> *t_uf, intT t_cid, double _r,
-            nodeT *t_nodes, intT *t_rootIdx, LDS::distCacheT **t_tbs, LDS::EDGE *t_edges,
+            nodeT *t_nodes, intT *t_rootIdx, CacheTables<nodeT> *t_tbs, LDS::EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, intT C, double eps):
             uf(t_uf), cid(t_cid), r(_r)//clusteredPts(t_clusteredPts),
             distComputer(t_distComputer),
             no_cache(t_no_cache){
                 EC2 = edgeComparator2(eps);
             // keep nn candidate when merging
-            tbs = t_tbs;
+            tb = t_tbs;
             edges = t_edges;
             nodes = t_nodes;
             rootIdx = t_rootIdx;
@@ -574,69 +529,17 @@ namespace HACTree {
             return 0; // intersect
         }
 
-
-        // return 0 if not found
-        // return distance if found
-        inline double find(intT qid, intT rid){
-            CHECK_NO_CACHE(-203)
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-            
-            typename LDS::distCacheT::eType result;
-            bool reach_thresh;
-            tie(result, reach_thresh) = tbs[qIdx]->find_thresh(rid);
-            if(!reach_thresh && result.idx == rIdx){
-			return result.dist;
-            }
-            
-            tie(result, reach_thresh) = tbs[rIdx]->find_thresh(qid);
-            if(!reach_thresh && result.idx == qIdx){
-			return result.dist;
-            }
-            return UNFOUND_TOKEN;
-        }
-
-        inline void insert(intT qid, intT rid, double d){
-            if(d == LARGER_THAN_UB){
-                return;
-            }
-            CHECK_NO_CACHE(-222)
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-
-            tbs[qIdx]->insert2(LDS::hashClusterAveET(rid, rIdx, d));
-            tbs[rIdx]->insert2(LDS::hashClusterAveET(qid, qIdx, d));
-        }
-
-        // return true when insert if sucussful or tables full
-        // return true means need to compute distance
-        inline bool insert_check(intT qid, intT rid){
-            CHECK_NO_CACHE(-233)
-            if(qid > rid){
-                swap(qid, rid);
-            }
-            intT qIdx = idx(qid);
-            intT rIdx = idx(rid);
-            bool inserted; bool reach_thresh;
-            tie(inserted, reach_thresh) = tbs[qIdx]->insert_thresh(LDS::hashClusterAveET(rid, rIdx, CHECK_TOKEN));
-            if(!reach_thresh) return inserted;
-
-            tie(inserted, reach_thresh) = tbs[rIdx]->insert_thresh(LDS::hashClusterAveET(qid, qIdx, CHECK_TOKEN));
-            if(!reach_thresh) return inserted;
-            return true;
-        }
-
         inline void updateDist(int Rid){ // need another table!
             // only first inserted is true, CHECK_TOKEN as a placeholder
             // if already in table, entry will not be replaced because CHECK_TOKEN is inserted
             // success = true when pair not in tbs and this is the first insert
             if(!no_cache){
-            bool success = insert_check(cid, Rid);
+            bool success = tb->insert_check(cid, Rid, true, true);
             if(!success){  // only compute distance once
-                double dist = find(cid, Rid);
+                double dist = tb->find(cid, Rid);
                 // success = false only when insertions fail and reach_thresh is false
-                if(dist == UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
-                if(dist != CHECK_TOKEN){              
+                if(dist == tb->UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
+                if(dist != tb->CHECK_TOKEN){              
                     utils::writeMin(&edges[cid], LDS::EDGE(cid, Rid, dist), EC2);
                     utils::writeMin(&edges[Rid], LDS::EDGE(Rid, cid, dist), EC2);
                 }
@@ -645,7 +548,7 @@ namespace HACTree {
             }
             
             double dist = distComputer->getDistNaive(qnode, getNode(Rid));
-            if(!no_cache) insert(cid, Rid, dist); 
+            if(!no_cache) tb->insert(cid, Rid, dist); 
             //in case Rid searches for cid
             utils::writeMin(&edges[cid], LDS::EDGE(cid, Rid, dist), EC2);
             utils::writeMin(&edges[Rid], LDS::EDGE(Rid, cid, dist), EC2);
@@ -665,7 +568,7 @@ namespace HACTree {
         inline bool checkComplete(objT *p){
             //already checked by iteminball
             // if(p->pointDist(qnode->center) > r) return false; //eps already added in get box
-            intT  Rid = p->idx(); //should all be centers uf->find(p->idx());
+            int  Rid = p->idx(); //should all be centers uf->find(p->idx());
             if(cid != Rid && Rid != edges[cid].second) updateDist(Rid);
             return false;
         }

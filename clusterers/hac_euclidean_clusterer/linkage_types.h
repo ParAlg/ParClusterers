@@ -7,6 +7,8 @@
 #include <tuple>
 #include "point.h"
 #include "parlay/utilities.h"
+#include "parlay/sequence.h"
+#include "parlay/primitives.h"
 #include "utils.h"
 
 #define SIZE_T_MAX std::numeric_limits<size_t>::max()
@@ -16,10 +18,9 @@
 using namespace std;
 namespace research_graph {
 namespace in_memory {
-
 namespace internal {
-
 namespace HACTree{
+  
 struct EDGE{//nodes unordered
     volatile int first;
     volatile int second;
@@ -53,7 +54,6 @@ struct edgeComparator2{
       }
 };
 
-}
 
 
 
@@ -142,6 +142,7 @@ struct TreeChainInfo{
 
 };
 
+}
 
 }  // namespace internal
 }  // namespace in_memory

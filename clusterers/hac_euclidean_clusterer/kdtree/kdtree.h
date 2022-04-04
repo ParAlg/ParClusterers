@@ -29,7 +29,7 @@
 using namespace std;
 namespace research_graph {
 namespace in_memory {
-
+namespace internal{
 namespace HACTree {
 
 
@@ -167,6 +167,43 @@ namespace HACTree {
 
       parlay::parallel_for(0, _items.size(), [&](size_t i)
                            { allItems->at(i) = &_items[i]; });
+
+      // construct self
+
+      baseT::items = allItems->cut(0, allItems->size());
+
+      baseT::resetId();
+      if (baseT::size() > 2000)
+        baseT::constructParallel(space, flags, leafSize);
+      else
+        baseT::constructSerial(space, leafSize);
+    }
+
+    tree(node<_dim, _objT, nodeInfo>* t1, node<_dim, _objT, nodeInfo>* t2,
+         parlay::slice<bool *, bool *> flags,
+         typename baseT::intT leafSize = 16)
+    {
+
+      typedef tree<_dim, _objT, nodeInfo> treeT;
+      typedef node<_dim, _objT, nodeInfo> nodeT;
+      int n1 = t1->size();
+      int n2 = t2->size();
+      int n = n1 + n2;
+
+      // allocate space for children
+      space = (nodeT *)malloc(sizeof(nodeT) * (2 * n - 1));
+
+      // allocate space for a copy of the items
+      allItems = new parlay::sequence<_objT *>(n);
+
+      // parlay::parallel_for(0,n, [&](size_t i)
+      //                      { allItems->at(i) = _items[i]; });
+      parlay::parallel_for(0, n1, [&](int i){
+        allItems[i] = t1->items[i];
+      });
+      parlay::parallel_for(0, n2, [&](int i){
+        allItems[n1+i] = t2->items[i];
+      });
 
       // construct self
 
@@ -408,7 +445,7 @@ namespace HACTree {
     }
   };
 
-}}}
+}}}}
 #include "treeImpl.h"
 #include "rangeSearchImpl.h"
 #include "dualTreeImpl.h"

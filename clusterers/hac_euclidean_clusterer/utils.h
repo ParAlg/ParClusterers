@@ -78,6 +78,14 @@ inline bool writeMin(ET *a, ET b) {
   return r;
 }
 
+template <class ET>
+inline void writeAdd(ET *a, ET b) {
+  volatile ET newV, oldV; 
+  do { oldV = *a; newV = oldV + b;}
+  while (!CAS_GCC(a, oldV, newV));
+}
+
+
 }
 }
 }

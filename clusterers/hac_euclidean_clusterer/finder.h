@@ -5,6 +5,8 @@
 #include "linkage_types.h"
 #include "matrix.h"
 #include "kdtree.h"
+#include "treeUtilities.h"
+#include "cacheUtilities.h"
 
 #include "parlay/sequence.h"
 #include "parlay/parallel.h"
@@ -56,9 +58,10 @@ class TreeNNFinder { //: public NNFinder<dim>
   treeT *kdtree;
   EDGE *edges; //edges[i] stores the min neigh of cluster i
 
-  distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
-  int hashTableSize=0;
-  distCacheT::eType *TA;
+  CacheTables<nodeT> *cacheTables;
+  // distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
+  // int hashTableSize=0;
+  // distCacheT::eType *TA;
 
   parlay::sequence<nodeT> nodes; // preallocated space to store tree nodes
   parlay::sequence<nodeT *> activeNodes; // pointers to the active nodes, same order as activeClustersTODO
@@ -71,11 +74,11 @@ class TreeNNFinder { //: public NNFinder<dim>
   // M marker;
 
   intT NAIVE_THRESHOLD = 50;
-  intT MAX_CACHE_TABLE_SIZE = 128;
+  // intT MAX_CACHE_TABLE_SIZE = 128;
 
   TreeNNFinder(intT t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
     bool t_noCache, double t_eps, intT t_naive_thresh, intT t_cache_size): 
-    uf(t_uf), n(t_n), no_cache(t_noCache), eps(t_eps), NAIVE_THRESHOLD(t_naive_thresh), MAX_CACHE_TABLE_SIZE(t_cache_size){
+    uf(t_uf), n(t_n), no_cache(t_noCache), eps(t_eps), NAIVE_THRESHOLD(t_naive_thresh){
     EC2 = LDS::edgeComparator2(eps);
     C = n;
     activeClusters = parlay::sequence<int>(n, [&](int i){return i;});
@@ -97,37 +100,23 @@ class TreeNNFinder { //: public NNFinder<dim>
     edges = (EGDE *)aligned_alloc(sizeof(EDGE), n*sizeof(EDGE));
     parlay::parallel_for(0,n,[&](int i){edges[i] = EDGE();});
 
-    if(!no_cache){ //TODO: double check
-    hashTableSize = min(n, 1 << utils::log2Up((uintT)(LINKAGE_LOADFACTOR*(uintT)MAX_CACHE_TABLE_SIZE)));
-    TA = (distCacheT::eType *) malloc(sizeof(distCacheT::eType)* ((long)n*2*hashTableSize));
-    distCacheT::eType emptyval = LDS::hashClusterAve().empty();
-    cacheTbs = (distCacheT **) malloc(sizeof(distCacheT *), 2*n);
-    parlay::parallel_for(0,n,[&](std::size_t i){
-      cacheTbs[i] = new distCacheT(min(MAX_CACHE_TABLE_SIZE, min(MAX_CACHE_TABLE_SIZE_INIT, C)), TA + i*hashTableSize, LDS::hashClusterAve(), LINKAGE_LOADFACTOR, true);
-    });
-    parlay::parallel_for(n,2*n,[&](std::size_t i){
-      cacheTbs[i] = new distCacheT(min(MAX_CACHE_TABLE_SIZE, C), TA + i*hashTableSize, LDS::hashClusterAve(), LINKAGE_LOADFACTOR);
-    });
-
-    parlay::parallel_for((std::size_t)n*hashTableSize,(std::size_t)n*2*hashTableSize,[&](std::size_t i){
-      TA[i] = emptyval;
-    });
-    } // end of if ! no cache
+    cacheTables = new CacheTables(no_cache, n, t_cache_size);
 
     nodeIdx.store(n); // have used n nodes
-    kdtree = new treeT(PP, n);
+    kdtree = build(PP);
     // marker = M(uf, nodes, rootIdx);
 
   }
 
   ~TreeNNFinder(){
-    if(!no_cache){
-      parallel_for(intT i=0; i<2*n; ++i) {
-        delete cacheTbs[i];
-      }
-      free(TA);
-      free(cacheTbs);
-    }
+    // if(!no_cache){
+    //   parallel_for(intT i=0; i<2*n; ++i) {
+    //     delete cacheTbs[i];
+    //   }
+    //   free(TA);
+    //   free(cacheTbs);
+    // }
+    delete cacheTables;
     delete kdtree;
     free(edges);
     // delete distComputer;
@@ -142,55 +131,6 @@ class TreeNNFinder { //: public NNFinder<dim>
   inline intT rightIdx(intT cid){return getNode(cid)->right->idx;}
   inline intT cid(intT idx){return cid(nodes[idx]);}
 
-
-  inline double find(intT qid, intT rid, intT qIdx = -1, intT  rIdx = -1){
-    CHECK_NO_CACHE(259)
-    if(qIdx == -1){
-      qIdx = idx(qid);
-      rIdx = idx(rid);
-    }
-
-    typename distCacheT::eType result;
-    bool reach_thresh;
-    tie(result, reach_thresh) = cacheTbs[qIdx]->find_thresh(rid);
-    if(!reach_thresh && result.idx == rIdx){
-	    return result.dist;
-    }
-    
-    tie(result, reach_thresh) = cacheTbs[rIdx]->find_thresh(qid);
-    if(!reach_thresh && result.idx == qIdx){
-	    return result.dist;
-    }
-    return UNFOUND_TOKEN;
-  }
-
-  inline double find(nodeT *inode, nodeT *jnode){
-	  return find(cid(inode), cid(jnode), idx(inode), idx(jnode));
-  }
-
-
-  inline void insert_helper(intT qid, intT rid, double d, distCacheT *tb1, distCacheT *tb2){
-    if(d == LARGER_THAN_UB){
-        return;
-    }
-    CHECK_NO_CACHE(284)
-    intT qIdx = idx(qid);
-    intT rIdx = idx(rid);
-    tb1->insert2(hashClusterAveET(rid, rIdx, d));
-    tb2->insert2(hashClusterAveET(qid, qIdx, d));
-  }
-
-  inline void insert(intT qid, intT rid, double d){
-    if(d == LARGER_THAN_UB){
-        return;
-    }
-    CHECK_NO_CACHE(291)
-    intT qIdx = idx(qid);
-    intT rIdx = idx(rid);
-
-    cacheTbs[qIdx]->insert2(hashClusterAveET(rid, rIdx, d));
-    cacheTbs[rIdx]->insert2(hashClusterAveET(qid, qIdx, d));
-  }
 
   inline double getDistNaive(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     return distComputer->getDistNaive(inode, jnode, lb, ub, par);
@@ -212,7 +152,7 @@ class TreeNNFinder { //: public NNFinder<dim>
   // range search has its own updateDist
   tuple<double, bool> getDist(intT i,  intT j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     if(!no_cache){
-    double d = find(i, j);
+    double d = cacheTables->find(i, j);
     // if(d == CHECK_TOKEN){cout << "find check token" << endl; exit(1);} // might find is in singleNN step in getNN
     if(d != UNFOUND_TOKEN && d != CHECK_TOKEN) return make_tuple(d, true);
     }
@@ -222,7 +162,7 @@ class TreeNNFinder { //: public NNFinder<dim>
 
   tuple<double, bool> getDist(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     if(!no_cache){
-    double d = find(inode, jnode);
+    double d = cacheTables->find(inode, jnode);
     // if(d == CHECK_TOKEN){cout << "find check token" << endl; exit(1);} // might find is in singleNN step in getNN
     if(d != UNFOUND_TOKEN && d != CHECK_TOKEN) return make_tuple(d, true); 
     }
@@ -304,7 +244,7 @@ class TreeNNFinder { //: public NNFinder<dim>
         utils::writeMin(&edges[cid], LDS::EDGE(cid,cid2,tmpD), EC2);
         utils::writeMin(&edges[cid2], LDS::EDGE(cid2,cid,tmpD), EC2); 
         if((!intable) && (!no_cache) && (tmpD != LARGER_THAN_UB)){
-          insert(cid, cid2, tmpD);
+          cacheTables->insert(cid, cid2, tmpD);
         }
       }
     }
@@ -381,31 +321,6 @@ class TreeNNFinder { //: public NNFinder<dim>
     rootIdx[newc] = rootNodeIdx;
   }
 
-    // return true only when insert if sucussful
-    // neex the  do Swap
-    // if one is old and one is new, always check tb[new]->old
-    // because the one stored in old might be outdated
-    // must have enough space due to alloc new
-    // calculate distance if return true
-  inline bool insert_check(intT qid, intT rid, bool doSwap){
-      CHECK_NO_CACHE(473)
-      if(doSwap && qid > rid){
-          swap(qid, rid);
-      }
-      intT qIdx = idx(qid);
-      intT rIdx = idx(rid);
-      bool inserted; bool reach_thresh;
-      tie(inserted, reach_thresh) = cacheTbs[qIdx]->insert_thresh(hashClusterAveET(rid, rIdx, CHECK_TOKEN));
-      if(!reach_thresh) return inserted;
-
-      if(doSwap){
-        tie(inserted, reach_thresh) = cacheTbs[rIdx]->insert_thresh(hashClusterAveET(qid, qIdx, CHECK_TOKEN));
-        if(!reach_thresh) return inserted;
-      }
-      
-      return false;
-  }
-
   inline void updateDist(intT newc){
     CHECK_NO_CACHE(497)
     intT idx1 = leftIdx(newc);
@@ -413,21 +328,20 @@ class TreeNNFinder { //: public NNFinder<dim>
     intT cid1 = getNode(newc)->left->cId;
     intT cid2 = getNode(newc)->right->cId;
 
-    distCacheT *tb1 = cacheTbs[idx1];
-    distCacheT *tb2 = cacheTbs[idx2];
+    auto tb1 = cacheTables->getTable(idx1);//cacheTbs[idx1];
+    auto tb2 = cacheTables->getTable(idx2);//cacheTbs[idx2];
 
-    //TODO: optimize to  alloc only once
-    _seq<typename distCacheT::eType> TAR1 = tb1->entries();
-    _seq<typename distCacheT::eType> TAR2 = tb2->entries();
+    auto TAR1 = tb1->entries();
+    auto TAR2 = tb2->entries();
     // if(C < 100)cout << "sizes in merge: " << TAR1.n+TAR2.n << "/" << tb1->m + tb2->m << endl;
-    distCacheT *newtb = cacheTbs[idx(newc)];
+    auto newtb = cacheTables->getTable(idx(newc));//cacheTbs[idx(newc)];
 
-    parallel_for(intT i = 0; i<(TAR1.n+TAR2.n); ++i){
-      distCacheT::eType *TA = TAR1.A;
+    parlay::parallel_for(0, (TAR1.size()+TAR2.size()), [&](int i){
+      distCacheT::eType *TA = TAR1.data();
       intT offset = 0;
-      if(i >= TAR1.n){ //switch to process tb2
-        TA = TAR2.A;
-        offset = TAR1.n;
+      if(i >= TAR1.size()){ //switch to process tb2
+        TA = TAR2.data();
+        offset = TAR1.size();
       }
       intT j = i-offset;
       intT newc2 = -1;
@@ -442,37 +356,37 @@ class TreeNNFinder { //: public NNFinder<dim>
           if(getNode(newc2)->round == getNode(newc)->round){
             // TA[j].first should == left idx or  right idx
             if(storedIdx == idx(getNode(newc2)->left) || storedIdx == idx(getNode(newc2)->right)){
-              success = insert_check(newc, newc2, true); // table might not be symmetric, faster than no ins check
+              success = cacheTables->insert_check(newc, newc2, true, false); // table might not be symmetric, faster than no ins check
               if(success) d = getNewDistN(newc, newc2); 
             }
             
           }else{
             // TA[j].first should == idx
             if(storedIdx == idx(getNode(newc2))){
-              success = insert_check(newc, newc2, false);
+              success = cacheTables->insert_check(newc, newc2, false, false);
               if(success) d = getNewDistO(newc, newc2);
             }
           }
         if(success) { // only insert duplicated entries once 
-          insert_helper(newc, newc2, d, newtb, cacheTbs[idx(newc2)]);
+          cacheTables->insert_helper(newc, newc2, d, newtb, cacheTbs[idx(newc2)]);
         }
       }
 
-    }
-    free(TAR1.A);
-    free(TAR2.A);
+    });
+    // free(TAR1.A);
+    // free(TAR2.A);
   }
 
   // find new activeClusters array based on uf, update C
-  inline void updateActiveClusters(intT round){
+  inline void updateActiveClusters(int round){
 #ifdef DEBUG
     UTIL::PrintVec(activeClusters, C);
 #endif
     
-    parallel_for(intT i = 0; i < C; ++i){
-      intT cid  = activeClusters[i];
+    parlay::parallel_for(0,C,[&](int i){
+      int cid  = activeClusters[i];
       flag[i] = (uf->find(cid)==cid);
-    }
+    });
 // chainNum = parlay::pack_into(make_slice(finder->activeClusters).cut(0,C), flag, terminal_nodes);
     
     C = parlay::pack_into(make_slice(activeClusters).cut(0,C), flag, make_slice(newClusters).cut(0,C));
@@ -499,7 +413,7 @@ class TreeNNFinder { //: public NNFinder<dim>
   // edges[i] stores the ith nn  of point i
   // initialize the chain in info
   inline void initChain(TreeChainInfo<dim> *info){
-    typedef FINDNN::AllPtsNN<dim, kdnodeT> F;
+    typedef AllPtsNN<kdnodeT> F;
     F *f = new F(edges, eps);
     FINDNNP::dualtree<kdnodeT, F>(kdtree->root, kdtree->root, f, false);
     parlay::parallel_for(0,n,[&](int i){
@@ -511,8 +425,8 @@ class TreeNNFinder { //: public NNFinder<dim>
     delete f;
     if(!no_cache){
     parlay::parallel_for(0,n,[&](int cid){
-      insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTbs[cid], cacheTbs[edges[cid].second]);
-    }
+      cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTbs[cid], cacheTbs[edges[cid].second]);
+    });
     }
   }
 }; // finder end
