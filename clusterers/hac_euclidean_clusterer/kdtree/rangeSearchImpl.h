@@ -2,7 +2,7 @@
 
 #include "parlay/parallel.h"
 #include "parlay/utilities.h"
-#include "kdTree.h"
+#include "kdtree.h"
 
 using namespace std;
 namespace research_graph {
