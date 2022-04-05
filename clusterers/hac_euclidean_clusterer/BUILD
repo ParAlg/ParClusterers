@@ -7,6 +7,7 @@ cc_library(
     srcs = ["hac-euclidean-clusterer.cc"],
     hdrs = ["hac-euclidean-clusterer.h"],
     deps = [
+        ':point',
         ':linkage',
         ':matrix',
         ':unionfind',
@@ -22,6 +23,13 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
     ],
     alwayslink = 1,
+)
+
+cc_library(
+    name = "point",
+    hdrs = ["point.h"],
+    deps = [
+    ],
 )
 
 cc_library(

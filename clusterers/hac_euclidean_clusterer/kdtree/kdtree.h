@@ -23,7 +23,7 @@
 #pragma once
 
 #include "parlay/sequence.h"
-#include "point.h"
+#include "../point.h"
 #include <tuple>
 
 using namespace std;
@@ -124,7 +124,7 @@ namespace HACTree {
     using baseT = node<_dim, _objT, nodeInfo>;
 
     parlay::sequence<_objT *> *allItems;
-    node<_dim, _objT> *space;
+    node<_dim, _objT, nodeInfo> *space;
 
   public:
     tree(parlay::slice<_objT *, _objT *> _items,
@@ -232,7 +232,7 @@ namespace HACTree {
 
     using floatT = double;
 
-    using pointT = point<dim>;
+    using pointT = point<_dim>;
 
     using nodeT = node<_dim, _objT, nodeInfo>;
 

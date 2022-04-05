@@ -103,7 +103,7 @@ struct nodeComparator{
 };
 
 // node info used for kd-tree
-struct kdNodeInfo{
+struct nodeInfo{
     typedef std::tuple<int, int> infoT; // <cid, min_n>
     int cId;
     std::atomic<double> ub;
@@ -111,7 +111,7 @@ struct kdNodeInfo{
     int idx = -1; // node idx
     int min_n = 1; //used for ward's linkage
 
-    kdNodeInfo(){
+    nodeInfo(){
         cId = -1;
         ub.store(numeric_limits<double>::max()); // used for allptsnn
     }

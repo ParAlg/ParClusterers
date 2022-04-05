@@ -24,7 +24,7 @@
 
 #include "parlay/parallel.h"
 #include "parlay/utilities.h"
-#include "kdTree.h"
+#include "kdtree.h"
 
 using namespace std;
 namespace research_graph {
@@ -46,10 +46,10 @@ namespace HACTree {
 
       using namespace parlay;
       using namespace parlay::internal;
-
+      static size_t _block_size = 2000;
       using T = typename In_Seq::value_type;
       size_t n = In.size();
-      size_t l = num_blocks(n, _block_size);
+      size_t l = parlay::internal::num_blocks(n, _block_size);
       sequence<size_t> Sums(l);
       sliced_for(
           n, _block_size,
@@ -316,7 +316,7 @@ namespace HACTree {
     return sqrt(result);
   }
 
-  template <int _dim, class _objT, class nodeInfo>
+  template <int dim, class objT, class nodeInfo>
   node<dim, objT, nodeInfo> *build(parlay::slice<objT *, objT *> P,
                          bool parallel,
                          size_t leafSize)
@@ -336,7 +336,7 @@ namespace HACTree {
     }
   }
 
-  template <int _dim, class _objT, class nodeInfo>
+  template <int dim, class objT, class nodeInfo>
   node<dim, objT, nodeInfo> *build(parlay::sequence<objT> &P,
                          bool parallel,
                          size_t leafSize)
@@ -344,7 +344,7 @@ namespace HACTree {
     return build<dim, objT, nodeInfo>(parlay::make_slice(P), parallel, leafSize);
   }
 
-  template <int _dim, class _objT, class nodeInfo>
+  template <int dim, class objT, class nodeInfo>
   void del(node<dim, objT, nodeInfo> *tree)
   {
     delete tree;

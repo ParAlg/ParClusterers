@@ -4,12 +4,13 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "kdtree.h"
 
 using namespace std;
 
 #define dualtree_spawn_macro(_condA, _condB, _Q1, _R1, _Q2, _R2){ \
     if(_condA && _condB){ \
-       parlay::pardo([&](){dualtree<nodeT, F>(_Q1, _R1, f, false);}, \
+       parlay::par_do([&](){dualtree<nodeT, F>(_Q1, _R1, f, false);}, \
           [&](){dualtree<nodeT, F>(_Q2, _R2, f, false);});  \
     }else if(_condA){ \
         dualtree<nodeT, F>(_Q1, _R1, f, false); \
@@ -71,7 +72,7 @@ namespace HACTree {
     template<class nodeT, class F>
     void dualtree(nodeT *Q, nodeT *R, F *f, bool check = true){
         if(Q->size() + R->size() < 4000){
-            FINDNN::dualtree_serial<nodeT, F>(Q, R, f, check);
+            dualtree_serial<nodeT, F>(Q, R, f, check);
             return;
         }
 
@@ -108,7 +109,7 @@ namespace HACTree {
             callOrder[2] = make_pair(f->NodeDistForOrder(Q->left, R->right), make_pair(Q->left, R->right));
             callOrder[3] = make_pair(f->NodeDistForOrder(Q->right, R->right), make_pair(Q->right, R->right));
             sort(callOrder, callOrder + 4);
-            parlay::parallel_for(0,4,[&](int cc)) {
+            parlay::parallel_for(0,4,[&](int cc) {
                 int c = f->SpawnOrder(cc);
                 nodeT *QQ = callOrder[c].second.first;
                 nodeT *RR = callOrder[c].second.second;

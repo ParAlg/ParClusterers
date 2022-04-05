@@ -103,8 +103,9 @@ public:
     for (int i=0; i<_dim; ++i) xx[i] = x[i]-op2.x[i];
     return pointT(xx);
   }
-  floatT operator[](int i) {return x[i];}
+  floatT& operator[](int i) {return x[i];}
   void updateX(int i, floatT val) {x[i]=val;}
+  floatT at(int i) {return x[i];}
   void minCoords(pointT b) {
     for (int i=0; i<_dim; ++i) x[i] = min(x[i], b.x[i]);}
   void minCoords(floatT* b) {
@@ -113,6 +114,16 @@ public:
     for (int i=0; i<_dim; ++i) x[i] = max(x[i], b.x[i]);}
   void maxCoords(floatT* b) {
     for (int i=0; i<_dim; ++i) x[i] = max(x[i], b[i]);}
+
+   pointT mult(floatT c) {
+      pointT r;
+      for(int i=0; i<dim; ++i) r[i] = x[i]*c;
+      return r;}
+
+   pointT operator*(floatT c) {
+      pointT r;
+      for(int i=0; i<dim; ++i) r[i] = x[i]*c;
+      return r;}
 //   intT quadrant(pointT center) {
 //     intT index = 0;
 //     intT offset = 1;
@@ -122,6 +133,7 @@ public:
 //     }
 //     return index;
 //   }
+  floatT* coords() {return x;}  
   bool outOfBox(pointT center, floatT hsize) {
     for (int i=0; i<_dim; ++i) {
       if (x[i]-hsize > center.x[i] || x[i]+hsize < center.x[i])
@@ -129,10 +141,14 @@ public:
     }
     return false;
   }
-  floatT pointDist(pointT p) {
+  inline floatT pointDist(pointT p) {
     floatT xx=0;
     for (int i=0; i<_dim; ++i) xx += (x[i]-p.x[i])*(x[i]-p.x[i]);
     return sqrt(xx);
+  }
+
+  floatT dist(pointT p) {
+    return pointDist(p);
   }
   
   floatT pointDistSq(point p) {
@@ -157,6 +173,7 @@ struct iPoint {
   floatT pointDist(iPoint *q) {return p.pointDist(q->p);}
   floatT dist(iPoint q) {return p.pointDist(q.p);}
   floatT pointDist(pointT q) {return p.pointDist(q);}
+  floatT dist(pointT q) {return p.pointDist(q);}
   floatT pointDistSq(iPoint q) {return p.pointDistSq(q.p);}
   floatT pointDistSq(iPoint *q) {return p.pointDistSq(q->p);}
   floatT pointDistSq(pointT q) {return p.pointDistSq(q);}
@@ -165,7 +182,10 @@ struct iPoint {
   pointT pt() {return p;}
   floatT* coordinate() {return p.x;}
   floatT coordinate(int i) {return p.x[i];}
+  floatT* coords() {return p.x;}
+  floatT coords(int i) {return p.x[i];}
   floatT x(int i) {return p.x[i];}
+  floatT at(int i) {return p.x[i];}
   void x(int i, floatT val) {p.x[i]=val;}
   int getDim(){return dim;}
   void minCoords(iPoint q){p.minCoords(q.p);}
