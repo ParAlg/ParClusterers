@@ -129,11 +129,11 @@ git_repository(
     tag = "v3.9.2",
 )
 
-#http_archive(
-#    name = "com_google_absl",
-#    strip_prefix = "abseil-cpp-master",
-#    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
-#)
+http_archive(
+    name = "com_google_absl",
+    strip_prefix = "abseil-cpp-master",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
+)
 
 # Bazel platform rules.
 http_archive(
@@ -143,11 +143,11 @@ http_archive(
     urls = ["https://github.com/bazelbuild/platforms/archive/98939346da932eef0b54cf808622f5bb0928f00b.zip"],
 )
 
-http_archive(
-  name = "com_google_absl",
-  urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
-  strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
-)
+#http_archive(
+#  name = "com_google_absl",
+#  urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
+#  strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
+#)
 
 git_repository(
     name = "com_google_googletest",
