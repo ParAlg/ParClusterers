@@ -3,6 +3,7 @@ syntax = "proto2";
 package research_graph.in_memory;
 
 message ClusteringStatsConfig {
+  option bool tmp = 1;
 }
 
 message ClusteringStatistics {

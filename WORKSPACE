@@ -23,10 +23,16 @@ local_repository(
     path = "external/gbbs/external/PAM/include",
 )
 
-http_archive(
+#http_archive(
+#    name = "com_github_gflags_gflags",
+#    strip_prefix = "gflags-master",
+#    urls = ["https://github.com/gflags/gflags/archive/master.zip"],
+#)
+
+git_repository(
     name = "com_github_gflags_gflags",
-    strip_prefix = "gflags-master",
-    urls = ["https://github.com/gflags/gflags/archive/master.zip"],
+    commit = "f40e43a6288940efadd29c208085db05335a15d8",
+    remote = "https://github.com/gflags/gflags.git",
 )
 
 bind(
