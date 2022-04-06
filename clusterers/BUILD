@@ -47,6 +47,7 @@ cc_library(
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:in-memory-clusterer-base",
     ],
 )

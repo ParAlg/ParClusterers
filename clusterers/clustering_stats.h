@@ -5,6 +5,7 @@
 #include "absl/strings/string_view.h"
 #include "google/protobuf/text_format.h"
 #include "clusterers/clustering_stats.pb.h"
+#include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 
 namespace research_graph::in_memory {
@@ -14,12 +15,12 @@ class ClusteringStats{
   ClusteringStatistics GetStats(const InMemoryClusterer::Clustering& clustering,
       absl::string_view input_graph,
       const ClusteringStatsConfig& clustering_stats_config);
-  Graph* MutableGraph() override { return &graph_; }
+  GbbsGraph* MutableGraph() override { return &graph_; }
 
  private:
   GbbsGraph graph_;
   ClusteringStatistics clustering_stats_;
-}
+};
 
 }  // namespace research_graph::in_memory
 
