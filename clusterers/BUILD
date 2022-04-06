@@ -49,6 +49,7 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@parcluster//parcluster/api:in-memory-clusterer-base,
     ],
+    visibility=["//visibility:public"],
 )
 
 cc_library(
