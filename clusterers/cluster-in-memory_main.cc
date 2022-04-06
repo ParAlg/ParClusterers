@@ -227,7 +227,7 @@ absl::Status Main() {
     return absl::UnimplementedError("Unknown clusterer.");
   }
 
-  ClusteringStatistics stats;
+  ClusteringStats stats;
   ClusteringStatsConfig stats_config;
   std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
   if (!google::protobuf::TextFormat::ParseFromString(clusterer_stats_config,
