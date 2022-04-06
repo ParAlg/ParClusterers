@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+message ClusteringStatsConfig {
+}
+
+message ClusteringStatistics {
+  // Original graph filename
+  optional string filename = 1;
+}

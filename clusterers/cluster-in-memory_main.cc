@@ -31,6 +31,7 @@
 #include "clusterers/kcore_clusterer/kcore-clusterer.h"
 #include "clusterers/ldd_clusterer/ldd-clusterer.h"
 
+#include "clustering_stats.h"
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -49,6 +50,9 @@ ABSL_FLAG(std::string, input_graph, "",
 ABSL_FLAG(std::string, output_clustering, "",
           "Output filename of a clustering.");
 
+ABSL_FLAG(std::string, output_statistics, "",
+          "Output filename for clustering statistics.");
+
 ABSL_FLAG(bool, is_symmetric_graph, true,
           "Without this flag, the program expects the edge list to represent "
           "an undirected graph (each edge needs to be given in both "
@@ -62,6 +66,9 @@ ABSL_FLAG(bool, float_weighted, false,
 ABSL_FLAG(std::string, input_communities, "",
           "Input file pattern of a list of communities; tab separated nodes, "
           "lines separating communities.");
+
+ABSL_FLAG(std::string, statistics_config, "",
+          "Text-format research_graph.in_memory.ClusteringStatsConfig proto.");
 
 namespace research_graph {
 namespace in_memory {
@@ -202,6 +209,7 @@ absl::Status Main() {
   }
 
   std::unique_ptr<InMemoryClusterer> clusterer;
+  bool is_hierarchical = false;
   if (clusterer_name == "ParallelAffinityClusterer") {
     clusterer.reset(new ParallelAffinityClusterer);
   } else if (clusterer_name == "ExampleClusterer") {
@@ -217,6 +225,18 @@ absl::Status Main() {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
     return absl::UnimplementedError("Unknown clusterer.");
   }
+
+  ClusteringStatistics stats;
+  ClusteringStatsConfig stats_config;
+  std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
+  if (!google::protobuf::TextFormat::ParseFromString(clusterer_stats_config,
+                                                     &stats_config)) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot parse --statistics_config as a text-format "
+                        "research_graph.in_memory.ClusteringStatsConfig proto: %s",
+                        clusterer_stats_config));
+  }
+
   auto begin_read = std::chrono::steady_clock::now();
   std::string input_file = absl::GetFlag(FLAGS_input_graph);
   // bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph); //
@@ -235,7 +255,10 @@ absl::Status Main() {
     // Transform to pointer graph
     g = CopyGraph(G);
   }
-  clusterer->MutableGraph()->graph_ = absl::make_unique<
+  clusterer->MutableGraph()->graph_ = absl::make_shared<
+      gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>>(g);
+  // TODO(jeshi): This is assuming we will always call stats
+  stats.MutableGraph()->graph_ = absl::make_shared<
       gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>>(g);
 
   auto end_read = std::chrono::steady_clock::now();
@@ -244,19 +267,31 @@ absl::Status Main() {
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Graph: " << input_file << std::endl;
 
-  InMemoryClusterer::Clustering clustering;
+  std::vector<InMemoryClusterer::Clustering> clusterings;
 
   auto begin_cluster = std::chrono::steady_clock::now();
   std::cout << "Calling clustering." << std::endl;
-  ASSIGN_OR_RETURN(clustering, clusterer->Cluster(config));
+  if (is_hierarchical) {
+    // TODO(jeshi): Not implemented
+  } else {
+    InMemoryClusterer::Clustering clustering;
+    ASSIGN_OR_RETURN(clustering, clusterer->Cluster(config));
+    clusterings.push_back(std::move(clustering));
+  }
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
 
   std::string input_communities = absl::GetFlag(FLAGS_input_communities);
+  std::string output_stats_file = absl::GetFlag(FLAGS_output_statistics);
+  auto clustering_stats = stats.GetStats(clusterings[0],
+    absl::GetFlag(FLAGS_input_graph), stats_config);
+  // TODO(jeshi): Properly write stats to file
+  std::cout << "Graph name from stats: " << stats_config.filename() << std::endl;
 
   std::string output_file = absl::GetFlag(FLAGS_output_clustering);
-  // TODO(laxmand): fix status warnings here (and potentially elsewhere).
-  WriteClustering(output_file.c_str(), clustering);
+  // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
+  // TODO(jeshi): Support writing entire dendrogram to output file
+  WriteClustering(output_file.c_str(), clustering[0]);
 
   return absl::OkStatus();
 }
