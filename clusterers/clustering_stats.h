@@ -13,7 +13,7 @@ namespace research_graph::in_memory {
 class ClusteringStats{
  public:
   ClusteringStatistics GetStats(const InMemoryClusterer::Clustering& clustering,
-      absl::string_view input_graph,
+      const std::string& input_graph,
       const ClusteringStatsConfig& clustering_stats_config);
   GbbsGraph* MutableGraph() { return &graph_; }
 
