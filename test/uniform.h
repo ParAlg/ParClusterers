@@ -8,7 +8,7 @@
 #include <limits>
 #include "parlay/parallel.h"
 #include "parlay/utilities.h"
-#include "point.h"
+#include "clusterers/hac_euclidean_clusterer/point.h"
 
   namespace pargeo {
   namespace uniformDataGen {
@@ -105,7 +105,7 @@
       floatT a1 = 1; for (int d = 0; d < dim - 1; ++ d) a1 *= r1;
       floatT a2 = 1; for (int d = 0; d < dim - 1; ++ d) a2 *= r2;
       size_t n1 = a1 * n / (a1 + a2);
-      size_t n2 = n - n1;
+    //   size_t n2 = n - n1;
       floatT t1 = 1 - 1 / r1;
       floatT t2 = 1 / r2 - 1;
 

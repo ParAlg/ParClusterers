@@ -1,8 +1,8 @@
 #include "gbbs/bridge.h"
-#include "point.h"
-#include "kdtree/kdtree.h"
+#include "clusterers/hac_euclidean_clusterer/point.h"
+#include "clusterers/hac_euclidean_clusterer/kdtree/kdtree.h"
 #include "uniform.h"
-#include "node.h"
+#include "clusterers/hac_euclidean_clusterer/node.h"
 #include <gtest/gtest.h>
 
 #include <vector>
@@ -31,56 +31,56 @@ parlay::sequence<point<2>> smallData()
   return P;
 }
 
-// template <int dim>
-// inline void testKdTree(parlay::sequence<point<dim>> &P)
-// {
-//   using nodeT = internal::HACTree::node<dim, point<dim>, nodeInfo>;
+template <int dim>
+inline void testKdTree(parlay::sequence<point<dim>> &P)
+{
+  using nodeT = internal::HACTree::node<dim, point<dim>, nodeInfo>;
 
-//   nodeT *tree1 = internal::HACTree::build<dim, point<dim>, nodeInfo>(P, true);
+  nodeT *tree1 = internal::HACTree::build<dim, point<dim>, nodeInfo>(P, true);
 
-//   std::function<size_t(nodeT *)> checkSum =
-//       [&](nodeT *node) -> size_t
-//   {
-//     if (!node->isLeaf())
-//     {
-//       size_t lSize = checkSum(node->L());
-//       size_t rSize = checkSum(node->R());
+  std::function<size_t(nodeT *)> checkSum =
+      [&](nodeT *node) -> size_t
+  {
+    if (!node->isLeaf())
+    {
+      size_t lSize = checkSum(node->L());
+      size_t rSize = checkSum(node->R());
 
-//       // Check if node sizes are consistent
-//       EXPECT_EQ(lSize + rSize, node->size());
+      // Check if node sizes are consistent
+      EXPECT_EQ(lSize + rSize, node->size());
 
-//       // Check if each point is in the bounding box
-//       for (size_t i = 0; i < node->size(); ++i)
-//       {
-//         auto p = *(node->at(i));
-//         for (size_t d = 0; d < node->dim; ++d)
-//         {
-//           EXPECT_TRUE(p[d] <= node->getMax(d));
-//           EXPECT_TRUE(p[d] >= node->getMin(d));
-//         }
-//       }
+      // Check if each point is in the bounding box
+      for (int i = 0; i < node->size(); ++i)
+      {
+        auto p = *(node->at(i));
+        for (size_t d = 0; d < node->dim; ++d)
+        {
+          EXPECT_TRUE(p[d] <= node->getMax(d));
+          EXPECT_TRUE(p[d] >= node->getMin(d));
+        }
+      }
 
-//       // Check if box sizes are consistent
-//       for (size_t d = 0; d < node->dim; ++d)
-//       {
-//         EXPECT_FLOAT_EQ(std::max(node->L()->getMax(d),
-//                                  node->R()->getMax(d)),
-//                         node->getMax(d));
-//       }
-//     }
-//     return node->size();
-//   };
+      // Check if box sizes are consistent
+      for (size_t d = 0; d < node->dim; ++d)
+      {
+        EXPECT_FLOAT_EQ(std::max(node->L()->getMax(d),
+                                 node->R()->getMax(d)),
+                        node->getMax(d));
+      }
+    }
+    return node->size();
+  };
 
-//   checkSum(tree1);
+  checkSum(tree1);
 
-//   internal::HACTree::del(tree1);
-// }
+  internal::HACTree::del(tree1);
+}
 
 TEST(kdTree_structure, testSerial2d)
 {
   static const int dim = 2;
   auto P = pargeo::uniformInPolyPoints<dim>(100, 0, 1.0);
-  // testKdTree<dim>(P);
+  testKdTree<dim>(P);
 }
 
 // Demonstrate some basic assertions.
