@@ -129,10 +129,16 @@ git_repository(
     tag = "v3.9.2",
 )
 
+#http_archive(
+#    name = "com_google_absl",
+#    strip_prefix = "abseil-cpp-master",
+#    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
+#)
+
 http_archive(
-    name = "com_google_absl",
-    strip_prefix = "abseil-cpp-master",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
+  name = "com_google_absl",
+  urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
+  strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
 )
 
 git_repository(
