@@ -148,11 +148,17 @@ git_repository(
 )
 
 # rules_cc defines rules for generating C++ code from Protocol Buffers.
+#http_archive(
+#    name = "rules_cc",
+#    sha256 = "fa42eade3cad9190c2a6286a6213f07f1a83d26d9f082d56f526d014c6ea7444",
+#    strip_prefix = "rules_cc-02becfef8bc97bda4f9bb64e153f1b0671aec4ba",
+#    urls = [
+#        "https://github.com/bazelbuild/rules_cc/archive/02becfef8bc97bda4f9bb64e153f1b0671aec4ba.zip",
+#    ],
+#)
+
 http_archive(
-    name = "rules_cc",
-    sha256 = "fa42eade3cad9190c2a6286a6213f07f1a83d26d9f082d56f526d014c6ea7444",
-    strip_prefix = "rules_cc-02becfef8bc97bda4f9bb64e153f1b0671aec4ba",
-    urls = [
-        "https://github.com/bazelbuild/rules_cc/archive/02becfef8bc97bda4f9bb64e153f1b0671aec4ba.zip",
-    ],
+  name = "com_google_googletest",
+  urls = ["https://github.com/google/googletest/archive/011959aafddcd30611003de96cfd8d7a7685c700.zip"],
+  strip_prefix = "googletest-011959aafddcd30611003de96cfd8d7a7685c700",
 )
