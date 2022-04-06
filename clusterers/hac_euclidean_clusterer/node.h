@@ -3,7 +3,7 @@
 #include "point.h"
 #include "parlay/sequence.h"
 #include "parlay/parallel.h"
-
+#include "utils.h"
 
 using namespace std;
 namespace research_graph {
@@ -105,23 +105,27 @@ struct nodeComparator{
 // node info used for kd-tree
 struct nodeInfo{
     typedef std::tuple<int, int> infoT; // <cid, min_n>
-    int cId;
-    std::atomic<double> ub;
+    int cId = -1;
+    // std::atomic<double> ub; // need to write an = assign method if use atomic
+    double ub = numeric_limits<double>::max();
     int round = 0;
     int idx = -1; // node idx
     int min_n = 1; //used for ward's linkage
 
     nodeInfo(){
-        cId = -1;
-        ub.store(numeric_limits<double>::max()); // used for allptsnn
+        // cId = -1;
+        // ub.store(numeric_limits<double>::max()); // used for allptsnn
+        ub = numeric_limits<double>::max();
     }
 
-    inline double getUB(){return ub.load();}
+    inline double getUB(){return ub;}//{return ub.load();}
     inline void updateUB(double tmp){
-        parlay::write_min(&ub, tmp, std::less<double>());
+        // parlay::write_min(&ub, tmp, std::less<double>());
+        utils::writeMin(&ub, tmp);
     }
     inline void resetUB(){
-        ub.store(numeric_limits<double>::max());
+        // ub.store(numeric_limits<double>::max());
+        ub = numeric_limits<double>::max();
     }
     inline int getCId(){return cId;}
     inline void setCId(int id){cId = id;}

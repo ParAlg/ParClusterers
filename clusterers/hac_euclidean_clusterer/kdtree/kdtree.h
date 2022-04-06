@@ -131,7 +131,7 @@ namespace HACTree {
          typename baseT::intT leafSize = 16)
     {
 
-      typedef tree<_dim, _objT, nodeInfo> treeT;
+      // typedef tree<_dim, _objT, nodeInfo> treeT;
       typedef node<_dim, _objT, nodeInfo> nodeT;
 
       // allocate space for children
@@ -156,7 +156,7 @@ namespace HACTree {
          typename baseT::intT leafSize = 16)
     {
 
-      typedef tree<_dim, _objT, nodeInfo> treeT;
+      // typedef tree<_dim, _objT, nodeInfo> treeT;
       typedef node<_dim, _objT, nodeInfo> nodeT;
 
       // allocate space for children
@@ -184,7 +184,7 @@ namespace HACTree {
          typename baseT::intT leafSize = 16)
     {
 
-      typedef tree<_dim, _objT, nodeInfo> treeT;
+      // typedef tree<_dim, _objT, nodeInfo> treeT;
       typedef node<_dim, _objT, nodeInfo> nodeT;
       int n1 = t1->size();
       int n2 = t2->size();
@@ -248,7 +248,7 @@ namespace HACTree {
 
     nodeT *sib;
 
-    parlay::slice<_objT **, _objT **> items;
+    parlay::slice<_objT **, _objT **> items = parlay::make_slice((_objT**)nullptr, (_objT**)nullptr);
 
     nodeInfo nInfo;
 
