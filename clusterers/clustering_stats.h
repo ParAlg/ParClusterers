@@ -5,6 +5,7 @@
 #include "absl/strings/string_view.h"
 #include "google/protobuf/text_format.h"
 #include "clusterers/clustering_stats.pb.h"
+#include "parcluster/api/in-memory-clusterer-base.h"
 
 namespace research_graph::in_memory {
 
