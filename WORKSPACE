@@ -135,11 +135,10 @@ git_repository(
 #    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
 #)
 
-git_repository(
-name = "com_google_absl",
-commit = "d5bc72dbb6c50cdd2ab85bf6bd6a56f858da78bb",
-remote = "git@code.faw.cn:third_party_repos/abseil-cpp.git",
-shallow_since = "1603691491 +0800",
+http_archive(
+  name = "com_google_absl",
+  urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
+  strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
 )
 
 git_repository(
