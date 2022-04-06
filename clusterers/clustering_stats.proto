@@ -3,10 +3,10 @@ syntax = "proto2";
 package research_graph.in_memory;
 
 message ClusteringStatsConfig {
-  optional bool tmp = 0;
+  optional bool tmp = 1;
 }
 
 message ClusteringStatistics {
   // Original graph filename
-  optional string filename = 0;
+  optional string filename = 1;
 }
