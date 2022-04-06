@@ -9,10 +9,8 @@ cc_library(
     deps = [
         ':point',
         ':linkage',
-        ':matrix',
         ':unionfind',
         ':linkage_types',
-        ':point',
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -25,23 +23,10 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_library(
-    name = "point",
-    hdrs = ["point.h"],
-    deps = [
-    ],
-)
 
 cc_library(
     name = "linkage",
     hdrs = ["linkage.h"],
-    deps = [
-    ],
-)
-
-cc_library(
-    name = "matrix",
-    hdrs = ["matrix.h"],
     deps = [
     ],
 )
@@ -59,6 +44,55 @@ cc_library(
     deps = [
     ],
 )
+
+
+cc_library(
+    name = "kdtree",
+    hdrs = ["kdtree/kdtree.h"],
+    deps = [
+        ':treeImpl',
+        ':rangeSearchImpl',
+        ':dualTreeImpl',
+    ],
+)
+
+cc_library(
+    name = "treeImpl",
+    hdrs = ["kdtree/treeImpl.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "rangeSearchImpl",
+    hdrs = ["kdtree/rangeSearchImpl.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "dualTreeImpl",
+    hdrs = ["kdtree/dualTreeImpl.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "node",
+    hdrs = ["node.h"],
+    deps = [
+       ":point",
+       ":utils"
+    ],
+)
+
+cc_library(
+    name = "utils",
+    hdrs = ["utils.h"],
+    deps = [
+    ],
+)
+
 
 cc_library(
     name = "point",

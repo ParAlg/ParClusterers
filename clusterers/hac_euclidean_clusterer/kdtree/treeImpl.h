@@ -322,7 +322,7 @@ namespace HACTree {
                          size_t leafSize)
   {
     typedef tree<dim, objT, nodeInfo> treeT;
-    typedef node<dim, objT, nodeInfo> nodeT;
+    // typedef node<dim, objT, nodeInfo> nodeT;
 
     if (parallel)
     {
