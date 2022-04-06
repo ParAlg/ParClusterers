@@ -135,6 +135,19 @@ git_repository(
 #    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
 #)
 
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "bcd0c5f46a49b85b384906daae41d277b3dc0ff27c7c752cc51e43048a58ec83",
+    strip_prefix = "rules_foreign_cc-0.7.1",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/0.7.1.tar.gz",
+)
+
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+# This sets up some common toolchains for building targets. For more details, please see
+# https://bazelbuild.github.io/rules_foreign_cc/0.7.1/flatten.html#rules_foreign_cc_dependencies
+rules_foreign_cc_dependencies()
+
 # Bazel platform rules.
 http_archive(
     name = "platforms",
