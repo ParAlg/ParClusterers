@@ -24,6 +24,33 @@ cc_library(
     alwayslink = 1,
 )
 
+proto_library(
+    name = "clustering_stats_proto",
+    srcs = [
+        "clustering_stats.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "clustering_stats_cc_proto",
+    deps = [":clustering_stats_proto"],
+)
+
+cc_library(
+    name = "clustering_stats",
+    srcs = ["clustering_stats.cc"],
+    hdrs = ["clustering_stats.h"],
+    deps = [
+        ":clustering_stats_cc_proto",
+        "@parcluster//parcluster/api:gbbs-graph",
+        "@parcluster//parcluster/api:status_macros",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@parcluster//parcluster/api:in-memory-clusterer-base,
+    ],
+)
+
 cc_library(
     name = "cluster-in-memory_main_lib",
     srcs = ["cluster-in-memory_main.cc"],
@@ -79,32 +106,5 @@ cc_binary(
         ":cluster-in-memory-metric_main_lib",
         ":all-metric-clusterers",
         "//external:gflags",
-    ],
-)
-
-proto_library(
-    name = "clustering_stats_proto",
-    srcs = [
-        "clustering_stats.proto",
-    ],
-)
-
-cc_proto_library(
-    name = "clustering_stats_cc_proto",
-    deps = [":clustering_stats_proto"],
-)
-
-cc_library(
-    name = "clustering_stats",
-    srcs = ["clustering_stats.cc"],
-    hdrs = ["clustering_stats.h"],
-    deps = [
-        ":clustering_stats_cc_proto",
-        "@parcluster//parcluster/api:gbbs-graph",
-        "@parcluster//parcluster/api:status_macros",
-        "@com_google_absl//absl/base",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@parcluster//parcluster/api:in-memory-clusterer-base,
     ],
 )
