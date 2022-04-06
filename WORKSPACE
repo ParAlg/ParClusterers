@@ -143,11 +143,10 @@ http_archive(
     urls = ["https://github.com/bazelbuild/platforms/archive/98939346da932eef0b54cf808622f5bb0928f00b.zip"],
 )
 
-http_archive(
+git_repository(
     name = "com_google_absl",
-    sha256 = "26d3f00c2749899529e5741bf6c07f59a87a96999ffcf72590bc221e565b6720",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/4791df7d1ac966e6c7abdeffafa5030d718500df.zip"],
-    strip_prefix = "abseil-cpp-4791df7d1ac966e6c7abdeffafa5030d718500df",
+    remote = "https://github.com/abseil/abseil-cpp.git",
+    commit = "4791df7d1ac966e6c7abdeffafa5030d718500df",
 )
 
 git_repository(
