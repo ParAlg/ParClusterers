@@ -286,14 +286,14 @@ absl::Status Main() {
   auto clustering_stats = stats.GetStats(clusterings[0],
     absl::GetFlag(FLAGS_input_graph), stats_config);
   // TODO(jeshi): Properly write stats to file
-  std::cout << "Graph name from stats: " << stats.filename() << std::endl;
+  std::cout << "Graph name from stats: " << clustering_stats.filename() << std::endl;
 
   std::string output_file = absl::GetFlag(FLAGS_output_clustering);
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  WriteClustering(output_file.c_str(), clusterings[0]);
+  return WriteClustering(output_file.c_str(), clusterings[0]);
 
-  return absl::OkStatus();
+  // return absl::OkStatus();
 }
 
 }  // namespace
