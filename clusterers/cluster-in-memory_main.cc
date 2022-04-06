@@ -256,11 +256,10 @@ absl::Status Main() {
     // Transform to pointer graph
     g = CopyGraph(G);
   }
-  clusterer->MutableGraph()->graph_ = absl::make_shared<
+  clusterer->MutableGraph()->graph_ = std::make_shared<
       gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>>(g);
   // TODO(jeshi): This is assuming we will always call stats
-  stats.MutableGraph()->graph_ = absl::make_shared<
-      gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>>(g);
+  stats.MutableGraph()->graph_ = clusterer->MutableGraph()->graph_;
 
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read");
@@ -287,12 +286,12 @@ absl::Status Main() {
   auto clustering_stats = stats.GetStats(clusterings[0],
     absl::GetFlag(FLAGS_input_graph), stats_config);
   // TODO(jeshi): Properly write stats to file
-  std::cout << "Graph name from stats: " << stats_config.filename() << std::endl;
+  std::cout << "Graph name from stats: " << stats.filename() << std::endl;
 
   std::string output_file = absl::GetFlag(FLAGS_output_clustering);
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  WriteClustering(output_file.c_str(), clustering[0]);
+  WriteClustering(output_file.c_str(), clusterings[0]);
 
   return absl::OkStatus();
 }
