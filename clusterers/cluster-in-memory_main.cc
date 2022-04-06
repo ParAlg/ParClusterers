@@ -31,7 +31,8 @@
 #include "clusterers/kcore_clusterer/kcore-clusterer.h"
 #include "clusterers/ldd_clusterer/ldd-clusterer.h"
 
-#include "clustering_stats.h"
+#include "clusterers/clustering_stats.h"
+#include "clusterers/clustering_stats.pb.h"
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
