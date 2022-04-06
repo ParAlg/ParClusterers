@@ -135,6 +135,14 @@ git_repository(
 #    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
 #)
 
+# Bazel platform rules.
+http_archive(
+    name = "platforms",
+    sha256 = "b601beaf841244de5c5a50d2b2eddd34839788000fa1be4260ce6603ca0d8eb7",
+    strip_prefix = "platforms-98939346da932eef0b54cf808622f5bb0928f00b",
+    urls = ["https://github.com/bazelbuild/platforms/archive/98939346da932eef0b54cf808622f5bb0928f00b.zip"],
+)
+
 http_archive(
   name = "com_google_absl",
   urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
@@ -148,17 +156,11 @@ git_repository(
 )
 
 # rules_cc defines rules for generating C++ code from Protocol Buffers.
-#http_archive(
-#    name = "rules_cc",
-#    sha256 = "fa42eade3cad9190c2a6286a6213f07f1a83d26d9f082d56f526d014c6ea7444",
-#    strip_prefix = "rules_cc-02becfef8bc97bda4f9bb64e153f1b0671aec4ba",
-#    urls = [
-#        "https://github.com/bazelbuild/rules_cc/archive/02becfef8bc97bda4f9bb64e153f1b0671aec4ba.zip",
-#    ],
-#)
-
 http_archive(
-  name = "com_google_googletest",
-  urls = ["https://github.com/google/googletest/archive/011959aafddcd30611003de96cfd8d7a7685c700.zip"],
-  strip_prefix = "googletest-011959aafddcd30611003de96cfd8d7a7685c700",
+    name = "rules_cc",
+    sha256 = "fa42eade3cad9190c2a6286a6213f07f1a83d26d9f082d56f526d014c6ea7444",
+    strip_prefix = "rules_cc-02becfef8bc97bda4f9bb64e153f1b0671aec4ba",
+    urls = [
+        "https://github.com/bazelbuild/rules_cc/archive/02becfef8bc97bda4f9bb64e153f1b0671aec4ba.zip",
+    ],
 )
