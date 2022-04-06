@@ -15,7 +15,7 @@ class ClusteringStats{
   ClusteringStatistics GetStats(const InMemoryClusterer::Clustering& clustering,
       absl::string_view input_graph,
       const ClusteringStatsConfig& clustering_stats_config);
-  GbbsGraph* MutableGraph() override { return &graph_; }
+  GbbsGraph* MutableGraph() { return &graph_; }
 
  private:
   GbbsGraph graph_;
