@@ -115,11 +115,12 @@ struct TreeChainInfo{
   // then in checking, only check for -1
   inline void invalidate(int cid, int code){
     chain[cid] = code;
-  }
-
-  inline void invalidateRev(int cid){
     chainRev[cid] = invalid_rev;
   }
+
+  // inline void invalidateRev(int cid){
+  //   chainRev[cid] = invalid_rev;
+  // }
 
   //get the rev of ith terminal nodes 
   inline pair<int, double> getChainPrev(int i){
@@ -131,14 +132,16 @@ struct TreeChainInfo{
 
   // update findNN, terminal_nodes and chainNum
   template<class F>
-  inline void next(F *finder){
-    parlay::parallel_for(0, finder->n, [&](int i){
-      is_terminal[i] = false;
+  inline void next(F *finder, int round){
+    parlay::parallel_for(0, chainNum, [&](int i){
+      is_terminal[terminal_nodes[i]] = false;
     });
     int C = finder->C;
     parlay::parallel_for(0, C, [&](int i){
       int cid = finder->activeClusters[i];
-      flag[i] = getNN(cid) == NO_NEIGH || getNN(getNN(cid)) == NO_NEIGH ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
+      int nn = getNN(cid);
+      //getNN(getNN(cid)) == NO_NEIGH
+      flag[i] = nn == NO_NEIGH || finder->justMerge(cid, round) ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
       is_terminal[cid] = flag[i];
     });
     chainNum = parlay::pack_into(make_slice(finder->activeClusters).cut(0,C), flag, terminal_nodes);

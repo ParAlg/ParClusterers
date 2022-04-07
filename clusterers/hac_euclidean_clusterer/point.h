@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <limits>
 
+#include "parlay/slice.h"
+
 using namespace std;
 
 
@@ -89,6 +91,10 @@ public:
   point(vectT v) { for (int i=0; i<_dim; ++i) x[i]=v[i]; }
   point(floatT* p) { for (int i=0; i<_dim; ++i) x[i]=p[i]; }
   point(pointT* p) { for (int i=0; i<_dim; ++i) x[i]=p->x[i]; }
+  
+  template<class _tIn>
+  point(parlay::slice<_tIn*,_tIn*> p) {
+      for(int i=0; i<_dim; ++i) x[i] = (floatT)p[i];}
 //   void print() {
 //     cout << std::setprecision(2);
 //     cout << ":(";

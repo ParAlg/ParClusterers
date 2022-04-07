@@ -3,7 +3,6 @@
 #include <atomic>
 #include "unionfind.h"
 #include "linkage_types.h"
-#include "matrix.h"
 
 #include "parlay/sequence.h"
 #include "parlay/parallel.h"
@@ -16,7 +15,7 @@ using namespace std;
 namespace research_graph {
 namespace in_memory {
 namespace internal {
-
+namespace HACTree {
 
 template<int dim, class TF>
 inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
@@ -44,7 +43,7 @@ inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
 template<int dim, class TF>
 inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChainInfo *info, int round, int *flags){
   int chainNum = info->chainNum;
-  LDS::EDGE *edges = finder->edges.data();
+  EDGE *edges = finder->edges;
   
 #ifdef TIMING2
   timer t1; t1.start();
@@ -63,7 +62,7 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
       int newc = uf->link(cid, nn, edges[cid].getW());
       info->invalidate(nn, NO_NEIGH);
       info->invalidate(cid, NO_NEIGH);
-      info->invalidateRev(newc);
+      // info->invalidateRev(newc);
       finder->merge(cid, nn, newc, round, edges[cid].getW());
       flags[i] = newc;
     }else{
@@ -154,4 +153,4 @@ inline void chain_linkage(TF *finder){
 }
 
 
-}}}
+}}}}
