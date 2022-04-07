@@ -69,11 +69,11 @@ class NNFinder {
 
   NNFinder(int t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
     bool t_noCache, int t_cache_size=32, double t_eps = 0, int t_naive_thresh=5): 
-    uf(t_uf), n(t_n), no_cache(t_noCache), eps(t_eps), NAIVE_THRESHOLD(t_naive_thresh){
+    n(t_n), uf(t_uf), no_cache(t_noCache), NAIVE_THRESHOLD(t_naive_thresh), eps(t_eps){
     EC2 = edgeComparator2(eps);
     C = n;
     activeClusters = natural_int_array(n);
-    PP = makeIPoint(t_P);
+    PP = makeIPoint(t_P, n);
     centers = parlay::sequence<pointT>(n); parlay::parallel_for(0,n,[&](int i){centers[i]=PP[i];});
 
     distComputer = _distComputer;
@@ -89,10 +89,10 @@ class NNFinder {
     edges = (EDGE *)aligned_alloc(sizeof(EDGE), n*sizeof(EDGE));
     parlay::parallel_for(0,n,[&](int i){edges[i] = EDGE();});
 
-    cacheTables = new CacheTables(no_cache, n, t_cache_size);
+    cacheTables = new CacheTables<nodeT>(no_cache, n, t_cache_size, this);
 
     nodeIdx.store(n); // have used n nodes
-    kdtree = build(PP, true);
+    kdtree = build<dim, pointT , nodeInfo>(PP, true);
   }
 
   ~NNFinder(){
@@ -395,7 +395,7 @@ class NNFinder {
   inline void initChain(TreeChainInfo *info){
     typedef AllPtsNN<kdnodeT> F;
     F *f = new F(edges, eps);
-    dualtree<kdnodeT, F>(kdtree->root, kdtree->root, f, false);
+    dualtree<kdnodeT, F>(kdtree, kdtree, f, false);
     parlay::parallel_for(0,n,[&](int i){
       info->updateChain(edges[i].first, edges[i].second, edges[i].getW());
     });

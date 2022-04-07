@@ -31,33 +31,33 @@ namespace HACTree {
         if(f->isLeaf(Q) && f->isLeaf(R)){
             f->BasePost(Q,R);
         }else if (f->isLeaf(Q)){
-           double dLeft = f->NodeDistForOrder(Q, R->left);
-	       double dRight = f->NodeDistForOrder(Q, R->right);
+           double dLeft = f->NodeDistForOrder(Q, R->L());
+	       double dRight = f->NodeDistForOrder(Q, R->R());
            if(f->SpawnOrder(dLeft , dRight)){
-              if(!f->Score(dRight, Q, R->right)) dualtree_serial<nodeT, F>(Q, R->right, f, false);
-              if(!f->Score(dLeft, Q, R->left)) dualtree_serial<nodeT, F>(Q, R->left, f, false);
+              if(!f->Score(dRight, Q, R->R())) dualtree_serial<nodeT, F>(Q, R->R(), f, false);
+              if(!f->Score(dLeft, Q, R->L())) dualtree_serial<nodeT, F>(Q, R->L(), f, false);
            }else{
-              if(!f->Score(dLeft, Q, R->left)) dualtree_serial<nodeT, F>(Q, R->left, f, false);
-              if(!f->Score(dRight, Q, R->right)) dualtree_serial<nodeT, F>(Q, R->right, f, false);
+              if(!f->Score(dLeft, Q, R->L())) dualtree_serial<nodeT, F>(Q, R->L(), f, false);
+              if(!f->Score(dRight, Q, R->R())) dualtree_serial<nodeT, F>(Q, R->R(), f, false);
            }
            f->QLPost(Q,R);
         }else if(f->isLeaf(R)){
-           double dLeft = f->NodeDistForOrder(Q->left, R);
-	       double dRight = f->NodeDistForOrder(Q->right, R);
+           double dLeft = f->NodeDistForOrder(Q->L(), R);
+	       double dRight = f->NodeDistForOrder(Q->R(), R);
            if(f->SpawnOrder(dLeft , dRight)){
-              if(!f->Score(dRight, Q->right, R)) dualtree_serial<nodeT, F>(Q->right, R, f, false);
-              if(!f->Score(dLeft, Q->left, R)) dualtree_serial<nodeT, F>(Q->left, R, f, false);
+              if(!f->Score(dRight, Q->R(), R)) dualtree_serial<nodeT, F>(Q->R(), R, f, false);
+              if(!f->Score(dLeft, Q->L(), R)) dualtree_serial<nodeT, F>(Q->L(), R, f, false);
            }else{
-              if(!f->Score(dLeft, Q->left, R)) dualtree_serial<nodeT, F>(Q->left, R, f, false);
-              if(!f->Score(dRight, Q->right, R)) dualtree_serial<nodeT, F>(Q->right, R, f, false);
+              if(!f->Score(dLeft, Q->L(), R)) dualtree_serial<nodeT, F>(Q->L(), R, f, false);
+              if(!f->Score(dRight, Q->R(), R)) dualtree_serial<nodeT, F>(Q->R(), R, f, false);
            }
             f->RLPost(Q,R);
         }else{
             pair<double, pair<nodeT *, nodeT *>> callOrder[4];
-            callOrder[0] = make_pair(f->NodeDistForOrder(Q->left, R->left), make_pair(Q->left, R->left));
-            callOrder[1] = make_pair(f->NodeDistForOrder(Q->right, R->left), make_pair(Q->right, R->left));
-            callOrder[2] = make_pair(f->NodeDistForOrder(Q->left, R->right), make_pair(Q->left, R->right));
-            callOrder[3] = make_pair(f->NodeDistForOrder(Q->right, R->right), make_pair(Q->right, R->right));
+            callOrder[0] = make_pair(f->NodeDistForOrder(Q->L(), R->L()), make_pair(Q->L(), R->L()));
+            callOrder[1] = make_pair(f->NodeDistForOrder(Q->R(), R->L()), make_pair(Q->R(), R->L()));
+            callOrder[2] = make_pair(f->NodeDistForOrder(Q->L(), R->R()), make_pair(Q->L(), R->R()));
+            callOrder[3] = make_pair(f->NodeDistForOrder(Q->R(), R->R()), make_pair(Q->R(), R->R()));
             sort(callOrder, callOrder + 4);
             for (int cc = 0; cc < 4; ++ cc) {
                 int c = f->SpawnOrder(cc);
@@ -81,33 +81,33 @@ namespace HACTree {
         if(f->isLeaf(Q) && f->isLeaf(R)){ // not parallel bc leaf size should be small
             f->BasePost(Q,R);
         }else if (f->isLeaf(Q)){
-           double dLeft = f->NodeDistForOrder(Q, R->left);
-	       double dRight = f->NodeDistForOrder(Q, R->right);
-            bool condA = !f->Score(dRight, Q, R->right);
-            bool condB = !f->Score(dLeft, Q, R->left);
+           double dLeft = f->NodeDistForOrder(Q, R->L());
+	       double dRight = f->NodeDistForOrder(Q, R->R());
+            bool condA = !f->Score(dRight, Q, R->R());
+            bool condB = !f->Score(dLeft, Q, R->L());
            if(f->SpawnOrder(dLeft , dRight)){
-               dualtree_spawn_macro(condA, condB, Q, R->right, Q, R->left);
+               dualtree_spawn_macro(condA, condB, Q, R->R(), Q, R->L());
            }else{
-               dualtree_spawn_macro(condB, condA, Q, R->left, Q, R->right);
+               dualtree_spawn_macro(condB, condA, Q, R->L(), Q, R->R());
            }
            f->QLPost(Q,R);
         }else if(f->isLeaf(R)){
-           double dLeft = f->NodeDistForOrder(Q->left, R);
-	       double dRight = f->NodeDistForOrder(Q->right, R);
-            bool condA = !f->Score(dRight,Q->right, R);
-            bool condB = !f->Score(dLeft, Q->left, R);
+           double dLeft = f->NodeDistForOrder(Q->L(), R);
+	       double dRight = f->NodeDistForOrder(Q->R(), R);
+            bool condA = !f->Score(dRight,Q->R(), R);
+            bool condB = !f->Score(dLeft, Q->L(), R);
            if(f->SpawnOrder(dLeft , dRight)){
-               dualtree_spawn_macro(condA, condB, Q->right, R, Q->left, R);
+               dualtree_spawn_macro(condA, condB, Q->R(), R, Q->L(), R);
            }else{
-              dualtree_spawn_macro(condB, condA, Q->left, R, Q->right, R);
+              dualtree_spawn_macro(condB, condA, Q->L(), R, Q->R(), R);
            }
             f->RLPost(Q,R);
         }else{
             pair<double, pair<nodeT *, nodeT *>> callOrder[4];
-            callOrder[0] = make_pair(f->NodeDistForOrder(Q->left, R->left), make_pair(Q->left, R->left));
-            callOrder[1] = make_pair(f->NodeDistForOrder(Q->right, R->left), make_pair(Q->right, R->left));
-            callOrder[2] = make_pair(f->NodeDistForOrder(Q->left, R->right), make_pair(Q->left, R->right));
-            callOrder[3] = make_pair(f->NodeDistForOrder(Q->right, R->right), make_pair(Q->right, R->right));
+            callOrder[0] = make_pair(f->NodeDistForOrder(Q->L(), R->L()), make_pair(Q->L(), R->L()));
+            callOrder[1] = make_pair(f->NodeDistForOrder(Q->R(), R->L()), make_pair(Q->R(), R->L()));
+            callOrder[2] = make_pair(f->NodeDistForOrder(Q->L(), R->R()), make_pair(Q->L(), R->R()));
+            callOrder[3] = make_pair(f->NodeDistForOrder(Q->R(), R->R()), make_pair(Q->R(), R->R()));
             sort(callOrder, callOrder + 4);
             parlay::parallel_for(0,4,[&](int cc) {
                 int c = f->SpawnOrder(cc);
@@ -135,22 +135,22 @@ namespace HACTree {
     //         result = f->BasePost(Q,R);
     //     }else if (f->isLeaf(Q)){
     //         E result1, result2;
-    //         cilk_spawn dualtree2<nodeT, F, E>(Q, R->left, f, result1, false);
-    //         result2 = dualtree2<nodeT, F, E>(Q, R->right, f, result2, false);
+    //         cilk_spawn dualtree2<nodeT, F, E>(Q, R->L(), f, result1, false);
+    //         result2 = dualtree2<nodeT, F, E>(Q, R->R(), f, result2, false);
     //         cilk_sync;
     //         result = f->QLPost(Q,R, result1, result2);
     //     }else if(f->isLeaf(R)){
     //         E result1, result2;
-    //         cilk_spawn dualtree2<nodeT, F, E>(Q->left, R, f, result1, false);
-    //         result2 = dualtree2<nodeT, F, E>(Q->right, R, f, result2, false);
+    //         cilk_spawn dualtree2<nodeT, F, E>(Q->L(), R, f, result1, false);
+    //         result2 = dualtree2<nodeT, F, E>(Q->R(), R, f, result2, false);
     //         cilk_sync;
     //         result = f->RLPost(Q,R, result1, result2);
     //     }else{
     //         E result1, result2, result3, result4;
-    //         cilk_spawn dualtree2<nodeT, F, E>(Q->left, R->left, f, result1, false);
-    //         cilk_spawn dualtree2<nodeT, F, E>(Q->left, R->right, f, result2, false);
-    //         cilk_spawn dualtree2<nodeT, F, E>(Q->right, R->right, f, result3, false);
-    //         result4 = dualtree2<nodeT, F, E>(Q->right, R->left, f, result4, false);
+    //         cilk_spawn dualtree2<nodeT, F, E>(Q->L(), R->L(), f, result1, false);
+    //         cilk_spawn dualtree2<nodeT, F, E>(Q->L(), R->R(), f, result2, false);
+    //         cilk_spawn dualtree2<nodeT, F, E>(Q->R(), R->R(), f, result3, false);
+    //         result4 = dualtree2<nodeT, F, E>(Q->R(), R->L(), f, result4, false);
 	//         cilk_sync;
     //         result = f->Post(Q,R, result1, result2, result3, result4);
     //     }

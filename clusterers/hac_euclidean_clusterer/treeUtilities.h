@@ -45,11 +45,11 @@ namespace HACTree {
 
         inline void BaseCase(nodeT *Q, nodeT *R, int i, int j){
             auto f = [&](EDGE i, EDGE j) {return (i.getW() < j.getW());};
-            double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
+            double qrdist = (Q->at(i))->pointDist(*(R->at(j)));
             if(qrdist > ub){
                 utils::writeMin(&e, EDGE(-1,-1,numeric_limits<double>::max()), f);
             }else{
-                utils::writeMin(&e, EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), f);
+                utils::writeMin(&e, EDGE(Q->at(i)->idx(),R->at(j)->idx(),qrdist), f);
             }
         }
 
@@ -81,7 +81,7 @@ namespace HACTree {
     template<class nodeT>
     struct AllPtsNN{
         EDGE *edges;
-        const edgeComparator2 EC2 = edgeComparator2();
+        edgeComparator2 EC2;
 
         AllPtsNN(EDGE *ee, double eps){
             EC2 = edgeComparator2(eps);
@@ -93,7 +93,7 @@ namespace HACTree {
         }
 
         inline bool Score(double d, nodeT *Q, nodeT *R){
-            return d > (Q->nInfo).getUB();
+            return d > (Q->getInfo()).getUB();
         }
 
         inline bool Score(nodeT *Q, nodeT *R, bool check = true){
@@ -101,10 +101,10 @@ namespace HACTree {
         }
 
         inline void BaseCase(nodeT *Q, nodeT *R, int i, int j){
-            int ii = Q->items[i]->idx();
-            int jj = R->items[j]->idx();
+            int ii = Q->at(i)->idx();
+            int jj = R->at(j)->idx();
             if (ii == jj) return;
-            double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
+            double qrdist = (Q->at(i))->pointDist(*(R->at(j)));
             utils::writeMin(&edges[ii], EDGE(ii,jj,qrdist), EC2);
         }
 
@@ -128,19 +128,19 @@ namespace HACTree {
                 }
             }
 
-            double temp = edges[Q->items[0]->idx()].getW();
+            double temp = edges[Q->at(0)->idx()].getW();
             for(int i=1; i<Q->size(); ++i){
-               double eweight = edges[Q->items[i]->idx()].getW(); 
+               double eweight = edges[Q->at(i)->idx()].getW(); 
 		    if(eweight > temp){
                     temp = eweight;
                 }
             }
-            (Q->nInfo).updateUB(temp);
+            (Q->getInfo()).updateUB(temp);
         }
 
         inline void QLPost(nodeT *Q, nodeT *R){}
         inline void RLPost(nodeT *Q, nodeT *R){
-            (Q->nInfo).updateUB(max((Q->left->nInfo).getUB(), (Q->right->nInfo).getUB()));
+            (Q->getInfo()).updateUB(max((Q->L()->getInfo()).getUB(), (Q->R()->getInfo()).getUB()));
         }
         inline void Post(nodeT *Q, nodeT *R){
             RLPost(Q,R);
@@ -167,7 +167,7 @@ namespace HACTree {
         }
         
         inline bool Score(double d, nodeT *Q, nodeT *R){
-            return (R->nInfo.getCId() == cid) || (d > e->getW());
+            return (R->getInfo().getCId() == cid) || (d > e->getW());
         }
 
         inline bool Score(nodeT *Q, nodeT *R, bool check = true){
@@ -175,9 +175,9 @@ namespace HACTree {
         }
 
         inline void BaseCase(nodeT *Q, nodeT *R, int i, int j){
-            if(uf->find(R->items[j]->idx()) == cid) return;
-            double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
-            utils::writeMin(e, EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), EC2);
+            if(uf->find(R->at(j)->idx()) == cid) return;
+            double qrdist = (Q->at(i))->pointDist(*(R->at(j)));
+            utils::writeMin(e, EDGE(Q->at(i)->idx(),R->at(j)->idx(),qrdist), EC2);
         }
 
         inline double NodeDistForOrder(nodeT *Q, nodeT *R){
@@ -220,36 +220,36 @@ namespace HACTree {
 
         inline void TopDownNode(nodeT *Q, int id){
             if(!isTopDown(id)) return;
-            Q->nInfo.setCId(id);
+            Q->getInfo().setCId(id);
         }
 
         inline void BottomUpNode(nodeT *Q, int id){
             if(isTopDown(id)) return;
-            int cidl = Q->left->nInfo.getCId();
+            int cidl = Q->L()->getInfo().getCId();
             if(cidl != -1){
-                int cidr = Q->right->nInfo.getCId();
-                if(cidl == cidr)Q->nInfo.setCId(cidl);
+                int cidr = Q->R()->getInfo().getCId();
+                if(cidl == cidr)Q->getInfo().setCId(cidl);
             }
         }
 
         inline void BaseCase(nodeT *Q, int id){
             if(isTopDown(id)){
-                Q->nInfo.setCId(id);
+                Q->getInfo().setCId(id);
             }else{
-                id = uf->find(Q->items[0]->idx());
+                id = uf->find(Q->at(0)->idx());
                 for(int i=0; i<Q->n; ++i){
-                    if(uf->find(Q->items[i]->idx())!= id){
-                        Q->nInfo.setCId(-1);
+                    if(uf->find(Q->at(i)->idx())!= id){
+                        Q->getInfo().setCId(-1);
                         return;
                     }
                 }
-                Q->nInfo.setCId(id);
+                Q->getInfo().setCId(id);
             }
         }
 
         inline int SwitchMode(nodeT *Q, int id){
             if(isTopDown(id)) return id;
-            int cid = Q->nInfo.getCId();
+            int cid = Q->getInfo().getCId();
             if(cid == -1) return -1;
             return uf->find(cid); 
         }
@@ -257,7 +257,7 @@ namespace HACTree {
         inline bool Par(nodeT *Q){return Q->n > 2000;}
 
         inline bool Stop(nodeT *Q, int id){
-            int cid = Q->nInfo.getCId();
+            int cid = Q->getInfo().getCId();
             return cid != -1 && cid == id;
         }
 
@@ -283,26 +283,26 @@ namespace HACTree {
 
         inline void TopDownNode(kdnodeT *Q, infoT info){
             if(!isTopDown(info)) return;
-            Q->nInfo.setInfo(info);
+            Q->getInfo().setInfo(info);
         }
 
         inline void BottomUpNode(kdnodeT *Q, infoT info){
             if(isTopDown(info)) return;
-            Q->nInfo.setMinN(min(Q->left->nInfo.getMinN(), Q->right->nInfo.getMinN()));
+            Q->getInfo().setMinN(min(Q->L()->getInfo().getMinN(), Q->R()->getInfo().getMinN()));
         }
 
         inline void BaseCase(kdnodeT *Q, infoT info){
             if(isTopDown(info)){
-                Q->nInfo.setInfo(info);
+                Q->getInfo().setInfo(info);
             }else{
                 int id = Q->items[0]->idx();
                 int min_n = sizes[id]; 
                 for(int i=1; i<Q->size(); ++i){
-                    int id_temp = Q->items[i]->idx();
+                    int id_temp = Q->at(i)->idx();
                     min_n = min(min_n, sizes[id_temp]);  
                 }
                 id = -1;
-                Q->nInfo.setInfo(infoT(id, min_n));
+                Q->getInfo().setInfo(infoT(id, min_n));
             }
         }
 
@@ -328,11 +328,11 @@ namespace HACTree {
             f->TopDownNode(Q, id);
             if(f->Par(Q)){
                 parlay::par_do(
-                [&](){singletree<nodeT, F, E>(Q->left, f, id);}, 
-                [&](){singletree<nodeT, F, E>(Q->right, f, id);});  
+                [&](){singletree<nodeT, F, E>(Q->L(), f, id);}, 
+                [&](){singletree<nodeT, F, E>(Q->R(), f, id);});  
             }else{
-                singletree<nodeT, F, E>(Q->left, f, id);
-                singletree<nodeT, F, E>(Q->right, f, id);
+                singletree<nodeT, F, E>(Q->L(), f, id);
+                singletree<nodeT, F, E>(Q->R(), f, id);
             }
             f->BottomUpNode(Q, id);
         }
@@ -435,7 +435,7 @@ namespace HACTree {
         }
 
         inline bool isComplete(kdnodeT *Q){
-            int  Rid = Q->nInfo.getCId();
+            int  Rid = Q->getInfo().getCId();
             if(cid == Rid ) return true;
             if( Rid != -1){
                 int ct; bool reach_thresh;
@@ -559,7 +559,7 @@ namespace HACTree {
         inline bool isComplete(kdnodeT *Q){
             if(distComputer->method == WARD){
                 double dsq = my_node_distance_sq(Q);
-                double min_n = (double)Q->nInfo.getMinN();
+                double min_n = (double)Q->getInfo().getMinN();
                 double qn = (double)qnode->size();
                 if(dsq > (qn + min_n)/min_n / qn  / 2 * r * r ) return true;
             }

@@ -317,7 +317,7 @@ namespace HACTree {
   }
 
   template <int dim, class objT, class nodeInfo>
-  node<dim, objT, nodeInfo> *build(parlay::slice<objT *, objT *> P,
+  tree<dim, objT, nodeInfo> *build(parlay::slice<objT *, objT *> P,
                          bool parallel,
                          size_t leafSize)
   {
@@ -337,7 +337,7 @@ namespace HACTree {
   }
 
   template <int dim, class objT, class nodeInfo>
-  node<dim, objT, nodeInfo> *build(parlay::sequence<objT> &P,
+  tree<dim, objT, nodeInfo> *build(parlay::sequence<objT> &P,
                          bool parallel,
                          size_t leafSize)
   {
