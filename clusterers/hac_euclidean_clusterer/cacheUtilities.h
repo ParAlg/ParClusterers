@@ -96,7 +96,7 @@ struct CacheTables{
     typedef Table<hashCluster> distCacheT;
 
     std::size_t CACHE_TABLE_SIZE = 64;
-    static const std::size_t T_SIZE_INIT = 64;
+    std::size_t T_SIZE_INIT = 64;
 
     bool no_cache;
     std::size_t n;

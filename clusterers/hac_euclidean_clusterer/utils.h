@@ -7,13 +7,13 @@ namespace in_memory {
 namespace internal{
 namespace utils {
 
-#if defined(MCX16)
+// #if defined(MCX16)
 //ET should be 128 bits and 128-bit aligned
 template <class ET> 
   inline bool CAS128(ET* a, ET b, ET c) {
   return __sync_bool_compare_and_swap_16((__int128*)a,*((__int128*)&b),*((__int128*)&c));
 }
-#endif
+// #endif
 
 // The conditional should be removed by the compiler
 // this should work with pointer types, or pairs of integers
@@ -26,11 +26,11 @@ inline bool CAS(ET *ptr, ET oldv, ET newv) {
   } else if (sizeof(ET) == 4) {
     return __sync_bool_compare_and_swap_4((int *) ptr, *((int *) &oldv), *((int *) &newv));
   } 
-#if defined(MCX16)
+// #if defined(MCX16)
   else if (sizeof(ET) == 16) {
     return utils::CAS128(ptr, oldv, newv);
   }
-#endif
+// #endif
   else {
     std::cout << "common/utils.h CAS bad length " << sizeof(ET) << std::endl;
     abort();
@@ -44,10 +44,10 @@ inline bool CAS_GCC(ET *ptr, ET oldv, ET newv) {
   } else if (sizeof(ET) == 8) {
     return __sync_bool_compare_and_swap((long*)ptr, *((long*)&oldv), *((long*)&newv));
   } 
-#ifdef MCX16
+// #ifdef MCX16
   else if(sizeof(ET) == 16)
     return __sync_bool_compare_and_swap_16((__int128*)ptr,*((__int128*)&oldv),*((__int128*)&newv));
-#endif
+// #endif
   else {
     std::cout << "common/utils.h CAS_GCC bad length" << sizeof(ET) << std::endl;
     abort();
