@@ -12,6 +12,7 @@ cc_library(
         ':unionfind',
         ':linkage_types',
         ':finder',
+        ":clusterer",
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -23,6 +24,18 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "clusterer",
+    hdrs = ["clusterer.h"],
+    deps = [
+        ":unionfind",
+        ":linkage_types",
+        ':finder',
+    ],
+)
+
+
 
 cc_library(
     name = "finder",

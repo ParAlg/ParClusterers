@@ -110,6 +110,9 @@ class NNFinder {
   inline int leftIdx(int cid){return getNode(cid)->left->idx;}
   inline int rightIdx(int cid){return getNode(cid)->right->idx;}
   inline int cid(int idx){return cid(nodes[idx]);}
+  inline bool justMerge(int cid, int round){
+    return round == getNode(uf->find(cid))->getRound();
+  }
 
 
   inline double getDistNaive(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
@@ -381,7 +384,10 @@ class NNFinder {
         int cid = activeClusters[i];
         centers[i] = pointT(getNode(cid)->center, cid); //consider making an array of active node pointers
       });
-      kdtree->kdTreeRebuild(centers, C);
+
+      delete kdtree;
+      kdtree = build<dim, pointT , nodeInfo>(centers, true); //TODO optimize to rebuild
+      // kdtree->kdTreeRebuild(centers, C);
     }
 
 #ifdef DEBUG

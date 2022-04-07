@@ -8,6 +8,9 @@
 
 #include "clusterers/hac_euclidean_clusterer/finder.h"
 #include "clusterers/hac_euclidean_clusterer/dist.h"
+#include "clusterers/hac_euclidean_clusterer/clusterer.h"
+
+#include "pointIO.h"
 
 #include <vector>
 
@@ -94,10 +97,14 @@ TEST(kdTree, testBuild)
   testKdTree<dim>(P);
 }
 
-TEST(kdTree, treeUtilities)
+TEST(kdTree, small)
 {
   auto P = smallData2();
   int n = P.size();
+  int chainNum = n;
+  int round = 0;
+  int *flags = (int*) malloc(sizeof(int)*n);// used in linkterminalnodes
+
   UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
   // auto P = makeIPoint(P0);
 
@@ -111,36 +118,49 @@ TEST(kdTree, treeUtilities)
   NNFinder<2, distT, F> *finder = new NNFinder<2, distT, F>(n, P.data(), uf, dist, true); //a no cache finder
   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
   finder->initChain(info);
-
   vector<int> round1_nn = {1,0,1,2,3,6,5};
+  vector<long> round1_rev = {1,0,3,4,-1,6,5};
   for(int i=0;i<n;++i){
     EXPECT_EQ(finder->edges[i].first, i);
-    EXPECT_EQ(info->chain[i], finder->edges[i].second);
-    EXPECT_EQ(info->chain[i], round1_nn[i]);
+    EXPECT_EQ(finder->edges[i].second, round1_nn[i]);
+    EXPECT_EQ(info->getNN(i), round1_nn[i]);
+    EXPECT_EQ(info->chainRev[i].second, round1_rev[i]);
   }
 
-  // {
-  //   kdTree::rangeTraverse<2, objT, nodeT, F>(tree, P[0], sqrt(2) / 2);
-  //   EXPECT_EQ(nbrs.size(), 2);
-  // }
+  link_terminal_nodes<dim, TF>(uf, finder, info, round, flags);
+  EXPECT_EQ(uf->find(0), uf->find(1));
+  EXPECT_EQ(uf->find(5), uf->find(6));
+  vector<int> round1_nn2 = {-1,-1,1,2,3,-1,-1};
+  vector<long> round1_rev2 = {-1,-1,3,4,-1,-1,-1};
+  for(int i=0;i<n;++i){
+    EXPECT_EQ(finder->edges[i].first, i);
+    EXPECT_EQ(finder->edges[i].second, round1_nn[i]);
+    EXPECT_EQ(info->getNN(i), round1_nn2[i]);
+    EXPECT_EQ(info->chainRev[i].second, round1_rev2[i]);
+  }
+  // chain_find_nn(chainNum, finder, info);
 
-  // {
-  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], 1);
-  //   EXPECT_EQ(nbrs.size(), 3);
-  // }
-
-  // {
-  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], sqrt(2));
-  //   EXPECT_EQ(nbrs.size(), 4);
-  // }
-
-  // {
-  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], sqrt(2) * 3);
-  //   EXPECT_EQ(nbrs.size(), 7);
-  // }
-
-  // kdTree::del(tree);
+  free(flags);
 }
+
+// TEST(kdTree, AllNNlarge)
+// {
+//   auto P = pargeo::pointIO::readPointsFromFile<point<2>>("2D_Var_10K");
+//   int n = P.size();
+//   UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+//   // auto P = makeIPoint(P0);
+
+//   using objT = iPoint<2>;
+//   // using nodeT = internal::HACTree::node<2, objT, nodeInfo>;
+
+//   using distT = distAverageSq<2>;
+//   using F = RangeQueryCenterF<2, objT, distT>;
+  
+//   distT *dist = new distT();
+//   NNFinder<2, distT, F> *finder = new NNFinder<2, distT, F>(n, P.data(), uf, dist, true); //a no cache finder
+//   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
+//   finder->initChain(info);
+// }
 
 // Demonstrate some basic assertions.
 // TEST(HelloTest, BasicAssertions) {

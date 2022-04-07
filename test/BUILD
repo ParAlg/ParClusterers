@@ -13,7 +13,9 @@ cc_test(
         "//clusterers/hac_euclidean_clusterer:finder",
         "//clusterers/hac_euclidean_clusterer:linkage_types",
         "//clusterers/hac_euclidean_clusterer:dist",
+        "//clusterers/hac_euclidean_clusterer:clusterer",
         ':uniform',
+        ":pointIO",
         "@com_google_googletest//:gtest_main",
         "@gbbs//gbbs:bridge"],
 )
@@ -25,3 +27,19 @@ cc_library(
       "//clusterers/hac_euclidean_clusterer:point",
     ],
 )
+
+cc_library(
+    name = "pointIO",
+    hdrs = ["pointIO.h"],
+    deps = [
+      ":IO"
+    ],
+)
+
+cc_library(
+    name = "IO",
+    hdrs = ["IO.h"],
+    deps = [
+    ],
+)
+
