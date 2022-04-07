@@ -74,6 +74,7 @@ struct dendroLine{
     }
 };
 
+
 struct TreeChainInfo{
   parlay::sequence<int> terminal_nodes;// must be cluster id
   parlay::sequence<int> chain;//chain[i] is cluster i's nn, NO_NEIGH for unknown or invalid// -1 for unknown, -2 for invalid
@@ -81,9 +82,9 @@ struct TreeChainInfo{
   parlay::sequence<bool> flag;
   int chainNum;
 
-  parlay::sequence<pair<double, long>> chainRev;// reverse chain, indexed by cid TODO: change to just double?
   parlay::sequence<pair<int, double>> revTerminals; // indexed by ith temrinal nodes
   static constexpr pair<double, long> invalid_rev = make_pair(numeric_limits<double>::max(), (long)-1);
+  pair<double, long> *chainRev; // reverse chain, indexed by cid TODO: change to just double?
 
 
   TreeChainInfo(int n, double _eps = 1e-20){
@@ -94,15 +95,22 @@ struct TreeChainInfo{
     flag = parlay::sequence<bool>(n);
     chainNum = n;
 
-    chainRev = parlay::sequence<pair<double, long>>(n, invalid_rev); //note: changing!
     revTerminals = parlay::sequence<pair<int, double>>(n);
 
+    chainRev = (pair<double, long> *)malloc(sizeof(pair<double, long>) * n);//can't use util's writemin in parlay sequence data
+    parlay::parallel_for(0,n,[&](int i){chainRev[i] = invalid_rev;});
     // EC2 = LDS::PairComparator21<pair<long, double>>(_eps);
+  }
+
+  ~TreeChainInfo(){
+    free(chainRev);
   }
 
   inline void updateChain(int cid, int nn, double w){
     chain[cid] = nn;
-    utils::writeMin(&chainRev[nn], make_pair(w,(long)cid), std::less<pair<double, long>>()); 
+    pair<double, long> new_pair = make_pair(w,(long)cid);
+    pair<double, long> new_pair2 = make_pair(w,(long)cid);
+    utils::writeMin(&chainRev[nn], new_pair, std::less<pair<double, long>>()); 
   }
   // then in checking, only check for -1
   inline void invalidate(int cid, int code){
