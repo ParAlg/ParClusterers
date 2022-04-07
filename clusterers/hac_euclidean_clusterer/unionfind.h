@@ -39,7 +39,8 @@ namespace UnionFind {
 			values = nullptr;
 		}
     }
-
+	
+	IntType size(){return m_n;}
       void del() {free(parents); free(hooks); if(values) free(values);}
 
       // Assumes root is negative 

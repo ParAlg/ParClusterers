@@ -92,11 +92,11 @@ namespace HACTree {
 
   /* Bichromatic closest pair */
 
-  template <typename nodeT>
-  std::tuple<typename nodeT::objT *,
-             typename nodeT::objT *,
-             typename nodeT::objT::floatT>
-  bichromaticClosestPair(nodeT *n1, nodeT *n2);
+  // template <typename nodeT>
+  // std::tuple<typename nodeT::objT *,
+  //            typename nodeT::objT *,
+  //            typename nodeT::objT::floatT>
+  // bichromaticClosestPair(nodeT *n1, nodeT *n2);
 
   /* Well-separated pair decomposition */
 
@@ -330,6 +330,8 @@ namespace HACTree {
     inline floatT getMax(int i) { return pMax[i]; }
 
     inline floatT getMin(int i) { return pMin[i]; }
+    
+    inline nodeInfo getInfo() {return nInfo;}
 
     // inline void setEmpty() { id = -2; }
 

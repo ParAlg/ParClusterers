@@ -23,7 +23,7 @@ namespace HACTree {
     // bichromatic furthest pair
     template<class nodeT>
     struct BCFP{
-        LDS::EDGE __attribute__ ((aligned (16))) e;
+        EDGE __attribute__ ((aligned (16))) e;
         double ub = numeric_limits<double>::max();
 
         ~BCFP(){}
@@ -47,9 +47,9 @@ namespace HACTree {
             auto f = [&](EDGE i, EDGE j) {return (i.getW() < j.getW());};
             double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
             if(qrdist > ub){
-                utils::writeMin(&e, LDS::EDGE(-1,-1,numeric_limits<double>::max()), f);
+                utils::writeMin(&e, EDGE(-1,-1,numeric_limits<double>::max()), f);
             }else{
-                utils::writeMin(&e, LDS::EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), f);
+                utils::writeMin(&e, EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), f);
             }
         }
 
@@ -62,7 +62,7 @@ namespace HACTree {
             return l < r;
         }
 
-        inline int SpawnOrder(intT i){
+        inline int SpawnOrder(int i){
             return 3-i;
         }
 
@@ -105,7 +105,7 @@ namespace HACTree {
             int jj = R->items[j]->idx();
             if (ii == jj) return;
             double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
-            utils::writeMin(&edges[ii], LDS::EDGE(ii,jj,qrdist), EC2);
+            utils::writeMin(&edges[ii], EDGE(ii,jj,qrdist), EC2);
         }
 
         inline double NodeDistForOrder(nodeT *Q, nodeT *R){
@@ -163,7 +163,7 @@ namespace HACTree {
         NNsingle(EDGE *t_e, UnionFind::ParUF<int> *t_uf, int t_cid):e(t_e),uf(t_uf), cid(t_cid){}
 
         NNsingle(UnionFind::ParUF<int> *t_uf, int t_cid):uf(t_uf), cid(t_cid){
-            e = new LDS::EDGE(-1,-1,numeric_limits<double>::max());
+            e = new EDGE(-1,-1,numeric_limits<double>::max());
         }
         
         inline bool Score(double d, nodeT *Q, nodeT *R){
@@ -177,7 +177,7 @@ namespace HACTree {
         inline void BaseCase(nodeT *Q, nodeT *R, int i, int j){
             if(uf->find(R->items[j]->idx()) == cid) return;
             double qrdist = (Q->items[i])->pointDist(*(R->items[j]));
-            utils::writeMin(e, LDS::EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), EC2);
+            utils::writeMin(e, EDGE(Q->items[i]->idx(),R->items[j]->idx(),qrdist), EC2);
         }
 
         inline double NodeDistForOrder(nodeT *Q, nodeT *R){
@@ -209,13 +209,13 @@ namespace HACTree {
 
     // mark the if a tree node has points from a single cluster
     // used for complete linkage
-    template<int dim, class nodeT>
+    template<class nodeT>
     struct MarkClusterId{
         
         UnionFind::ParUF<int> *uf;
 
         MarkClusterId(UnionFind::ParUF<int> *t_uf):uf(t_uf){}
-        inline bool doMark(intT C, intT round){ return round > 5 && C > 1;}
+        inline bool doMark(int C, int round){ return round > 5 && C > 1;}
         inline bool isTopDown(int id){ return id != -1;}
 
         inline void TopDownNode(nodeT *Q, int id){
@@ -265,7 +265,7 @@ namespace HACTree {
 
     // mark the min_n on a kd-tree of cluster centers, used for ward's linkage
     // TODO: clean the code to not mark this and only used the global min_n?
-    template<int dim, class kdnodeT, class nodeInfo>
+    template<class kdnodeT, class nodeInfo>
     struct MarkMinN{
         typedef typename nodeInfo::infoT infoT;
 
@@ -327,7 +327,7 @@ namespace HACTree {
         }else{
             f->TopDownNode(Q, id);
             if(f->Par(Q)){
-                parlay::pardo(
+                parlay::par_do(
                 [&](){singletree<nodeT, F, E>(Q->left, f, id);}, 
                 [&](){singletree<nodeT, F, E>(Q->right, f, id);});  
             }else{
@@ -339,11 +339,11 @@ namespace HACTree {
     }
 
     // mark a tree with cid=cid
-    template<int dim, class nodeT>
+    template<class nodeT>
     void markTree(nodeT *Q, UnionFind::ParUF<int> *uf, int cid = -1){
-        typedef MarkClusterId<dim, nodeT> M;
+        typedef MarkClusterId<nodeT> M;
         M *marker = new M(uf);
-        singletree<nodeT, M, intT>(Q, marker, cid);
+        singletree<nodeT, M, int>(Q, marker, cid);
     }
 
 
@@ -374,14 +374,14 @@ namespace HACTree {
         bool no_cache;
 
         RangeQueryCountF(UnionFind::ParUF<int> *t_uf, int t_cid, 
-            nodeT *t_nodes, intT *t_rootIdx, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
+            nodeT *t_nodes, int *t_rootIdx, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, int C, double _eps):
             uf(t_uf), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
             distComputer(t_distComputer), eps(_eps){
             EC2 = edgeComparator2(eps);
             e = make_pair(t_edges[cid].second, t_edges[cid].getW());
 
-            pid = getWorkerId();
+            pid = parlay::worker_id();
             tb = distComputer->initClusterTb(pid, C);//clusterTbs[idx];
 
             tbs = t_tbs;
@@ -393,14 +393,14 @@ namespace HACTree {
         ~RangeQueryCountF(){
         }
 
-        inline intT getFinalNN(){return e.first;}
+        inline int getFinalNN(){return e.first;}
         inline double getFinalDist(){return e.second;}
 
-        inline intT idx(nodeT* node){ return node->idx;}
-        inline nodeT *getNode(intT cid){return nodes+rootIdx[cid];}
-        inline intT idx(intT cid){return idx(getNode(cid));}
+        inline int idx(nodeT* node){ return node->idx;}
+        inline nodeT *getNode(int cid){return nodes+rootIdx[cid];}
+        inline int idx(int cid){return idx(getNode(cid));}
 
-        inline void updateDist(intT Rid, bool reach_thresh){
+        inline void updateDist(int Rid, bool reach_thresh){
             if(cid != Rid && Rid != e.first){
 
                 if(!no_cache){
@@ -408,8 +408,8 @@ namespace HACTree {
                 if(!success){  // only compute distance once
                     double dist = tbs->find(cid, Rid);
                     // success = false only when insertions fail and reach_thresh is false
-                    if(dist == tbs->UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
-                    if(dist != tbs->CHECK_TOKEN){              
+                    if(dist == UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
+                    if(dist != CHECK_TOKEN){              
                         if(e.second - dist > eps){ e = make_pair(Rid, dist);}  
                         else if(abs(e.second - dist) <= eps && Rid < e.first){e = make_pair(Rid, dist); }
                     }
@@ -425,7 +425,7 @@ namespace HACTree {
             }
         }
         
-        inline tuple<intT, bool> incrementTable(int Rid, int a = 1){
+        inline tuple<int, bool> incrementTable(int Rid, int a = 1){
             if(get<0>(tb[Rid]) != distComputer->round || get<2>(tb[Rid]) != cid){
                 tb[Rid] =  make_tuple(distComputer->round, a, (long)cid);//make_entry(round, cid, a);
             }else{
@@ -438,7 +438,7 @@ namespace HACTree {
             int  Rid = Q->nInfo.getCId();
             if(cid == Rid ) return true;
             if( Rid != -1){
-                intT ct; bool reach_thresh;
+                int ct; bool reach_thresh;
                 tie(ct, reach_thresh) = incrementTable(Rid, Q->size());
                 if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->getN()) updateDist(Rid, reach_thresh);
                 return true;
@@ -465,6 +465,7 @@ namespace HACTree {
 
     // need t_m active hash table size to store candidates
     // invariant: e contain the current nearest neighbor in tbs to cid
+    // the tree is a tree of cluster centroids, each point's is the cluster's id
     // insert into (smallid, large id) table, only succeeded one compute and update
     template<int dim, class objT, class distT>
     struct RangeQueryCenterF{
@@ -473,7 +474,7 @@ namespace HACTree {
         typedef tree<dim, objT, nodeInfo> kdtreeT;
         typedef node<dim, objT, nodeInfo> kdnodeT;
 
-        UnionFind::ParUF<int> *uf;
+        // UnionFind::ParUF<int> *uf;
         int cid;
         EDGE *edges;
         nodeT *nodes;
@@ -487,10 +488,10 @@ namespace HACTree {
         bool no_cache;
         const bool local = false; // writemin after
 
-        RangeQueryCenterF(UnionFind::ParUF<intT> *t_uf, intT t_cid, double _r,
-            nodeT *t_nodes, intT *t_rootIdx, CacheTables<nodeT> *t_tbs, LDS::EDGE *t_edges,
-            distT *t_distComputer, bool t_no_cache, intT C, double eps):
-            uf(t_uf), cid(t_cid), r(_r)//clusteredPts(t_clusteredPts),
+        RangeQueryCenterF(int t_cid, double _r,
+            nodeT *t_nodes, int *t_rootIdx, CacheTables<nodeT> *t_tbs, EDGE *t_edges,
+            distT *t_distComputer, bool t_no_cache, int C, double eps):
+            cid(t_cid), r(_r),//clusteredPts(t_clusteredPts), uf(t_uf), 
             distComputer(t_distComputer),
             no_cache(t_no_cache){
                 EC2 = edgeComparator2(eps);
@@ -505,12 +506,12 @@ namespace HACTree {
 
         ~RangeQueryCenterF(){
         }
-        inline intT getFinalNN(){return edges[cid].second;}
+        inline int getFinalNN(){return edges[cid].second;}
         inline double getFinalDist(){return edges[cid].getW();}
 
-        inline intT idx(nodeT* node){ return node->idx;}
-        inline nodeT *getNode(intT cid){return nodes+rootIdx[cid];}
-        inline intT idx(intT cid){return idx(getNode(cid));}
+        inline int idx(nodeT* node){ return node->idx;}
+        inline nodeT *getNode(int cid){return nodes+rootIdx[cid];}
+        inline int idx(int cid){return idx(getNode(cid));}
 
         inline double my_node_distance_sq(kdnodeT *Q) {
             pointT qcenter = qnode->center;
@@ -538,10 +539,10 @@ namespace HACTree {
             if(!success){  // only compute distance once
                 double dist = tb->find(cid, Rid);
                 // success = false only when insertions fail and reach_thresh is false
-                if(dist == tb->UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
-                if(dist != tb->CHECK_TOKEN){              
-                    utils::writeMin(&edges[cid], LDS::EDGE(cid, Rid, dist), EC2);
-                    utils::writeMin(&edges[Rid], LDS::EDGE(Rid, cid, dist), EC2);
+                if(dist == UNFOUND_TOKEN){  cout << "should not find unfound_token" << endl;exit(1);}
+                if(dist != CHECK_TOKEN){              
+                    utils::writeMin(&edges[cid], EDGE(cid, Rid, dist), EC2);
+                    utils::writeMin(&edges[Rid], EDGE(Rid, cid, dist), EC2);
                 }
                 return;  
             }
@@ -550,13 +551,13 @@ namespace HACTree {
             double dist = distComputer->getDistNaive(qnode, getNode(Rid));
             if(!no_cache) tb->insert(cid, Rid, dist); 
             //in case Rid searches for cid
-            utils::writeMin(&edges[cid], LDS::EDGE(cid, Rid, dist), EC2);
-            utils::writeMin(&edges[Rid], LDS::EDGE(Rid, cid, dist), EC2);
+            utils::writeMin(&edges[cid], EDGE(cid, Rid, dist), EC2);
+            utils::writeMin(&edges[Rid], EDGE(Rid, cid, dist), EC2);
 
         }
 
         inline bool isComplete(kdnodeT *Q){
-            if(distComputer->method == LDS::WARD){
+            if(distComputer->method == WARD){
                 double dsq = my_node_distance_sq(Q);
                 double min_n = (double)Q->nInfo.getMinN();
                 double qn = (double)qnode->size();

@@ -3,8 +3,8 @@
 #include <atomic>
 #include "unionfind.h"
 #include "linkage_types.h"
-#include "matrix.h"
-#include "kdtree.h"
+// #include "matrix.h"
+#include "kdtree/kdtree.h"
 #include "treeUtilities.h"
 #include "cacheUtilities.h"
 
@@ -15,38 +15,24 @@
 using namespace std;
 
 #define ALLOCDOUBLE
-#define LARGER_THAN_UB numeric_limits<double>::max()
-// #define CHECK_TOKEN -1
-// #define UNFOUND_TOKEN -2
-#define MAX_CACHE_TABLE_SIZE_INIT 64
-#define LINKAGE_LOADFACTOR 2.0
-// #define CHECK_NO_CACHE(i) if(no_cache){cout << "no cache " << i << endl; exit(1);}
-#define CHECK_NO_CACHE(i)
+
+
 
 namespace research_graph {
 namespace in_memory {
 namespace internal {
-
 namespace HACTree {
 
-template<int dim, class distF, class Fr, class M>
-class TreeNNFinder { //: public NNFinder<dim>
+template<int dim, class distF, class Fr>
+class NNFinder {
   public:
-  // typedef iPoint<dim> pointT;
   typedef iPoint<dim> pointT;
-  // typedef typename FINDNN::CLinkNodeInfo nodeInfo;
-  typedef typename Fr::nodeInfo nodeInfo;
-  // typedef FINDNN::AveLinkNodeInfo<dim, pointT *> nodeT;
   typedef Node<dim> nodeT;
-  typedef HACTree::node<dim, pointT, kdNodeInfo > kdnodeT;
-  typedef HACTree::tree<dim, pointT, kdNodeInfo > treeT;
-  // typedef typename Fr::kdnodeT kdnodeT;
-  // typedef typename Fr::kdtreeT treeT;
-  typedef LDS::distCacheT distCacheT;
-  typedef LDS::hashClusterAveET hashClusterAveET;
+  typedef HACTree::node<dim, pointT, nodeInfo > kdnodeT;
+  typedef HACTree::tree<dim, pointT, nodeInfo > treeT;
+  typedef Table<hashCluster> distCacheT;
   typedef int intT;
-
-  bool no_cache;
+  
   int C;// number of clusters
   int n;// number of points
   parlay::sequence<pointT> PP;
@@ -58,89 +44,83 @@ class TreeNNFinder { //: public NNFinder<dim>
   treeT *kdtree;
   EDGE *edges; //edges[i] stores the min neigh of cluster i
 
+  bool no_cache;
   CacheTables<nodeT> *cacheTables;
   // distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
   // int hashTableSize=0;
   // distCacheT::eType *TA;
 
-  parlay::sequence<nodeT> nodes; // preallocated space to store tree nodes
-  parlay::sequence<nodeT *> activeNodes; // pointers to the active nodes, same order as activeClustersTODO
-  edgeComparator2 EC2;
-  double eps;
   atomic<intT> nodeIdx; // the index of next node to use for cluster trees
-
+  parlay::sequence<nodeT> nodes; // preallocated space to store tree nodes
+  // parlay::sequence<nodeT *> activeNodes; // pointers to the active nodes, same order as activeClustersTODO
+  
   distF *distComputer;
   parlay::sequence<pointT> centers; //used to rebuild kd-tree
-  // M marker;
 
-  intT NAIVE_THRESHOLD = 50;
-  // intT MAX_CACHE_TABLE_SIZE = 128;
+  int NAIVE_THRESHOLD = 5;
+  double eps;
+  edgeComparator2 EC2;
 
-  TreeNNFinder(intT t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
-    bool t_noCache, double t_eps, intT t_naive_thresh, intT t_cache_size): 
+  parlay::sequence<int> natural_int_array(int n){
+    auto A = parlay::sequence<int>(n); 
+    parlay::parallel_for(0,n,[&](int i){A[i]=i;});
+    return A;
+  }
+
+  NNFinder(int t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
+    bool t_noCache, int t_cache_size=32, double t_eps = 0, int t_naive_thresh=5): 
     uf(t_uf), n(t_n), no_cache(t_noCache), eps(t_eps), NAIVE_THRESHOLD(t_naive_thresh){
-    EC2 = LDS::edgeComparator2(eps);
+    EC2 = edgeComparator2(eps);
     C = n;
-    activeClusters = parlay::sequence<int>(n, [&](int i){return i;});
-    PP = parlay::sequence<pointT>(n, [&](int i){return pointT(t_P[i], i);});
-    centers = parlay::sequence<pointT>(n, [&](int i){return PP[i];});
+    activeClusters = natural_int_array(n);
+    PP = makeIPoint(t_P);
+    centers = parlay::sequence<pointT>(n); parlay::parallel_for(0,n,[&](int i){centers[i]=PP[i];});
 
-    // distComputer = new distF(PP, n, no_cache);
     distComputer = _distComputer;
 
-    rootIdx = parlay::sequence<int>(n, [&](int i){return i;});
+    rootIdx = natural_int_array(n);
     nodes = parlay::sequence<nodeT>(2*n);
-    // distComputer->initNodes(nodes.data(), n);
     parlay::parallel_for(0,n,[&](int i){nodes[i] = nodeT(i, t_P[i]);});
     
     flag = parlay::sequence<bool>(C);
     newClusters = parlay::sequence<int>(C);
 
-    // edges =parlay::sequence<LDS::EDGE>(n, [&](int i){return LDS::EDGE();});
-    edges = (EGDE *)aligned_alloc(sizeof(EDGE), n*sizeof(EDGE));
+    // edges =parlay::sequence<EDGE>(n, [&](int i){return EDGE();});
+    edges = (EDGE *)aligned_alloc(sizeof(EDGE), n*sizeof(EDGE));
     parlay::parallel_for(0,n,[&](int i){edges[i] = EDGE();});
 
     cacheTables = new CacheTables(no_cache, n, t_cache_size);
 
     nodeIdx.store(n); // have used n nodes
-    kdtree = build(PP);
-    // marker = M(uf, nodes, rootIdx);
-
+    kdtree = build(PP, true);
   }
 
-  ~TreeNNFinder(){
-    // if(!no_cache){
-    //   parallel_for(intT i=0; i<2*n; ++i) {
-    //     delete cacheTbs[i];
-    //   }
-    //   free(TA);
-    //   free(cacheTbs);
-    // }
+  ~NNFinder(){
     delete cacheTables;
     delete kdtree;
     free(edges);
     // delete distComputer;
   }
 
-  inline intT cid(nodeT* node){ return node->cId;}
-  inline intT idx(nodeT* node){ return node->idx;}
-  inline nodeT *getNode(intT cid){return nodes+rootIdx[cid];}
-  inline distCacheT *getTable(intT cid){return cacheTbs[rootIdx[cid]];}
-  inline intT idx(intT cid){return idx(getNode(cid));}
-  inline intT leftIdx(intT cid){return getNode(cid)->left->idx;}
-  inline intT rightIdx(intT cid){return getNode(cid)->right->idx;}
-  inline intT cid(intT idx){return cid(nodes[idx]);}
+  inline int cid(nodeT* node){ return node->cId;}
+  inline int idx(nodeT* node){ return node->idx;}
+  inline nodeT *getNode(int cid){return nodes+rootIdx[cid];}
+  inline distCacheT *getTable(int idx){return cacheTables->getTable(idx);}
+  inline int idx(int cid){return idx(getNode(cid));}
+  inline int leftIdx(int cid){return getNode(cid)->left->idx;}
+  inline int rightIdx(int cid){return getNode(cid)->right->idx;}
+  inline int cid(int idx){return cid(nodes[idx]);}
 
 
   inline double getDistNaive(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     return distComputer->getDistNaive(inode, jnode, lb, ub, par);
   }
 
-  // inline double getDistNaive(intT i, intT j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
+  // inline double getDistNaive(int i, int j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
   //   return distComputer->getDistNaive(i, j, lb, ub, par);
   // }
 
-  // inline double getDistNaiveDebug(intT i, intT j){
+  // inline double getDistNaiveDebug(int i, int j){
   //   return distComputer->getDistNaive(getNode(i), getNode(j), -1,numeric_limits<double>::max(), false );
   // }
 
@@ -150,7 +130,7 @@ class TreeNNFinder { //: public NNFinder<dim>
   // true if found in table
   // used in merging 
   // range search has its own updateDist
-  tuple<double, bool> getDist(intT i,  intT j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
+  tuple<double, bool> getDist(int i,  int j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     if(!no_cache){
     double d = cacheTables->find(i, j);
     // if(d == CHECK_TOKEN){cout << "find check token" << endl; exit(1);} // might find is in singleNN step in getNN
@@ -171,13 +151,13 @@ class TreeNNFinder { //: public NNFinder<dim>
 
   //newc is a newly merged cluster
   // newc is new, rid is old
-  inline double getNewDistO(intT newc, intT rid){
+  inline double getNewDistO(int newc, int rid){
     nodeT* ql = getNode(newc)->left;
-    intT nql = ql->n;
+    int nql = ql->n;
     nodeT* qr = getNode(newc)->right;
-    intT nqr = qr->n;
+    int nqr = qr->n;
     nodeT* rroot = getNode(rid);
-    intT nr = rroot->n;
+    int nr = rroot->n;
     double dij = getNode(newc)->getHeight();
 
     // double n1 = (double)nql * (double)nr;
@@ -201,17 +181,17 @@ class TreeNNFinder { //: public NNFinder<dim>
   //todo: cids on cluster tree do not need to be marked
   // overwrite entry?
   // TODO: consider changing hashtable to idx -> (idx, dist)
-  inline double getNewDistN(intT newc, intT rid){
+  inline double getNewDistN(int newc, int rid){
     nodeT* ql = getNode(newc)->left;
-    intT nql = ql->n;
+    int nql = ql->n;
     nodeT* qr = getNode(newc)->right;
-    intT nqr = qr->n;
+    int nqr = qr->n;
     double dij = getNode(newc)->getHeight();
 
     nodeT* rl = getNode(rid)->left;
-    intT nrl = rl->n;
+    int nrl = rl->n;
     nodeT* rr = getNode(rid)->right;
-    intT nrr = rr->n;
+    int nrr = rr->n;
     double dklr = getNode(rid)->getHeight();
 
     double d1,d2, d3, d4; bool intable;
@@ -233,27 +213,27 @@ class TreeNNFinder { //: public NNFinder<dim>
 
   // store the closest nn in edges
   // assume edges[cid] already has max written
-  void getNN_naive(intT cid, double ub = numeric_limits<double>::max(), intT t_nn = -1){
-    utils::writeMin(&edges[cid], LDS::EDGE(cid, t_nn, ub), EC2); 
-    parallel_for(intT i = 0; i < C; ++i){
-      intT cid2 = activeClusters[i];
+  void getNN_naive(int cid, double ub = numeric_limits<double>::max(), int t_nn = -1){
+    utils::writeMin(&edges[cid], EDGE(cid, t_nn, ub), EC2); 
+    parlay::parallel_for(0, C, [&](int i){
+      int cid2 = activeClusters[i];
       if(cid2 != cid){//if(cid2 < cid) { // the larger one might not be a terminal node only work if C == |terminal node|
         double tmpD;
         bool intable;
         tie(tmpD, intable) = getDist(cid, cid2, -1, edges[cid].getW(), true);
-        utils::writeMin(&edges[cid], LDS::EDGE(cid,cid2,tmpD), EC2);
-        utils::writeMin(&edges[cid2], LDS::EDGE(cid2,cid,tmpD), EC2); 
+        utils::writeMin(&edges[cid], EDGE(cid,cid2,tmpD), EC2);
+        utils::writeMin(&edges[cid2], EDGE(cid2,cid,tmpD), EC2); 
         if((!intable) && (!no_cache) && (tmpD != LARGER_THAN_UB)){
           cacheTables->insert(cid, cid2, tmpD);
         }
       }
-    }
+    });
     // return make_pair(-1, -1); 
   }
 
   // store the closest nn in edges
   // assume edges[cid] already has max written
-  inline void getNN(intT cid, double ub = numeric_limits<double>::max(), intT t_nn = -1){
+  inline void getNN(int cid, double ub = numeric_limits<double>::max(), int t_nn = -1){
     // if(edges[cid].getW() ==0){ can't stop, need the one with smallest id
 
     // after a round of C <= 50, we might not have all entries
@@ -267,12 +247,12 @@ class TreeNNFinder { //: public NNFinder<dim>
     // can't writemin to all edges first and then search
     // maybe because a bad neighbor can write to the edge and give a bad radius
     double minD = ub;
-    intT nn = t_nn;
+    int nn = t_nn;
     bool intable;
     Node<dim> query = getNode(cid);
 
     if(ub == numeric_limits<double>::max()){
-        typedef FINDNN::NNsingle<dim, kdnodeT> Fs;
+        typedef NNsingle<kdnodeT> Fs;
         Fs fs = Fs(uf, cid, eps);
         // if(distComputer->nn_process){
         //   distComputer->getRadius(cid, kdtree->root, &fs);
@@ -280,7 +260,7 @@ class TreeNNFinder { //: public NNFinder<dim>
         pointT centroid = pointT(query->center, cid);
         treeT treetmp = treeT(&centroid, 1, false);
         // closest to a single point in cluster
-        FINDNNP::dualtree<kdnodeT, Fs>(treetmp.root, kdtree->root, &fs);
+        dualtree<kdnodeT, Fs>(treetmp.root, kdtree->root, &fs);
         // }
         
         nn = uf->find(fs.e->second);
@@ -292,41 +272,41 @@ class TreeNNFinder { //: public NNFinder<dim>
         }
 #endif
         if((!intable) && (!no_cache)  && (minD != LARGER_THAN_UB)){
-          insert(cid, nn, minD);
+          cacheTables->insert(cid, nn, minD);
         }
     }
 
-    utils::writeMin(&edges[cid], LDS::EDGE(cid, nn, minD), EC2); 
-    utils::writeMin(&edges[nn], LDS::EDGE(nn, cid, minD), EC2);
+    utils::writeMin(&edges[cid], EDGE(cid, nn, minD), EC2); 
+    utils::writeMin(&edges[nn], EDGE(nn, cid, minD), EC2);
     if(minD ==0){
       return;
     }
     double r = distComputer->getBall(query, minD+eps); //TODO: changed to dist, need to set r in range function
 
-    Fr fr = Fr(uf, cid, r, nodes, rootIdx, cacheTbs, edges, distComputer, no_cache, C, eps); 
+    Fr fr = Fr(uf, cid, r, nodes, rootIdx, cacheTables, edges, distComputer, no_cache, C, eps); 
     HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree->root, query->center, r, &fr);
 
     if(fr.local){ //TODO: optimize out to simplify code
     nn = fr.getFinalNN();
     minD = fr.getFinalDist();
-    utils::writeMin(&edges[cid], LDS::EDGE(cid, nn, minD), EC2); 
+    utils::writeMin(&edges[cid], EDGE(cid, nn, minD), EC2); 
     }
   }
 
     // merge two clusters in dendrogram
     // u, v are cluster ids
-  inline void merge(intT u, intT v, intT newc, intT round, double height){
-    intT rootNodeIdx = nodeIdx.fetch_add(1);
+  inline void merge(int u, int v, int newc, int round, double height){
+    int rootNodeIdx = nodeIdx.fetch_add(1);
     nodes[rootNodeIdx] = nodeT(newc, round, rootNodeIdx, getNode(u), getNode(v), height);
     rootIdx[newc] = rootNodeIdx;
   }
 
-  inline void updateDist(intT newc){
+  inline void updateDist(int newc){
     CHECK_NO_CACHE(497)
-    intT idx1 = leftIdx(newc);
-    intT idx2 = rightIdx(newc);
-    intT cid1 = getNode(newc)->left->cId;
-    intT cid2 = getNode(newc)->right->cId;
+    int idx1 = leftIdx(newc);
+    int idx2 = rightIdx(newc);
+    int cid1 = getNode(newc)->left->cId;
+    int cid2 = getNode(newc)->right->cId;
 
     auto tb1 = cacheTables->getTable(idx1);//cacheTbs[idx1];
     auto tb2 = cacheTables->getTable(idx2);//cacheTbs[idx2];
@@ -337,15 +317,15 @@ class TreeNNFinder { //: public NNFinder<dim>
     auto newtb = cacheTables->getTable(idx(newc));//cacheTbs[idx(newc)];
 
     parlay::parallel_for(0, (TAR1.size()+TAR2.size()), [&](int i){
-      distCacheT::eType *TA = TAR1.data();
-      intT offset = 0;
+      auto TA = TAR1.data();
+      int offset = 0;
       if(i >= TAR1.size()){ //switch to process tb2
         TA = TAR2.data();
         offset = TAR1.size();
       }
-      intT j = i-offset;
-      intT newc2 = -1;
-      intT storedIdx = TA[j].idx; 
+      int j = i-offset;
+      int newc2 = -1;
+      int storedIdx = TA[j].idx; 
       // if storedIdx is inconsistant, the newc2 has changed and we do not calculate
       newc2 = uf->find(TA[j].first);
       if(newc2 != cid1 && newc2 != cid2){
@@ -368,7 +348,7 @@ class TreeNNFinder { //: public NNFinder<dim>
             }
           }
         if(success) { // only insert duplicated entries once 
-          cacheTables->insert_helper(newc, newc2, d, newtb, cacheTbs[idx(newc2)]);
+          cacheTables->insert_helper(newc, newc2, d, newtb, cacheTables->getTable(idx(newc2)));
         }
       }
 
@@ -412,20 +392,20 @@ class TreeNNFinder { //: public NNFinder<dim>
 
   // edges[i] stores the ith nn  of point i
   // initialize the chain in info
-  inline void initChain(TreeChainInfo<dim> *info){
+  inline void initChain(TreeChainInfo *info){
     typedef AllPtsNN<kdnodeT> F;
     F *f = new F(edges, eps);
-    FINDNNP::dualtree<kdnodeT, F>(kdtree->root, kdtree->root, f, false);
+    dualtree<kdnodeT, F>(kdtree->root, kdtree->root, f, false);
     parlay::parallel_for(0,n,[&](int i){
       info->updateChain(edges[i].first, edges[i].second, edges[i].getW());
     });
 #ifdef DEBUG
-    UTIL::PrintVec2<LDS::EDGE>(edges, n);
+    UTIL::PrintVec2<EDGE>(edges, n);
 #endif
     delete f;
     if(!no_cache){
     parlay::parallel_for(0,n,[&](int cid){
-      cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTbs[cid], cacheTbs[edges[cid].second]);
+      cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTables->getTable(cid), cacheTables->getTable(edges[cid].second));
     });
     }
   }

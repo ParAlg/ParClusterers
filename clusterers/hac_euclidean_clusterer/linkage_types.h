@@ -83,7 +83,7 @@ struct TreeChainInfo{
 
   parlay::sequence<pair<double, long>> chainRev;// reverse chain, indexed by cid TODO: change to just double?
   parlay::sequence<pair<int, double>> revTerminals; // indexed by ith temrinal nodes
-  static const pair<double, long> invalid_rev = make_pair(numeric_limits<double>::max(), (long)-1);
+  static constexpr pair<double, long> invalid_rev = make_pair(numeric_limits<double>::max(), (long)-1);
 
 
   TreeChainInfo(int n, double _eps = 1e-20){
@@ -97,7 +97,7 @@ struct TreeChainInfo{
     chainRev = parlay::sequence<pair<double, long>>(n, invalid_rev); //note: changing!
     revTerminals = parlay::sequence<pair<int, double>>(n);
 
-    EC2 = LDS::PairComparator21<pair<long, double>>(_eps);
+    // EC2 = LDS::PairComparator21<pair<long, double>>(_eps);
   }
 
   inline void updateChain(int cid, int nn, double w){

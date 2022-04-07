@@ -11,6 +11,11 @@ namespace in_memory {
 namespace internal {
 
 namespace HACTree {
+
+#define LARGER_THAN_UB numeric_limits<double>::max()
+
+enum Method { WARD, COMP, AVG, AVGSQ };
+
 // Node data structure, used for dendrogram tree, each node represents a intermediate cluster
 // TODO: changed size_t to int, but need to check overflow for multication computation
 template<int dim, bool keep_var = true>
