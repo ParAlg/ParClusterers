@@ -102,7 +102,7 @@ TEST(kdTree, treeUtilities)
   // auto P = makeIPoint(P0);
 
   using objT = iPoint<2>;
-  using nodeT = internal::HACTree::node<2, objT, nodeInfo>;
+  // using nodeT = internal::HACTree::node<2, objT, nodeInfo>;
 
   using distT = distAverageSq<2>;
   using F = RangeQueryCenterF<2, objT, distT>;
@@ -111,6 +111,14 @@ TEST(kdTree, treeUtilities)
   NNFinder<2, distT, F> *finder = new NNFinder<2, distT, F>(n, P.data(), uf, dist, true); //a no cache finder
   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
   finder->initChain(info);
+
+  vector<int> round1_nn = {1,0,1,2,3,6,5};
+  for(int i=0;i<n;++i){
+    EXPECT_EQ(finder->edges[i].first, i);
+    EXPECT_EQ(info->chain[i], finder->edges[i].second);
+    EXPECT_EQ(info->chain[i], round1_nn[i]);
+  }
+
   // {
   //   kdTree::rangeTraverse<2, objT, nodeT, F>(tree, P[0], sqrt(2) / 2);
   //   EXPECT_EQ(nbrs.size(), 2);
@@ -131,7 +139,7 @@ TEST(kdTree, treeUtilities)
   //   EXPECT_EQ(nbrs.size(), 7);
   // }
 
-  kdTree::del(tree);
+  // kdTree::del(tree);
 }
 
 // Demonstrate some basic assertions.
