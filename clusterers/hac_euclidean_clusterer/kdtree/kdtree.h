@@ -39,18 +39,6 @@ namespace HACTree {
   template <int _dim, class _objT, class nodeInfo>
   class node;
 
-  /* Kd-tree construction and destruction */
-
-  template <int _dim, class objT, class nodeInfo>
-  node<_dim, objT, nodeInfo> *build(parlay::slice<objT *, objT *> P,
-                         bool parallel = true,
-                         size_t leafSize = 16);
-
-  template <int _dim, class objT, class nodeInfo>
-  node<_dim, objT, nodeInfo> *build(parlay::sequence<objT> &P,
-                         bool parallel = true,
-                         size_t leafSize = 16);
-
   template <int _dim, class _objT, class nodeInfo>
   void del(node<_dim, _objT, nodeInfo> *tree);
 
@@ -447,6 +435,18 @@ namespace HACTree {
     }
   };
 
+  /* Kd-tree construction and destruction */
+
+  template <int _dim, class objT, class nodeInfo>
+  tree<_dim, objT, nodeInfo> *build(parlay::slice<objT *, objT *> P,
+                         bool parallel = true,
+                         size_t leafSize = 16);
+
+  template <int _dim, class objT, class nodeInfo>
+  tree<_dim, objT, nodeInfo> *build(parlay::sequence<objT> &P,
+                         bool parallel = true,
+                         size_t leafSize = 16);
+                         
 }}}}
 #include "treeImpl.h"
 #include "rangeSearchImpl.h"

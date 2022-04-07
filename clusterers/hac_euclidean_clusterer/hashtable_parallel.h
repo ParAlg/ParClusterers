@@ -41,13 +41,13 @@ class Table {
   eType empty;
   HASH hashStruct;
   eType* TA;
-  double load;
+  double load=1;
   using index = size_t;
   using intT = size_t;
   bool is_full;
 
   static void clearA(eType* A, intT n, eType v) {
-    auto f = [&](size_t i) { assign_uninitialized(A[i], v); };
+    auto f = [&](size_t i) { parlay::assign_uninitialized(A[i], v); };
     parlay::parallel_for(0, n, f, parlay::granularity(n));
   }
 
@@ -70,7 +70,6 @@ class Table {
   // sure to not call del() if you are passing a pointer to the middle
   // of an array.
  Table(intT size, eType* _TA, HASH hashF, bool clear = false) :
-  load(1),
     m(size), 
     // m(100 + static_cast<size_t>(load * size)),
     // mask(m-1),

@@ -95,22 +95,28 @@ struct CacheTables{
     typedef int intT;
     typedef Table<hashCluster> distCacheT;
 
-    int CACHE_TABLE_SIZE = 64;
-    static const int T_SIZE_INIT = 64;
+    std::size_t CACHE_TABLE_SIZE = 64;
+    static const std::size_t T_SIZE_INIT = 64;
 
     bool no_cache;
-    int n;
+    std::size_t n;
     nodeT* nodes;
+    int *rootIdx;
     distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
     std::size_t hashTableSize=0;
     distCacheT::eType *TA;
 
-    CacheTables(bool _no_cache, int _n, int t_cache_size):no_cache(_no_cache), n(_n), CACHE_TABLE_SIZE(t_cache_size){
+
+    
+
+    template<class Finder>
+    CacheTables(bool _no_cache, int _n, int t_cache_size, Finder* finder):CACHE_TABLE_SIZE(t_cache_size), no_cache(_no_cache), n(_n){
         if(!no_cache){ //TODO: double check
-            hashTableSize = min(n, 1 << parlay::log2_up((uint)CACHE_TABLE_SIZE));
+            // hashTableSize = min(n, (1 << parlay::log2_up((uint)CACHE_TABLE_SIZE)));
+            hashTableSize = min(n, CACHE_TABLE_SIZE);
             TA = (distCacheT::eType *) malloc(sizeof(distCacheT::eType)* ((std::size_t)n*2*hashTableSize));
             distCacheT::eType emptyval = hashCluster().empty();
-            cacheTbs = (distCacheT **) malloc(sizeof(distCacheT *), 2*n);
+            cacheTbs = (distCacheT **) malloc(sizeof(distCacheT *)*2*n);
             parlay::parallel_for(0,n,[&](std::size_t i){
                 cacheTbs[i] = new distCacheT(min(hashTableSize, min(T_SIZE_INIT, n)), TA + i*hashTableSize, hashCluster(), true);
             });
@@ -122,6 +128,9 @@ struct CacheTables{
                 TA[i] = emptyval;
             });
         } // end of if ! no cache
+        rootIdx = finder->rootIdx.data();
+        nodes = finder->nodes.data();
+
     }
 
     ~CacheTables(){
@@ -134,9 +143,10 @@ struct CacheTables{
     }
     }
 
-    inline intT cid(nodeT* node){ return node->cId;}
-    inline intT idx(nodeT* node){ return node->idx;}
-
+    inline int cid(nodeT* node){ return node->cId;}
+    inline int idx(nodeT* node){ return node->idx;}
+    inline int idx(int cid){return idx(getNode(cid));}
+    inline nodeT *getNode(int cid){return nodes+rootIdx[cid];}
     distCacheT *getTable(int idx){return cacheTbs[idx];}
 
     // return UNFOUND_TOKEN if not found

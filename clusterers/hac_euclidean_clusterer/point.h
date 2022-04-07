@@ -195,6 +195,13 @@ parlay::sequence<iPoint<dim>> makeIPoint(parlay::slice<point<dim> *, point<dim> 
 }
 
 template<int dim>
+parlay::sequence<iPoint<dim>> makeIPoint(point<dim> *P, int n){
+  auto PP = parlay::sequence<iPoint<dim>>(n);
+  parlay::parallel_for(0,n,[&](int i){PP[i]=iPoint<dim>(P[i], i);});
+  return std::move(PP);
+}
+
+template<int dim>
 parlay::sequence<iPoint<dim>> makeIPoint(parlay::sequence<point<dim>>& P){
   return makeIPoint(P.cut(0,P.size()));
 }

@@ -18,20 +18,20 @@ namespace HACTree {
 
     if (Q->isLeaf()) {
         for(int i=0; i<Q->size(); ++i) {
-            if (Q->itemInBall(center, r, Q->items[i])) {
-                f->checkComplete(Q->items[i]);
+            if (Q->itemInBall(center, r, Q->at(i))) {
+                f->checkComplete(Q->at(i));
             }
         }
     } else {
         if(f->Par(Q)){
             parlay::par_do([&](){
-                rangeTraverse(Q->left, center, r, f);
+                rangeTraverse(Q->L(), center, r, f);
             },[&](){    
-                rangeTraverse(Q->right, center, r, f);
+                rangeTraverse(Q->R(), center, r, f);
             });
         }else{
-            rangeTraverse(Q->left, center, r, f);
-            rangeTraverse(Q->right, center, r, f);
+            rangeTraverse(Q->L(), center, r, f);
+            rangeTraverse(Q->R(), center, r, f);
         }
     }
   }
