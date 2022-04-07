@@ -27,6 +27,11 @@ extern int g_dim;
 #define A_HASH_LINKAGE_PROBE_THRESH (m)
 #endif
 
+namespace research_graph {
+namespace in_memory {
+namespace internal{
+namespace HACTree{
+
 template <class HASH>
 class Table {
  public:
@@ -43,7 +48,7 @@ class Table {
 
   static void clearA(eType* A, intT n, eType v) {
     auto f = [&](size_t i) { assign_uninitialized(A[i], v); };
-    parlay::parallel_for(0, n, f, granularity(n));
+    parlay::parallel_for(0, n, f, parlay::granularity(n));
   }
 
   struct notEmptyF { 
@@ -64,11 +69,11 @@ class Table {
   // passed size must be a power of 2 and will not be rounded.  Make
   // sure to not call del() if you are passing a pointer to the middle
   // of an array.
- Table(intT size, eType* _TA, HASH hashF, double _load, bool clear = false) :
-  load(_load),
-    // m(size), 
-    m(100 + static_cast<size_t>(load * size)),
-    mask(m-1),
+ Table(intT size, eType* _TA, HASH hashF, bool clear = false) :
+  load(1),
+    m(size), 
+    // m(100 + static_cast<size_t>(load * size)),
+    // mask(m-1),
     empty(hashF.empty()),
     hashStruct(hashF), 
     TA(_TA),
@@ -86,7 +91,7 @@ class Table {
     while (true) {
       eType c;
       c = TA[h];
-      intT cmp;
+      // intT cmp;
       if(c==empty && utils::CAS(&TA[h],c,v)) return 1; 
       else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
 	if(!hashStruct.replaceQ(v,c))
@@ -121,7 +126,7 @@ class Table {
     while (true) {
       eType c;
       c = TA[h];
-      intT cmp;
+      // intT cmp;
       if(c == empty && utils::CAS(&TA[h],c,v)){ 
         return 1; 
       }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
@@ -158,7 +163,7 @@ class Table {
     while (1) {
       eType c;
       c = TA[h];
-      intT cmp;
+      // intT cmp;
       if(c == empty && utils::CAS(&TA[h],c,v)){ 
         return make_tuple(1, false); 
       }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
@@ -234,11 +239,11 @@ class Table {
   // returns the number of entries
    size_t count() {
     auto is_full = [&](size_t i) -> size_t { return (TA[i] == empty) ? 0 : 1; };
-    return parlay::internal::reduce(parlay::delayed_seq<size_t>(m, is_full), addm<size_t>());
+    return parlay::internal::reduce(parlay::delayed_seq<size_t>(m, is_full), parlay::addm<size_t>());
   }
 
     // returns all the current entries compacted into a sequence
-    sequence<eType> entries() {
+    parlay::sequence<eType> entries() {
     return parlay::filter(make_slice(TA, TA+m),
                   [&] (eType v) { return v != empty; });
   }
@@ -281,7 +286,7 @@ struct hashPair {
 
   kType getKey(eType v) { return v->first; }
 
-  uintT hash(kType s) { return keyHash.hash(s);}
+  uint hash(kType s) { return keyHash.hash(s);}
   int cmp(kType s, kType s2) { return keyHash.cmp(s, s2);}
 
   bool replaceQ(eType s, eType s2) {
@@ -304,3 +309,7 @@ struct hashSimplePair {
 };
 
 
+}
+}
+}
+}

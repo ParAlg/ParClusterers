@@ -20,7 +20,7 @@ using namespace std;
 
 namespace research_graph {
 namespace in_memory {
-
+namespace internal {
 namespace HACTree {
         
     template<class nodeT, class F>
@@ -158,5 +158,5 @@ namespace HACTree {
     // }
 
 }
-
+}
 }}

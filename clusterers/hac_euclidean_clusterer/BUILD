@@ -11,6 +11,7 @@ cc_library(
         ':linkage',
         ':unionfind',
         ':linkage_types',
+        ':finder',
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -23,6 +24,26 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "finder",
+    hdrs = ["finder.h"],
+    deps = [
+        ":unionfind",
+        ":linkage_types",
+        ':point',
+        ':kdtree',
+    ],
+)
+
+
+cc_library(
+    name = "dist",
+    hdrs = ["dist.h"],
+    deps = [
+        ":kdtree",
+        ":treeUtilities"
+    ],
+)
 
 cc_library(
     name = "linkage",
@@ -74,6 +95,38 @@ cc_library(
     name = "dualTreeImpl",
     hdrs = ["kdtree/dualTreeImpl.h"],
     deps = [
+    ],
+)
+
+
+
+cc_library(
+    name = "treeUtilities",
+    hdrs = ["treeUtilities.h"],
+    deps = [
+        ":point",
+        ":unionfind",
+        ":linkage_types",
+        ":cacheUtilities",
+        ":utils"
+    ],
+)
+
+cc_library(
+    name = "cacheUtilities",
+    hdrs = ["cacheUtilities.h"],
+    deps = [
+        ':node',
+        "hashtable_parallel"
+    ],
+)
+
+
+cc_library(
+    name = "hashtable_parallel",
+    hdrs = ["hashtable_parallel.h"],
+    deps = [
+        ":utils"
     ],
 )
 

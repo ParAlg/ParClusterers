@@ -5,15 +5,17 @@
 #include <string>
 #include <vector>
 
-#include "point.h"
+// #include "point.h"
 #include "node.h"
-#include "unionfind.h"
+// #include "unionfind.h"
 #include "utils.h"
-#include "linkage_types.h"
+// #include "linkage_types.h"
 #include "hashtable_parallel.h"
-#include "hashtable_serial.h"
+// #include "hashtable_serial.h"
 
 #include "parlay/utilities.h"
+
+
 
 using namespace std;
 namespace research_graph {
@@ -21,6 +23,8 @@ namespace in_memory {
 namespace internal {
 namespace HACTree {
 
+// #define CHECK_NO_CACHE(i) if(no_cache){cout << "no cache " << i << endl; exit(1);}
+#define CHECK_NO_CACHE(i)
 #define CHECK_TOKEN -1
 #define UNFOUND_TOKEN -2
 
@@ -91,26 +95,27 @@ struct CacheTables{
     typedef int intT;
     typedef Table<hashCluster> distCacheT;
 
-    static const int MAX_CACHE_TABLE_SIZE = 128;
+    int CACHE_TABLE_SIZE = 64;
+    static const int T_SIZE_INIT = 64;
 
     bool no_cache;
     int n;
     nodeT* nodes;
     distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
-    int hashTableSize=0;
+    std::size_t hashTableSize=0;
     distCacheT::eType *TA;
 
-    CacheTables(bool _no_cache, int _n, int t_cache_size):no_cache(_no_cache), n(_n), MAX_CACHE_TABLE_SIZE(t_cache_size){
+    CacheTables(bool _no_cache, int _n, int t_cache_size):no_cache(_no_cache), n(_n), CACHE_TABLE_SIZE(t_cache_size){
         if(!no_cache){ //TODO: double check
-            hashTableSize = min(n, 1 << utils::log2Up((uintT)(LINKAGE_LOADFACTOR*(uintT)MAX_CACHE_TABLE_SIZE)));
-            TA = (distCacheT::eType *) malloc(sizeof(distCacheT::eType)* ((long)n*2*hashTableSize));
-            distCacheT::eType emptyval = LDS::hashClusterAve().empty();
+            hashTableSize = min(n, 1 << parlay::log2_up((uint)CACHE_TABLE_SIZE));
+            TA = (distCacheT::eType *) malloc(sizeof(distCacheT::eType)* ((std::size_t)n*2*hashTableSize));
+            distCacheT::eType emptyval = hashCluster().empty();
             cacheTbs = (distCacheT **) malloc(sizeof(distCacheT *), 2*n);
             parlay::parallel_for(0,n,[&](std::size_t i){
-                cacheTbs[i] = new distCacheT(min(MAX_CACHE_TABLE_SIZE, min(MAX_CACHE_TABLE_SIZE_INIT, C)), TA + i*hashTableSize, LDS::hashClusterAve(), LINKAGE_LOADFACTOR, true);
+                cacheTbs[i] = new distCacheT(min(hashTableSize, min(T_SIZE_INIT, n)), TA + i*hashTableSize, hashCluster(), true);
             });
             parlay::parallel_for(n,2*n,[&](std::size_t i){
-                cacheTbs[i] = new distCacheT(min(MAX_CACHE_TABLE_SIZE, C), TA + i*hashTableSize, LDS::hashClusterAve(), LINKAGE_LOADFACTOR);
+                cacheTbs[i] = new distCacheT(min(hashTableSize, n), TA + i*hashTableSize, hashCluster()); //clear together below
             });
 
             parlay::parallel_for((std::size_t)n*hashTableSize,(std::size_t)n*2*hashTableSize,[&](std::size_t i){
@@ -132,7 +137,7 @@ struct CacheTables{
     inline intT cid(nodeT* node){ return node->cId;}
     inline intT idx(nodeT* node){ return node->idx;}
 
-    distCacheT *getTable(int idx){return cacheTables[idx];}
+    distCacheT *getTable(int idx){return cacheTbs[idx];}
 
     // return UNFOUND_TOKEN if not found
     // return distance if found
@@ -168,8 +173,8 @@ struct CacheTables{
         CHECK_NO_CACHE(284)
         intT qIdx = idx(qid);
         intT rIdx = idx(rid);
-        tb1->insert_one_update(hashClusterAveET(rid, rIdx, d));
-        tb2->insert_one_update(hashClusterAveET(qid, qIdx, d));
+        tb1->insert_one_update(hashClusterET(rid, rIdx, d));
+        tb2->insert_one_update(hashClusterET(qid, qIdx, d));
   }
 
     inline void insert(intT qid, intT rid, double d){
@@ -180,8 +185,8 @@ struct CacheTables{
         intT qIdx = idx(qid);
         intT rIdx = idx(rid);
 
-        cacheTbs[qIdx]->insert_one_update(hashClusterAveET(rid, rIdx, d));
-        cacheTbs[rIdx]->insert_one_update(hashClusterAveET(qid, qIdx, d));
+        cacheTbs[qIdx]->insert_one_update(hashClusterET(rid, rIdx, d));
+        cacheTbs[rIdx]->insert_one_update(hashClusterET(qid, qIdx, d));
   }
 
      // return true only when insert if sucussful
@@ -198,11 +203,11 @@ struct CacheTables{
       intT qIdx = idx(qid);
       intT rIdx = idx(rid);
       bool inserted; bool reach_thresh;
-      tie(inserted, reach_thresh) = cacheTbs[qIdx]->insert_thresh(hashClusterAveET(rid, rIdx, CHECK_TOKEN));
+      tie(inserted, reach_thresh) = cacheTbs[qIdx]->insert_thresh(hashClusterET(rid, rIdx, CHECK_TOKEN));
       if(!reach_thresh) return inserted;
 
       if(doSwap){
-        tie(inserted, reach_thresh) = cacheTbs[rIdx]->insert_thresh(hashClusterAveET(qid, qIdx, CHECK_TOKEN));
+        tie(inserted, reach_thresh) = cacheTbs[rIdx]->insert_thresh(hashClusterET(qid, qIdx, CHECK_TOKEN));
         if(!reach_thresh) return inserted;
       }
       

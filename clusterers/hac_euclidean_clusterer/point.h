@@ -11,6 +11,8 @@ using namespace std;
 
 namespace research_graph {
 namespace in_memory {
+namespace internal{
+namespace HACTree{
 
 // from pbbs
 template <int _dim> class point;
@@ -159,38 +161,16 @@ public:
 };
 
 template<int dim>
-struct iPoint {
+struct iPoint : public point<dim> {
   typedef double floatT;
   typedef point<dim> pointT;
   int i;
-  pointT p;
-  iPoint(pointT pp, int ii): p(pp), i(ii) {}
-  iPoint(pointT pp): p(pp), i(-1) {}
+  iPoint(pointT pp, int ii): point<dim>(pp), i(ii) {}
+  iPoint(pointT pp): point<dim>(pp), i(-1) {}
   iPoint(): i(-1) {}
   bool isEmpty() {return i<0;}
-  floatT operator[](int i) {return p[i];}
-  floatT pointDist(iPoint q) {return p.pointDist(q.p);}
-  floatT pointDist(iPoint *q) {return p.pointDist(q->p);}
-  floatT dist(iPoint q) {return p.pointDist(q.p);}
-  floatT pointDist(pointT q) {return p.pointDist(q);}
-  floatT dist(pointT q) {return p.pointDist(q);}
-  floatT pointDistSq(iPoint q) {return p.pointDistSq(q.p);}
-  floatT pointDistSq(iPoint *q) {return p.pointDistSq(q->p);}
-  floatT pointDistSq(pointT q) {return p.pointDistSq(q);}
   int idx() {return i;}
   void idx(int ii) {i=ii;}
-  pointT pt() {return p;}
-  floatT* coordinate() {return p.x;}
-  floatT coordinate(int i) {return p.x[i];}
-  floatT* coords() {return p.x;}
-  floatT coords(int i) {return p.x[i];}
-  floatT x(int i) {return p.x[i];}
-  floatT at(int i) {return p.x[i];}
-  void x(int i, floatT val) {p.x[i]=val;}
-  int getDim(){return dim;}
-  void minCoords(iPoint q){p.minCoords(q.p);}
-  void maxCoords(iPoint q){p.maxCoords(q.p);}
-  void print(){p.print();}
 };
 
 template<int dim>
@@ -207,6 +187,19 @@ static std::ostream& operator<<(std::ostream& os, const iPoint<dim> v) {
   return os;
 }
 
+template<int dim>
+parlay::sequence<iPoint<dim>> makeIPoint(parlay::slice<point<dim> *, point<dim> *> P){
+  auto PP = parlay::sequence<iPoint<dim>>(P.size());
+  parlay::parallel_for(0,P.size(),[&](int i){PP[i]=iPoint<dim>(P[i], i);});
+  return std::move(PP);
+}
 
+template<int dim>
+parlay::sequence<iPoint<dim>> makeIPoint(parlay::sequence<point<dim>>& P){
+  return makeIPoint(P.cut(0,P.size()));
+}
+
+}
+}
 }
 }
