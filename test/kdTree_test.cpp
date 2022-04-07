@@ -4,39 +4,31 @@
 #include "uniform.h"
 #include "clusterers/hac_euclidean_clusterer/node.h"
 #include <gtest/gtest.h>
+#include "gmock/gmock.h"
+
+#include "clusterers/hac_euclidean_clusterer/finder.h"
+#include "clusterers/hac_euclidean_clusterer/dist.h"
 
 #include <vector>
 
 using namespace research_graph::in_memory;
 using namespace research_graph::in_memory::internal::HACTree;
 
-parlay::sequence<point<2>> smallData()
-{
-  parlay::sequence<point<2>> P(7);
-  P[0][0] = 0.5;  
-  P[0][1] = 3.5;
-  P[1][0] = 0.5;
-  P[1][1] = 2.5;
-  P[2][0] = 1;
-  P[2][1] = 3;
-  P[3][0] = 1.5;
-  P[3][1] = 2.5;
-  P[4][0] = 3.5;
-  P[4][1] = 0.5;
-  P[5][0] = 3.5;
-  P[5][1] = 0.5;
-  P[6][0] = 2.5;
-  P[6][1] = 0.5;
-
-  return P;
-}
 
 template <int dim>
 inline void testKdTree(parlay::sequence<point<dim>> &P)
-{
-  using nodeT = internal::HACTree::node<dim, point<dim>, nodeInfo>;
-
-  nodeT *tree1 = internal::HACTree::build<dim, point<dim>, nodeInfo>(P, true);
+{ 
+  using pointT = iPoint<dim>;
+  using nodeT = internal::HACTree::node<dim, pointT, nodeInfo>;
+  
+  auto PP = makeIPoint(P.cut(0,P.size()));
+  for (std::size_t i = 0; i < P.size(); ++i){
+    EXPECT_EQ(PP[i].pointDist(P[i]),0); //sanity check that the copy is successful
+  }
+  
+  nodeT *tree1 = internal::HACTree::build<dim, pointT , nodeInfo>(PP, true);
+  vector<int> pts = vector(P.size(), 0);
+  
 
   std::function<size_t(nodeT *)> checkSum =
       [&](nodeT *node) -> size_t
@@ -67,29 +59,88 @@ inline void testKdTree(parlay::sequence<point<dim>> &P)
                                  node->R()->getMax(d)),
                         node->getMax(d));
       }
+
+      //check nodeinfo for a default tree
+      nodeInfo nInfo = node->getInfo();
+      EXPECT_EQ(nInfo.cId, -1);
+      EXPECT_EQ(nInfo.ub, numeric_limits<double>::max());
+      EXPECT_EQ(nInfo.round, 0);
+      EXPECT_EQ(nInfo.idx, -1);
+      EXPECT_EQ(nInfo.min_n, 1);
+      // EXPECT_THAT(node->getInfo(), ::testing::FieldsAre(-1, numeric_limits<double>::max(), 0, -1, 1));
+    }else{
+      for (int i = 0; i < node->size(); ++i)
+      {
+        iPoint<dim> *p = node->getItem(i);
+        pts[p->idx()]++;
+      }
     }
     return node->size();
   };
 
-  checkSum(tree1);
+  ASSERT_THAT(pts, ::testing::Each(0));
+  size_t tree_n = checkSum(tree1);
+  
+  EXPECT_EQ(tree_n, P.size());
+  ASSERT_THAT(pts, ::testing::Each(1)); //each point is stored once
 
   internal::HACTree::del(tree1);
 }
 
-TEST(kdTree_structure, testSerial2d)
+TEST(kdTree, testBuild)
 {
   static const int dim = 2;
   auto P = pargeo::uniformInPolyPoints<dim>(100, 0, 1.0);
   testKdTree<dim>(P);
 }
 
-// Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
-  // Expect two strings not to be equal.
-  EXPECT_STRNE("hello", "world");
-  // Expect equality.
-  EXPECT_EQ(7 * 6, 42);
+TEST(kdTree, treeUtilities)
+{
+  auto P = smallData2();
+  int n = P.size();
+  UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+  // auto P = makeIPoint(P0);
+
+  using objT = iPoint<2>;
+  using nodeT = internal::HACTree::node<2, objT, nodeInfo>;
+
+  using distT = distAverageSq<2>;
+  using F = RangeQueryCenterF<2, objT, distT>;
+  
+  distT *dist = new distT();
+  NNFinder<2, distT, F> *finder = new NNFinder<2, distT, F>(n, P.data(), uf, dist, true); //a no cache finder
+  TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
+  finder->initChain(info);
+  // {
+  //   kdTree::rangeTraverse<2, objT, nodeT, F>(tree, P[0], sqrt(2) / 2);
+  //   EXPECT_EQ(nbrs.size(), 2);
+  // }
+
+  // {
+  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], 1);
+  //   EXPECT_EQ(nbrs.size(), 3);
+  // }
+
+  // {
+  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], sqrt(2));
+  //   EXPECT_EQ(nbrs.size(), 4);
+  // }
+
+  // {
+  //   sequence<iPoint<2> *> nbrs = kdTree::rangeSearch(tree, P[0], sqrt(2) * 3);
+  //   EXPECT_EQ(nbrs.size(), 7);
+  // }
+
+  kdTree::del(tree);
 }
+
+// Demonstrate some basic assertions.
+// TEST(HelloTest, BasicAssertions) {
+//   // Expect two strings not to be equal.
+//   EXPECT_STRNE("hello", "world");
+//   // Expect equality.
+//   EXPECT_EQ(7 * 6, 42);
+// }
 
 int main(int argc, char **argv)
 {

@@ -10,6 +10,52 @@
 #include "parlay/utilities.h"
 #include "clusterers/hac_euclidean_clusterer/point.h"
 
+using namespace research_graph::in_memory::internal::HACTree;
+// template<int dim>
+// using point = ::point<dim>;
+
+parlay::sequence<point<2>> smallData()
+{
+  parlay::sequence<point<2>> P(7);
+  P[0][0] = 0.5;  
+  P[0][1] = 3.5;
+  P[1][0] = 0.5;
+  P[1][1] = 2.5;
+  P[2][0] = 1;
+  P[2][1] = 3;
+  P[3][0] = 1.5;
+  P[3][1] = 2.5;
+  P[4][0] = 3.5;
+  P[4][1] = 0.5;
+  P[5][0] = 3.5;
+  P[5][1] = 0.5;
+  P[6][0] = 2.5;
+  P[6][1] = 0.5;
+
+  return P;
+}
+
+parlay::sequence<point<2>> smallData2()
+{
+  parlay::sequence<point<2>> P(7);
+  P[0][0] = 0.0;  
+  P[0][1] = 0.0;
+  P[1][0] = 1.0;
+  P[1][1] = 0.0;
+  P[2][0] = 1.0;
+  P[2][1] = 1.0;
+  P[3][0] = 2.0;
+  P[3][1] = 3.0;
+  P[4][0] = 5.0;
+  P[4][1] = 3.0;
+  P[5][0] = 6.0;
+  P[5][1] = 0.0;
+  P[6][0] = 4.0;
+  P[6][1] = -2.0;
+
+  return P;
+}
+
   namespace pargeo {
   namespace uniformDataGen {
 
@@ -63,9 +109,6 @@
     }
 
   } // End uniform data gen namespace
-
-  template<int dim>
-  using point = research_graph::in_memory::point<dim>;
 
   template<int dim, class pointT = point<dim>>
   parlay::sequence<pointT> uniformInPolyPoints(size_t n,
