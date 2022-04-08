@@ -78,7 +78,7 @@ namespace HACTree {
         inline void Post(nodeT *Q, nodeT *R){}
     };
 
-    template<class nodeT>
+    template<class nodeT, bool squared=false>
     struct AllPtsNN{
         EDGE *edges;
         edgeComparator2 EC2;
@@ -104,8 +104,14 @@ namespace HACTree {
             int ii = Q->at(i)->idx();
             int jj = R->at(j)->idx();
             if (ii == jj) return;
-            double qrdist = (Q->at(i))->pointDist(*(R->at(j)));
+            double qrdist;
+            if(squared){
+                qrdist = (Q->at(i))->pointDistSq(*(R->at(j)));
+            }else{
+                qrdist = (Q->at(i))->pointDist(*(R->at(j)));
+            }
             utils::writeMin(&edges[ii], EDGE(ii,jj,qrdist), EC2);
+            
         }
 
         inline double NodeDistForOrder(nodeT *Q, nodeT *R){
@@ -135,6 +141,7 @@ namespace HACTree {
                     temp = eweight;
                 }
             }
+            if(squared){temp = sqrt(temp);}
             (Q->getInfo()).updateUB(temp);
         }
 

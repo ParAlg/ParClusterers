@@ -396,16 +396,23 @@ class NNFinder {
   // edges[i] stores the ith nn  of point i
   // initialize the chain in info
   inline void initChain(TreeChainInfo *info){
-    typedef AllPtsNN<kdnodeT> F;
-    F *f = new F(edges, eps);
-    dualtree<kdnodeT, F>(kdtree, kdtree, f, false);
+    if(distComputer->squared){
+      typedef AllPtsNN<kdnodeT, true> F;
+      F *f = new F(edges, eps);
+      dualtree<kdnodeT, F>(kdtree, kdtree, f, false);
+      delete f;
+    }else{
+      typedef AllPtsNN<kdnodeT, false> F;
+      F *f = new F(edges, eps);
+      dualtree<kdnodeT, F>(kdtree, kdtree, f, false);
+      delete f;
+    }
     parlay::parallel_for(0,n,[&](int i){
       info->updateChain(edges[i].first, edges[i].second, edges[i].getW());
     });
 #ifdef DEBUG
     UTIL::PrintVec2<EDGE>(edges, n);
 #endif
-    delete f;
     if(!no_cache){
     parlay::parallel_for(0,n,[&](int cid){
       cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTables->getTable(cid), cacheTables->getTable(edges[cid].second));
