@@ -1,15 +1,15 @@
 #pragma once
 
 #include <atomic>
-#include "unionfind.h"
-#include "linkage_types.h"
+#include "utils/unionfind.h"
+#include "utils/chain.h"
 
 #include "parlay/sequence.h"
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
 
 #include "finder.h"
-#include "dendro.h"
+#include "utils/dendro.h"
 
 using namespace std;
 
