@@ -104,7 +104,7 @@ class NNFinder {
 
   inline int cid(nodeT* node){ return node->cId;}
   inline int idx(nodeT* node){ return node->idx;}
-  inline nodeT *getNode(int cid){return nodes+rootIdx[cid];}
+  inline nodeT *getNode(int cid){return &nodes[rootIdx[cid]];}
   inline distCacheT *getTable(int idx){return cacheTables->getTable(idx);}
   inline int idx(int cid){return idx(getNode(cid));}
   inline int leftIdx(int cid){return getNode(cid)->left->idx;}
@@ -252,22 +252,20 @@ class NNFinder {
     double minD = ub;
     int nn = t_nn;
     bool intable;
-    Node<dim> query = getNode(cid);
+    Node<dim>* query = getNode(cid);
 
     if(ub == numeric_limits<double>::max()){
         typedef NNsingle<kdnodeT> Fs;
-        Fs fs = Fs(uf, cid, eps);
-        // if(distComputer->nn_process){
-        //   distComputer->getRadius(cid, kdtree->root, &fs);
-        // }else{
-        pointT centroid = pointT(query->center, cid);
-        treeT treetmp = treeT(&centroid, 1, false);
+        Fs fs = Fs(uf, cid);
+        pointT *centroid = new pointT(query->center, cid);
+        treeT treetmp = treeT(centroid, cid); 
         // closest to a single point in cluster
-        dualtree<kdnodeT, Fs>(treetmp.root, kdtree->root, &fs);
+        dualtree<kdnodeT, Fs>(&treetmp, kdtree, &fs);
         // }
         
         nn = uf->find(fs.e->second);
         tie(minD, intable) = getDist(cid, nn); 
+        delete centroid;
 #ifdef DEBUG
         if(minD==LARGER_THAN_UB){
           cout << "minD is inifinity" << endl;
@@ -286,8 +284,8 @@ class NNFinder {
     }
     double r = distComputer->getBall(query, minD+eps); //TODO: changed to dist, need to set r in range function
 
-    Fr fr = Fr(uf, cid, r, nodes, rootIdx, cacheTables, edges, distComputer, no_cache, C, eps); 
-    HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree->root, query->center, r, &fr);
+    Fr fr = Fr(cid, r, cacheTables, edges, distComputer, no_cache, C, eps); 
+    HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree, query->center, r, &fr);
 
     if(fr.local){ //TODO: optimize out to simplify code
     nn = fr.getFinalNN();

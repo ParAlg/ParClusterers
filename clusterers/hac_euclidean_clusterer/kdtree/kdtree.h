@@ -115,6 +115,21 @@ namespace HACTree {
     node<_dim, _objT, nodeInfo> *space;
 
   public:
+    //create a tree node for a single point
+    tree(_objT *obj, int id){
+      typedef node<_dim, _objT, nodeInfo> nodeT;
+      space = (nodeT *)malloc(sizeof(nodeT) * 1);
+      allItems = new parlay::sequence<_objT *>(1);
+      allItems->at(0) = obj;
+      baseT::items = allItems->cut(0, 1);
+      baseT::resetId();
+      baseT::k = 0;
+      baseT::pMin = point<_dim>(obj);
+      baseT::pMax = baseT::pMin;
+      baseT::nInfo = nodeInfo();
+      baseT::nInfo.setCId(id);
+    }
+
     tree(parlay::slice<_objT *, _objT *> _items,
          typename baseT::intT leafSize = 16)
     {
@@ -258,20 +273,6 @@ namespace HACTree {
 
     intT splitItemSerial(floatT xM);
 
-    inline bool itemInBox(pointT pMin1, pointT pMax1, _objT *item)
-    {
-      for (int i = 0; i < _dim; ++i)
-      {
-        if (pMax1[i] < item->at(i) || pMin1[i] > item->at(i))
-          return false;
-      }
-      return true;
-    }
-
-    inline bool itemInBall(pointT center, double r, _objT* item) {
-    if(item->pointDist(center) > r) return false;
-    return true;}
-
     inline intT findWidest()
     {
       floatT xM = -1;
@@ -393,6 +394,21 @@ namespace HACTree {
         return boxInclude;
       else
         return boxOverlap;
+    }
+
+    inline bool itemInBox(pointT pMin1, pointT pMax1, _objT *item)
+    {
+      for (int i = 0; i < _dim; ++i)
+      {
+        if (pMax1[i] < item->at(i) || pMin1[i] > item->at(i))
+          return false;
+      }
+      return true;
+    }
+
+    inline bool itemInBall(pointT center, double r, _objT* item) {
+      if(item->pointDist(center) > r) return false;
+      return true;
     }
     
     inline double pointBoxDistance(pointT p, pointT pMin, pointT pMax) {

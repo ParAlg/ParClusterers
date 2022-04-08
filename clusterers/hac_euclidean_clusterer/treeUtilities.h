@@ -166,6 +166,10 @@ namespace HACTree {
             e = new EDGE(-1,-1,numeric_limits<double>::max());
         }
         
+        inline bool isLeaf(nodeT *Q){
+            return Q->isLeaf() || Q->size() < 400;
+        }
+
         inline bool Score(double d, nodeT *Q, nodeT *R){
             return (R->getInfo().getCId() == cid) || (d > e->getW());
         }
@@ -488,8 +492,7 @@ namespace HACTree {
         bool no_cache;
         const bool local = false; // writemin after
 
-        RangeQueryCenterF(int t_cid, double _r,
-            nodeT *t_nodes, int *t_rootIdx, CacheTables<nodeT> *t_tbs, EDGE *t_edges,
+        RangeQueryCenterF(int t_cid, double _r, CacheTables<nodeT> *t_tbs, EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, int C, double eps):
             cid(t_cid), r(_r),//clusteredPts(t_clusteredPts), uf(t_uf), 
             distComputer(t_distComputer),
@@ -498,8 +501,8 @@ namespace HACTree {
             // keep nn candidate when merging
             tb = t_tbs;
             edges = t_edges;
-            nodes = t_nodes;
-            rootIdx = t_rootIdx;
+            nodes = t_tbs->nodes;
+            rootIdx = t_tbs->rootIdx;
             // f = new F();
             qnode = getNode(cid);
         }
@@ -516,11 +519,11 @@ namespace HACTree {
         inline double my_node_distance_sq(kdnodeT *Q) {
             pointT qcenter = qnode->center;
             for (int d = 0; d < dim; ++ d) {
-                if (Q->pMin[d] > qcenter[d] || qcenter[d] > Q->pMax[d]) {
+                if (Q->getMin()[d] > qcenter[d] || qcenter[d] > Q->getMax()[d]) {
                 // disjoint at dim d, and intersect on dim < d
                 double rsqr = 0;
                 for (int dd = d; dd < dim; ++ dd) {
-                    double tmp = max(Q->pMin[dd] - qcenter[dd], qcenter[dd] - Q->pMax[dd]);
+                    double tmp = max(Q->getMin()[dd] - qcenter[dd], qcenter[dd] - Q->getMax()[dd]);
                     tmp = max(tmp, (double)0);
                     rsqr += tmp * tmp;
                 }

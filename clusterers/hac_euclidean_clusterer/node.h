@@ -9,7 +9,6 @@ using namespace std;
 namespace research_graph {
 namespace in_memory {
 namespace internal {
-
 namespace HACTree {
 
 #define LARGER_THAN_UB numeric_limits<double>::max()
@@ -113,8 +112,8 @@ struct nodeInfo{
     int cId = -1;
     // std::atomic<double> ub; // need to write an = assign method if use atomic
     double ub = numeric_limits<double>::max();
-    int round = 0;
-    int idx = -1; // node idx
+    // int round = 0;
+    // int idx = -1; // node idx
     int min_n = 1; //used for ward's linkage
 
     nodeInfo(){
@@ -134,10 +133,10 @@ struct nodeInfo{
     }
     inline int getCId(){return cId;}
     inline void setCId(int id){cId = id;}
-    inline int getRound(){return round;}
-    inline void setRound(int r){round = r;}
-    inline int getIdx(){return idx;}
-    inline void setIdx(int r){idx = r;}
+    // inline int getRound(){return round;}
+    // inline void setRound(int r){round = r;}
+    // inline int getIdx(){return idx;}
+    // inline void setIdx(int r){idx = r;}
     inline infoT initInfoVal() {return make_tuple(-1, numeric_limits<int>::max());}
     inline void setInfo(infoT info){
       tie(cId, min_n) = info;

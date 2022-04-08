@@ -9,6 +9,7 @@
 #include "parlay/primitives.h"
 
 #include "finder.h"
+#include "dendro.h"
 
 using namespace std;
 
@@ -17,11 +18,11 @@ namespace in_memory {
 namespace internal {
 namespace HACTree {
 
-template<int dim, class TF>
+template<class TF>
 inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
   parlay::parallel_for(0, chainNum, [&](int i){
       int cid = info->terminal_nodes[i];
-      finder->edges[cid] = LDS::EDGE(-1,-1,numeric_limits<double>::max());
+      finder->edges[cid] = EDGE(-1,-1,numeric_limits<double>::max());
   });
 
   parlay::parallel_for(0, chainNum, [&](int i){
@@ -40,8 +41,8 @@ inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
   });
 }
 
-template<int dim, class TF>
-inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChainInfo *info, int round, int *flags){
+template<class TF>
+inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChainInfo *info, int round, parlay::sequence<int>& flags){
   int chainNum = info->chainNum;
   EDGE *edges = finder->edges;
   
@@ -71,7 +72,7 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
   });
   
   if(!finder->no_cache){
-  auto merged = parlay::filter(make_slice(flags).cut(0, chainNum), [&](std::size_t i){return i!=NO_NEIGH;});
+  auto merged = parlay::filter(flags.cut(0, chainNum), [&](std::size_t i){return i!=NO_NEIGH;});
 
 #ifdef TIMING2
 	 if(LINKAGE_DOPRINT(round)){ UTIL::PrintSubtimer(":::merge", t1.next());  cout << "merged.n: " << merged.n << endl;}
@@ -90,15 +91,15 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
 
 // TODO: proceed in stages to save work
 template<int dim, class TF>
-inline void chain_linkage(TF *finder){
-  cout << "hash table size " << finder->hashTableSize << endl;
+vector<dendroLine> chain_linkage(TF *finder){
+  // cout << "hash table size " << finder->hashTableSize << endl;
   
   UnionFind::ParUF<int> *uf = finder->uf;
   int n = finder->n;
   int chainNum = n;
   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
   parlay::sequence<int> flagsSeq = parlay::sequence<int>(chainNum);
-  int *flags = flagsSeq.data();// used in linkterminalnodes
+  // int *flags = flagsSeq.data();// used in linkterminalnodes
 
 #ifdef VERBOSE
 	UTIL::PrintSubtimer("initialize", t1.next());
@@ -118,8 +119,12 @@ inline void chain_linkage(TF *finder){
     UTIL::PrintFunctionItem("CLINK", "Comp Num", finder->C);
     UTIL::PrintFunctionItem("Chain", "#", info->chainNum);}else{print = false;}
 #endif
-  if(round >= n)  exit(1);
-  if(round >= 2 && info->chainNum == 0) zero_chain_debug(finder, round, info); 
+  // if(round >= n)  exit(1);
+  // if(round >= 2 && info->chainNum == 0) zero_chain_debug(finder, round, info); 
+  if(round >= n){
+      cout << "too many rounds" << endl;
+      exit(1);
+  }
 
   if(round == 1){
     finder->initChain(info);
@@ -127,29 +132,31 @@ inline void chain_linkage(TF *finder){
 	if(print) UTIL::PrintSubtimer("init-chains", t1.next());
 #endif
   }else{
-    chain_find_nn(chainNum, finder, info);
+    chain_find_nn<TF>(chainNum, finder, info);
     // findAllNNBruteForce(chainNum, finder, info);
 #ifdef VERBOSE
 	if(print) UTIL::PrintSubtimer("find-nn", t1.next());
 #endif
   }
-    link_terminal_nodes<dim, TF>(uf, finder, info, round, flags);
+    link_terminal_nodes<TF>(uf, finder, info, round, flagsSeq);
 #ifdef VERBOSE
 	if(print) UTIL::PrintSubtimer("link-update", t1.next());
 #endif
-      // get ready for next round
+    // get ready for next round
     finder->updateActiveClusters(round);
     finder->distComputer->update(round, finder);
-    info->next(finder);
+    info->next(finder, round);
     chainNum = info->chainNum;
 #ifdef VERBOSE
 	if(print) UTIL::PrintSubtimer("update-clusters", t1.next());
 #endif
 //   t1.next();
   }
-  UTIL::PrintFunctionItem("CLINK", "rounds", round);
+  // UTIL::PrintFunctionItem("CLINK", "rounds", round);
   delete info;
   finder->distComputer->postProcess(finder);
+
+  return formatDendrogram<dim>(finder->nodes, n, 0);
 }
 
 
