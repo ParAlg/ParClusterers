@@ -57,24 +57,6 @@ struct edgeComparator2{
 
 
 
-struct dendroLine{
-    int id1;
-    int id2;
-    double height;
-    int size;
-    dendroLine(int _id1, int _id2, double _height, int _size):id1(_id1), id2(_id2), height(_height), size(_size){}
-    dendroLine(){}
-
-    void print(std::ofstream &file_obj){
-        file_obj << id1 << " " << id2 << " " << std::setprecision(20) << height << " " << size << std::endl; 
-    }
-
-    void print(){
-        std::cout << id1 << " " << id2 << " " << height << " " << size << std::endl; 
-    }
-};
-
-
 struct TreeChainInfo{
   parlay::sequence<int> terminal_nodes;// must be cluster id
   parlay::sequence<int> chain;//chain[i] is cluster i's nn, NO_NEIGH for unknown or invalid// -1 for unknown, -2 for invalid
@@ -141,7 +123,7 @@ struct TreeChainInfo{
       int cid = finder->activeClusters[i];
       int nn = getNN(cid);
       //getNN(getNN(cid)) == NO_NEIGH
-      flag[i] = nn == NO_NEIGH || finder->justMerge(cid, round) ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
+      flag[i] = nn == NO_NEIGH || finder->justMerge(nn, round) ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
       is_terminal[cid] = flag[i];
     });
     chainNum = parlay::pack_into(make_slice(finder->activeClusters).cut(0,C), flag, terminal_nodes);

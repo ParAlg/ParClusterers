@@ -243,7 +243,7 @@ class Table {
 
     // returns all the current entries compacted into a sequence
     parlay::sequence<eType> entries() {
-    return parlay::filter(make_slice(TA, TA+m),
+    return parlay::filter(parlay::make_slice(TA, TA+m),
                   [&] (eType v) { return v != empty; });
   }
 

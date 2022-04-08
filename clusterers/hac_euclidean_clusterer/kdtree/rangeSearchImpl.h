@@ -7,12 +7,12 @@
 using namespace std;
 namespace research_graph {
 namespace in_memory {
-
+namespace internal{
 namespace HACTree {
 
     template <int dim, typename objT, typename nodeT, typename F>
     void rangeTraverse(nodeT *Q, objT center, double r, F* f) {
-    int relation = Q->boxBallCompare(center, r, Q->pMin, Q->pMax);
+    int relation = Q->boxBallCompare(center, r, Q->getMin(), Q->getMax());
     if(relation == Q->boxExclude) return;
     if (f->isComplete(Q)) return;
 
@@ -25,15 +25,15 @@ namespace HACTree {
     } else {
         if(f->Par(Q)){
             parlay::par_do([&](){
-                rangeTraverse(Q->L(), center, r, f);
+                rangeTraverse<dim, objT, nodeT, F>(Q->L(), center, r, f);
             },[&](){    
-                rangeTraverse(Q->R(), center, r, f);
+                rangeTraverse<dim, objT, nodeT, F>(Q->R(), center, r, f);
             });
         }else{
-            rangeTraverse(Q->L(), center, r, f);
-            rangeTraverse(Q->R(), center, r, f);
+            rangeTraverse<dim, objT, nodeT, F>(Q->L(), center, r, f);
+            rangeTraverse<dim, objT, nodeT, F>(Q->R(), center, r, f);
         }
     }
   }
 
-}}}
+}}}}
