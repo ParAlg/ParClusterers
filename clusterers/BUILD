@@ -21,6 +21,7 @@ cc_library(
     deps = [
         "//clusterers/metric_example_clusterer:metric-example-clusterer",
         "//clusterers/hac_clusterer:hac-clusterer",
+        # "//clusterers/hac_euclidean_clusterer:hac-euclidean-clusterer",
     ],
     alwayslink = 1,
 )

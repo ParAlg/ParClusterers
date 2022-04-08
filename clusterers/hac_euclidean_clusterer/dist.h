@@ -440,19 +440,17 @@ inline double getPointId(pointT p){
 // };
 
 
-//todo: is this wrong? the update should update on sqaured distances
 template<int dim>
 struct distAverageSq {
   Method method = AVGSQ;
   bool squared = true;
 
-  inline static void printName(){
-    cout << "distAverage" << endl;
-  }
+  inline static void printName(){cout << "distAverage" << endl;}
 
   distAverageSq(){};
 
   inline static bool doRebuild(){return true;}
+
   inline double updateDistO(double d1, double d2, double nql, double nqr, double nr, double dij){
     double n1 = (double)nql * (double)nr;
     double n2 = (double)nqr * (double)nr;
@@ -477,11 +475,6 @@ struct distAverageSq {
     return d1  + d2  + d3 + d4;
   }
 
-  // // must be larger when euclidean distance is larger
-  // inline double getDistNaive(iPoint<dim> *i,  iPoint<dim> *j){ 
-  //   return inode->pointDistSq(j);
-  // }
-
     inline double getDistNaive(Node<dim> *inode,  Node<dim> *jnode, 
                             double lb = -1, double ub = numeric_limits<double>::max(), 
                             bool par = true){ 
@@ -494,19 +487,7 @@ struct distAverageSq {
     }
 
     template<class F>
-    inline void update(int round, F *finder){
-
-    }
-
-    template<class F>
-    inline void postProcess(F *finder){
-        // parlay::parallel_for(0, 2*finder->n-1, [&](int i){
-        //   finder->nodes[i].height = finder->nodes[i].height * finder->nodes[i].height;
-        // });
-        // parlay::parallel_for(0, finder->n, [&](int i){
-        //   finder->uf->values[i] = finder->uf->values[i]  * finder->uf->values[i];
-        // });
-    }
+    inline void update(int round, F *finder){}
 };
 }
 }

@@ -56,7 +56,7 @@ class NNFinder {
   distF *distComputer;
   parlay::sequence<pointT> centers; //used to rebuild kd-tree
 
-  int NAIVE_THRESHOLD = 5;
+  int NAIVE_THRESHOLD = 10;
   double eps;
   edgeComparator2 EC2;
 
@@ -67,7 +67,7 @@ class NNFinder {
   }
 
   NNFinder(int t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
-    bool t_noCache, int t_cache_size=32, double t_eps = 0, int t_naive_thresh=5): 
+    bool t_noCache, int t_cache_size=32, double t_eps = 0, int t_naive_thresh=10): 
     n(t_n), uf(t_uf), no_cache(t_noCache), NAIVE_THRESHOLD(t_naive_thresh), eps(t_eps){
     EC2 = edgeComparator2(eps);
     C = n;
@@ -260,7 +260,6 @@ class NNFinder {
         treeT treetmp = treeT(centroid, cid); 
         // closest to a single point in cluster
         dualtree<kdnodeT, Fs>(&treetmp, kdtree, &fs);
-        // }
         
         nn = uf->find(fs.e->second);
         tie(minD, intable) = getDist(cid, nn); 
@@ -281,12 +280,11 @@ class NNFinder {
     if(minD ==0){
       return;
     }
-    double r = distComputer->getBall(query, minD+eps); //TODO: changed to dist, need to set r in range function
-
+    double r = distComputer->getBall(query, minD+eps); 
     Fr fr = Fr(cid, r, cacheTables, edges, distComputer, no_cache, C, eps); 
     HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree, query->center, r, &fr);
 
-    if(fr.local){ //TODO: optimize out to simplify code
+    if(fr.local){
     nn = fr.getFinalNN();
     minD = fr.getFinalDist();
     utils::writeMin(&edges[cid], EDGE(cid, nn, minD), EC2); 
@@ -383,7 +381,7 @@ class NNFinder {
       });
 
       delete kdtree;
-      kdtree = build<dim, pointT , nodeInfo>(centers, true); //TODO optimize to rebuild
+      kdtree = build<dim, pointT , nodeInfo>(centers.cut(0, C), true); //TODO optimize to rebuild
       // kdtree->kdTreeRebuild(centers, C);
     }
 
