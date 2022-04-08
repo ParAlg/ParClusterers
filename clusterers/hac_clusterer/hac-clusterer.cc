@@ -68,7 +68,7 @@ absl::StatusOr<std::vector<int64_t>> HACClusterer::Cluster(
   }
 
   double checksum = parlay::reduce(parlay::delayed_seq<double>(n-1, [&](size_t i){return dendro[i].height;}));
-  cout << "Cost: " << checksum << endl;
+  cout << "Cost: " << std::setprecision(10)  << checksum << endl;
   delete W;
   // Initially each vertex is its own cluster.
   std::vector<int64_t> cluster_ids(n);

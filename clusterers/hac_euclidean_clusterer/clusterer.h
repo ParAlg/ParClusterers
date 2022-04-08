@@ -33,11 +33,6 @@ inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
   parlay::parallel_for(0, chainNum, [&](int i){
       int cid = info->terminal_nodes[i];
       info->updateChain(cid, finder->edges[cid].second, finder->edges[cid].getW());
-#ifdef DEBUG
-  UTIL::PrintFunctionItem("NN", "cid", cid);
-  UTIL::PrintFunctionItem("NN", "nn", finder->edges[cid].second);
-  UTIL::PrintFunctionItem("NN", "w", finder->edges[cid].getW());
-#endif
   });
 }
 
@@ -102,7 +97,7 @@ vector<dendroLine> chain_linkage(TF *finder){
 
 #ifdef VERBOSE
  ofstream file_obj;
- file_obj.open("debug/1k.txt"); 
+ file_obj.open("debug/uci1.txt"); 
 #endif
 
   int round = 0;
@@ -113,11 +108,11 @@ vector<dendroLine> chain_linkage(TF *finder){
     // if(LINKAGE_DOPRINT(round)){//
     // print = true;
     std::cout << endl;
-    std::cout << "Round" << round << endl;
-    std::cout << "Comp Num" <<  finder->C << endl;
-    std::cout << "Chain #" <<  info->chainNum << endl;//}else{print = false;}
+    std::cout << "Round " << round << endl;
+    std::cout << "Comp Num " <<  finder->C << endl;
+    std::cout << "Chain # " <<  info->chainNum << endl;//}else{print = false;}
+  // if(round >= 10)  exit(1);
 #endif
-  // if(round >= 29)  exit(1);
   // if(round >= 2 && info->chainNum == 0) zero_chain_debug(finder, round, info); 
   if(round >= n){
       std::cerr << "too many rounds" << std::endl;
