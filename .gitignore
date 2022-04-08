@@ -2,3 +2,12 @@
 
 .*.swp
 .*.swo
+
+
+datasets/
+.DS_Store
+spatial_clusters/general_hac/.DS_Store
+.vscode/
+external/.DS_Store
+outputs/
+external/gbbs

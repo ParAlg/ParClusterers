@@ -102,9 +102,9 @@ TEST(kdTree, small)
   auto P = smallData2();
   int n = P.size();
   int chainNum = n;
-  int round = 0;
-  int *flags = (int*) malloc(sizeof(int)*n);// used in linkterminalnodes
-
+  int round = 1;
+  // int *flags = (int*) malloc(sizeof(int)*n);// used in linkterminalnodes
+  parlay::sequence<int> flags = parlay::sequence<int>(chainNum);
   UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
   // auto P = makeIPoint(P0);
 
@@ -113,9 +113,10 @@ TEST(kdTree, small)
 
   using distT = distAverageSq<2>;
   using F = RangeQueryCenterF<2, objT, distT>;
+  using TF = NNFinder<2, distT, F>;
   
   distT *dist = new distT();
-  NNFinder<2, distT, F> *finder = new NNFinder<2, distT, F>(n, P.data(), uf, dist, true); //a no cache finder
+  TF *finder = new TF(n, P.data(), uf, dist, true); //a no cache finder
   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
   finder->initChain(info);
   vector<int> round1_nn = {1,0,1,2,3,6,5};
@@ -127,7 +128,7 @@ TEST(kdTree, small)
     EXPECT_EQ(info->chainRev[i].second, round1_rev[i]);
   }
 
-  link_terminal_nodes<dim, TF>(uf, finder, info, round, flags);
+  link_terminal_nodes<TF>(uf, finder, info, round, flags);
   EXPECT_EQ(uf->find(0), uf->find(1));
   EXPECT_EQ(uf->find(5), uf->find(6));
   vector<int> round1_nn2 = {-1,-1,1,2,3,-1,-1};
@@ -138,9 +139,34 @@ TEST(kdTree, small)
     EXPECT_EQ(info->getNN(i), round1_nn2[i]);
     EXPECT_EQ(info->chainRev[i].second, round1_rev2[i]);
   }
+  EXPECT_EQ(finder->getNode(1)->getRound(), 1);
+  EXPECT_EQ(finder->getNode(6)->getRound(), 1);
+
+  EXPECT_EQ(finder->getNode(1)->center[0], 0.5);
+  EXPECT_EQ(finder->getNode(1)->center[1], 0);
+
+  finder->updateActiveClusters(round);
+  EXPECT_EQ(finder->C, 5);
+  vector<int> active1 = {1,2,3,4,6};
+  for(int i=0;i<5;++i){
+    EXPECT_EQ(finder->activeClusters[i], active1[i]);
+  }
+
+  info->next(finder, round);
+  EXPECT_EQ(info->chainNum, 3);
+  vector<int> termi1 = {1,2,6};
+  vector<int> istermi1 = {false,true,true,false, false, false, true};
+  vector<int> revt1 = {-1, 3, -1};
+  for(int i=0;i<3;++i){
+    EXPECT_EQ(info->terminal_nodes[i], termi1[i]);
+    EXPECT_EQ(info->getChainPrev(i).first, revt1[i]);
+  }
+  for(int i=0;i<n;++i){
+    EXPECT_EQ(info->is_terminal[i], istermi1[i]);
+  }
   // chain_find_nn(chainNum, finder, info);
 
-  free(flags);
+  // free(flags);
 }
 
 // TEST(kdTree, AllNNlarge)
