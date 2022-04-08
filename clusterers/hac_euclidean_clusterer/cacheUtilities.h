@@ -86,6 +86,7 @@ namespace HACTree {
       }
   };
 
+// TODO: consider changing hashtable to idx -> (idx, dist)
 template<class nodeT>
 struct CacheTables{
     typedef int intT;
@@ -101,9 +102,6 @@ struct CacheTables{
     distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
     std::size_t hashTableSize=0;
     distCacheT::eType *TA;
-
-
-    
 
     template<class Finder>
     CacheTables(bool _no_cache, int _n, int t_cache_size, Finder* finder):CACHE_TABLE_SIZE(t_cache_size), no_cache(_no_cache), n(_n){

@@ -58,7 +58,6 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
       int newc = uf->link(cid, nn, edges[cid].getW());
       info->invalidate(nn, NO_NEIGH);
       info->invalidate(cid, NO_NEIGH);
-      // info->invalidateRev(newc);
       finder->merge(cid, nn, newc, round, edges[cid].getW());
       flags[i] = newc;
     }else{

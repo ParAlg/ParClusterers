@@ -567,12 +567,12 @@ namespace HACTree {
         }
 
         inline bool isComplete(kdnodeT *Q){
-            if(distComputer->method == WARD){
-                double dsq = my_node_distance_sq(Q);
-                double min_n = (double)Q->getInfo().getMinN();
-                double qn = (double)qnode->size();
-                if(dsq > (qn + min_n)/min_n / qn  / 2 * r * r ) return true;
-            }
+            // if(distComputer->method == WARD){
+            //     double dsq = my_node_distance_sq(Q);
+            //     double min_n = (double)Q->getInfo().getMinN();
+            //     double qn = (double)qnode->size();
+            //     if(dsq > (qn + min_n)/min_n / qn  / 2 * r * r ) return true;
+            // }
             return false;
         }
 
