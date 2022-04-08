@@ -2,8 +2,8 @@
 
 #include <atomic>
 
-#include "point.h"
-#include "node.h"
+#include "utils/point.h"
+#include "utils/node.h"
 #include "kdtree/kdtree.h"
 #include "treeUtilities.h"
 

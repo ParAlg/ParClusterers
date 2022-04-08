@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "point.h"
-#include "unionfind.h"
-#include "utils.h"
-#include "linkage_types.h"
+#include "utils/point.h"
+#include "utils/unionfind.h"
+#include "utils/utils.h"
+#include "utils/chain.h"
 #include "cacheUtilities.h"
 
 using namespace std;

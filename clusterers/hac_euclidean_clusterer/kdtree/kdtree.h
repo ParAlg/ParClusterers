@@ -23,7 +23,7 @@
 #pragma once
 
 #include "parlay/sequence.h"
-#include "../point.h"
+#include "../utils/point.h"
 #include <tuple>
 
 using namespace std;

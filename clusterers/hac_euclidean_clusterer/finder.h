@@ -1,9 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include "unionfind.h"
-#include "linkage_types.h"
-// #include "matrix.h"
+#include "utils/unionfind.h"
+#include "utils/chain.h"
 #include "kdtree/kdtree.h"
 #include "treeUtilities.h"
 #include "cacheUtilities.h"

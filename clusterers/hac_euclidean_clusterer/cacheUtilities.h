@@ -5,13 +5,9 @@
 #include <string>
 #include <vector>
 
-// #include "point.h"
-#include "node.h"
-// #include "unionfind.h"
-#include "utils.h"
-// #include "linkage_types.h"
-#include "hashtable_parallel.h"
-// #include "hashtable_serial.h"
+#include "utils/node.h"
+#include "utils/utils.h"
+#include "utils/hashtable_parallel.h"
 
 #include "parlay/utilities.h"
 
