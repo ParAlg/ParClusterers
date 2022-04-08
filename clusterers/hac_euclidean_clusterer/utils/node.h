@@ -28,7 +28,7 @@ struct Node{
     Node<dim> *left = nullptr;
     Node<dim> *right = nullptr;
     point<dim> pMin, pMax;
-    int offset = -1;  // the offset of this node in the 2*datasize-1 arrays of all dendrogram nodes
+    int offset = -1;  // the offset of points in this cluster in a contiguous array, used in average linkage
     point<dim> center;
     double var = 0; // variance
 

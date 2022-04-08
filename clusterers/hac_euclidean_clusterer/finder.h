@@ -13,10 +13,6 @@
 
 using namespace std;
 
-#define ALLOCDOUBLE
-
-
-
 namespace research_graph {
 namespace in_memory {
 namespace internal {
@@ -45,13 +41,9 @@ class NNFinder {
 
   bool no_cache;
   CacheTables<nodeT> *cacheTables;
-  // distCacheT **cacheTbs; // distance to clusters, store two copies of each distance
-  // int hashTableSize=0;
-  // distCacheT::eType *TA;
 
   atomic<intT> nodeIdx; // the index of next node to use for cluster trees
   parlay::sequence<nodeT> nodes; // preallocated space to store tree nodes
-  // parlay::sequence<nodeT *> activeNodes; // pointers to the active nodes, same order as activeClustersTODO
   
   distF *distComputer;
   parlay::sequence<pointT> centers; //used to rebuild kd-tree
@@ -84,7 +76,6 @@ class NNFinder {
     flag = parlay::sequence<bool>(C);
     newClusters = parlay::sequence<int>(C);
 
-    // edges =parlay::sequence<EDGE>(n, [&](int i){return EDGE();});
     edges = (EDGE *)aligned_alloc(sizeof(EDGE), n*sizeof(EDGE));
     parlay::parallel_for(0,n,[&](int i){edges[i] = EDGE();});
 
@@ -98,7 +89,6 @@ class NNFinder {
     delete cacheTables;
     delete kdtree;
     free(edges);
-    // delete distComputer;
   }
 
   inline int cid(nodeT* node){ return node->cId;}
@@ -118,14 +108,6 @@ class NNFinder {
     return distComputer->getDistNaive(inode, jnode, lb, ub, par);
   }
 
-  // inline double getDistNaive(int i, int j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
-  //   return distComputer->getDistNaive(i, j, lb, ub, par);
-  // }
-
-  // inline double getDistNaiveDebug(int i, int j){
-  //   return distComputer->getDistNaive(getNode(i), getNode(j), -1,numeric_limits<double>::max(), false );
-  // }
-
   // i, j are cluster ids
   // find distance in table 
   // if not found, compute by bruteforce and insert 
@@ -135,17 +117,14 @@ class NNFinder {
   tuple<double, bool> getDist(int i,  int j, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     if(!no_cache){
     double d = cacheTables->find(i, j);
-    // if(d == CHECK_TOKEN){cout << "find check token" << endl; exit(1);} // might find is in singleNN step in getNN
     if(d != UNFOUND_TOKEN && d != CHECK_TOKEN) return make_tuple(d, true);
     }
-    // if(distComputer->id_only) return make_tuple(getDistNaive(i,  j, lb, ub, par), false);
-    return make_tuple(getDistNaive(getNode(i),  getNode(j), lb, ub, par), false);
+    return make_tuple(getDistNaive(getNode(i), getNode(j), lb, ub, par), false);
   }
 
   tuple<double, bool> getDist(nodeT *inode,  nodeT *jnode, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){
     if(!no_cache){
     double d = cacheTables->find(inode, jnode);
-    // if(d == CHECK_TOKEN){cout << "find check token" << endl; exit(1);} // might find is in singleNN step in getNN
     if(d != UNFOUND_TOKEN && d != CHECK_TOKEN) return make_tuple(d, true); 
     }
     return make_tuple(getDistNaive(inode, jnode, lb, ub, par), false);
@@ -162,27 +141,15 @@ class NNFinder {
     int nr = rroot->n;
     double dij = getNode(newc)->getHeight();
 
-    // double n1 = (double)nql * (double)nr;
-    // double n2 = (double)nqr * (double)nr;
-    // double alln = n1 + n2 ;
-
     double d1,d2; bool intable;
     tie(d1, intable) = getDist(ql,rroot);
-    // d1 = n1 / alln * d1;
-
     tie(d2, intable) = getDist(qr,rroot);
-    // d2 = n2 / alln * d2;
-
-    // return d1 + d2;
     return distComputer->updateDistO(d1, d2, nql, nqr, nr, dij);
   }
 
 
-  //newc is a newly merged cluster
+  // newc is a newly merged cluster
   // newc is new, rid is merged
-  //todo: cids on cluster tree do not need to be marked
-  // overwrite entry?
-  // TODO: consider changing hashtable to idx -> (idx, dist)
   inline double getNewDistN(int newc, int rid){
     nodeT* ql = getNode(newc)->left;
     int nql = ql->n;
@@ -198,18 +165,9 @@ class NNFinder {
 
     double d1,d2, d3, d4; bool intable;
     tie(d1, intable) = getDist(ql,rl);
-    // d1 = n1 / alln * d1;
-
     tie(d2, intable) = getDist(ql,rr);
-    // d2 = n2 / alln * d2;
-
     tie(d3, intable) = getDist(qr,rl);
-    // d3 = n3 / alln * d3;
-
     tie(d4, intable) = getDist(qr,rr);
-    // d4 = n4 / alln * d4;
-
-    // return d1  + d2  + d3 + d4;
     return distComputer->updateDistN(d1, d2, d3, d4, nql, nqr, nrl, nrr, dij, dklr);
   }
 
@@ -230,7 +188,6 @@ class NNFinder {
         }
       }
     });
-    // return make_pair(-1, -1); 
   }
 
   // store the closest nn in edges
@@ -280,7 +237,7 @@ class NNFinder {
     if(minD ==0){
       return;
     }
-    double r = distComputer->getBall(query, minD+eps); 
+    double r = distComputer->getBall(query, minD)+eps; 
     Fr fr = Fr(cid, r, cacheTables, edges, distComputer, no_cache, C, eps); 
     HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree, query->center, r, &fr);
 
@@ -351,28 +308,17 @@ class NNFinder {
       }
 
     });
-    // free(TAR1.A);
-    // free(TAR2.A);
   }
 
   // find new activeClusters array based on uf, update C
   inline void updateActiveClusters(int round){
-#ifdef DEBUG
-    UTIL::PrintVec(activeClusters, C);
-#endif
-    
     parlay::parallel_for(0,C,[&](int i){
       int cid  = activeClusters[i];
       flag[i] = (uf->find(cid)==cid);
     });
-// chainNum = parlay::pack_into(make_slice(finder->activeClusters).cut(0,C), flag, terminal_nodes);
     
     C = parlay::pack_into(make_slice(activeClusters).cut(0,C), flag, make_slice(newClusters).cut(0,C));
     swap(activeClusters, newClusters);
-    // moved to distComputer->update();
-    // if(marker.doMark(C, round)){ //TODO: move marker to distComputation
-    //   FINDNN::singletree<kdnodeT, M, typename M::infoT>(kdtree->root, &marker, marker.initVal);
-    // }
 
     if(distComputer->doRebuild()){
       parlay::parallel_for(0, C, [&](int i){
@@ -382,13 +328,7 @@ class NNFinder {
 
       delete kdtree;
       kdtree = build<dim, pointT , nodeInfo>(centers.cut(0, C), true); //TODO optimize to rebuild
-      // kdtree->kdTreeRebuild(centers, C);
     }
-
-#ifdef DEBUG
-    cout <<  "pack activeClusters" << endl;
-    UTIL::PrintVec(activeClusters, C);
-#endif
   }
 
   // edges[i] stores the ith nn  of point i
@@ -408,9 +348,6 @@ class NNFinder {
     parlay::parallel_for(0,n,[&](int i){
       info->updateChain(edges[i].first, edges[i].second, edges[i].getW());
     });
-#ifdef DEBUG
-    UTIL::PrintVec2<EDGE>(edges, n);
-#endif
     if(!no_cache){
     parlay::parallel_for(0,n,[&](int cid){
       cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTables->getTable(cid), cacheTables->getTable(edges[cid].second));
