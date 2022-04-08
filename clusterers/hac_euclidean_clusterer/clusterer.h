@@ -98,8 +98,7 @@ vector<dendroLine> chain_linkage(TF *finder){
   int n = finder->n;
   int chainNum = n;
   TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
-  parlay::sequence<int> flagsSeq = parlay::sequence<int>(chainNum);
-  // int *flags = flagsSeq.data();// used in linkterminalnodes
+  parlay::sequence<int> flags = parlay::sequence<int>(chainNum);// used in linkterminalnodes
 
 #ifdef VERBOSE
 	UTIL::PrintSubtimer("initialize", t1.next());
@@ -125,20 +124,16 @@ vector<dendroLine> chain_linkage(TF *finder){
       cout << "too many rounds" << endl;
       exit(1);
   }
-
   if(round == 1){
     finder->initChain(info);
-#ifdef VERBOSE
-	if(print) UTIL::PrintSubtimer("init-chains", t1.next());
-#endif
   }else{
     chain_find_nn<TF>(chainNum, finder, info);
     // findAllNNBruteForce(chainNum, finder, info);
+  }
 #ifdef VERBOSE
 	if(print) UTIL::PrintSubtimer("find-nn", t1.next());
 #endif
-  }
-    link_terminal_nodes<TF>(uf, finder, info, round, flagsSeq);
+    link_terminal_nodes<TF>(uf, finder, info, round, flags);
 #ifdef VERBOSE
 	if(print) UTIL::PrintSubtimer("link-update", t1.next());
 #endif
