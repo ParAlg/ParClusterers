@@ -101,55 +101,58 @@ vector<dendroLine> chain_linkage(TF *finder){
   parlay::sequence<int> flags = parlay::sequence<int>(chainNum);// used in linkterminalnodes
 
 #ifdef VERBOSE
-	UTIL::PrintSubtimer("initialize", t1.next());
+ ofstream file_obj;
+ file_obj.open("debug/1k.txt"); 
 #endif
-//  ofstream file_obj;
-//  file_obj.open("debug/avg_UCI1_32_1th.txt"); //"+ to_string(round) + "
 
   int round = 0;
   bool print = false;
   while(finder->C > 1 ){
     round ++;
 #ifdef VERBOSE
-    if(LINKAGE_DOPRINT(round)){//
-    print = true;
-    UTIL::PrintBreak();
-    UTIL::PrintFunctionItem("CLINK", "Round", round);
-    UTIL::PrintFunctionItem("CLINK", "Comp Num", finder->C);
-    UTIL::PrintFunctionItem("Chain", "#", info->chainNum);}else{print = false;}
+    // if(LINKAGE_DOPRINT(round)){//
+    // print = true;
+    std::cout << endl;
+    std::cout << "Round" << round << endl;
+    std::cout << "Comp Num" <<  finder->C << endl;
+    std::cout << "Chain #" <<  info->chainNum << endl;//}else{print = false;}
 #endif
-  // if(round >= n)  exit(1);
+  // if(round >= 29)  exit(1);
   // if(round >= 2 && info->chainNum == 0) zero_chain_debug(finder, round, info); 
   if(round >= n){
-      cout << "too many rounds" << endl;
+      std::cerr << "too many rounds" << std::endl;
       exit(1);
   }
   if(round == 1){
     finder->initChain(info);
   }else{
     chain_find_nn<TF>(chainNum, finder, info);
-    // findAllNNBruteForce(chainNum, finder, info);
   }
+
 #ifdef VERBOSE
-	if(print) UTIL::PrintSubtimer("find-nn", t1.next());
+   for(int i = 0; i < finder->C; ++i){
+     file_obj << round << " " << finder->activeClusters[i] << endl;
+   }
+   file_obj << round << "========" << endl;
+    for(int i = 0; i < chainNum; ++i){
+      int cid = info->terminal_nodes[i];
+      file_obj << round << " " << cid << " " << finder->edges[cid].second << endl;//<< " " << finder->edges[cid].getW() 
+    }
+
+   file_obj << round << "========" << endl;
 #endif
+
     link_terminal_nodes<TF>(uf, finder, info, round, flags);
-#ifdef VERBOSE
-	if(print) UTIL::PrintSubtimer("link-update", t1.next());
-#endif
     // get ready for next round
     finder->updateActiveClusters(round);
     finder->distComputer->update(round, finder);
     info->next(finder, round);
     chainNum = info->chainNum;
-#ifdef VERBOSE
-	if(print) UTIL::PrintSubtimer("update-clusters", t1.next());
-#endif
 //   t1.next();
   }
   // UTIL::PrintFunctionItem("CLINK", "rounds", round);
   delete info;
-  finder->distComputer->postProcess(finder);
+  // finder->distComputer->postProcess(finder);
 
   return formatDendrogram<dim>(finder->nodes, n, 0);
 }

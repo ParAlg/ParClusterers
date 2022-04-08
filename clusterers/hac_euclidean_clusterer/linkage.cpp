@@ -7,7 +7,9 @@
 
 #include "parlay/primitives.h"
 
-// g++ -g -std=c++17 -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+// g++ -g -std=c++17 -ldl -pthread -DVERBOSE -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+// g++ -std=c++17 -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+
 
 using namespace std;
 using namespace research_graph::in_memory::internal::HACTree;
@@ -31,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     double checksum = parlay::reduce(parlay::delayed_seq<double>(n-1, [&](size_t i){return dendro[i].height;}));
 
-    cout << "cost: " << checksum << endl;
+    cout << "Cost: " << checksum << endl;
     ofstream file_obj;
     file_obj.open(output); 
     for(size_t i=0;i<n-1;i++){
