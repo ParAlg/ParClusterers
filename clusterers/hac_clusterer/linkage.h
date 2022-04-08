@@ -71,6 +71,9 @@ class MatrixNNFinder {
   inline std::size_t rightIdx(std::size_t cid){return getNode(cid)->right->idx;}
   inline std::size_t cid(std::size_t idx){return cid(nodes[idx]);}
   inline bool isActive(std::size_t cid){return uf->find(cid)==cid;}
+  inline bool justMerge(int cid, int round){
+    return round == getNode(uf->find(cid))->getRound();
+  }
 
   // i, j are cluster ids
   // find distance in matrix
@@ -297,7 +300,7 @@ vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
     link_terminal_nodes<MatrixNNFinder<T, distT>>(&finder, &info, round, flags);
     // get ready for next round
     finder.updateActiveClusters(round);
-    info.next(&finder);
+    info.next(&finder, round);
     chainNum = info.chainNum;
   }
   return formatDendrogram(finder.nodes, n, 0);

@@ -21,34 +21,55 @@ absl::StatusOr<std::vector<int64_t>> HACClusterer::Cluster(
   
   const HACClustererConfig& hac_config = config.hac_clusterer_config();
   const HACClustererConfig_LinkageMethod linkage_method = hac_config.linkage_method();
+  const HACClustererConfig_Distance distance = hac_config.distance();
+  const string output_dendro = hac_config.output_dendro();
+
   std::size_t n = datapoints.size();
       
   using T=double;
 
-  internal::SymMatrix<T> W = internal::getDistanceMatrix<T>(datapoints); 
+
+  internal::SymMatrix<T> *W;
+  if(distance == HACClustererConfig::EUCLIDEAN){
+    std::cout << "Distance: " << "Euclidean" << std::endl;
+    W = internal::getDistanceMatrix<T>(datapoints); 
+  }else if(distance == HACClustererConfig::EUCLIDEAN_SQ){
+    std::cout << "Distance: " << "Euclidean Square" << std::endl;
+    W = internal::getDistanceMatrix<T>(datapoints, &internal::distancesq<T>); 
+  }else{
+    std::cerr << "Distance = " << distance << std::endl;
+    return absl::UnimplementedError("Unknown distance.");
+  }
+  
   vector<internal::dendroLine> dendro;
 
 
-  if(linkage_method== HACClustererConfig::COMPLETE){
+  if(linkage_method == HACClustererConfig::COMPLETE){
     std::cout << "Linkage method: " << "complete linkage" << std::endl;
     using distT = internal::distComplete<T>;
-    dendro = internal::chain_linkage_matrix<T, distT>(&W);
-  }else if(linkage_method== HACClustererConfig::AVERAGE){
+    dendro = internal::chain_linkage_matrix<T, distT>(W);
+  }else if(linkage_method == HACClustererConfig::AVERAGE){
     std::cout << "Linkage method: " << "average linkage" << std::endl;
     using distT = internal::distAverage<T>;
-    dendro = internal::chain_linkage_matrix<T, distT>(&W);
+    dendro = internal::chain_linkage_matrix<T, distT>(W);
   }else{ //should not reach here if all methods in proto are implemented
     std::cerr << "Linkage method = " << linkage_method << std::endl;
     return absl::UnimplementedError("Unknown linkage method.");
   }
 
-  // ofstream file_obj;
-  // file_obj.open(output); 
-  // for(size_t i=0;i<n-1;i++){
-  //     dendro[i].print(file_obj);
-  // }
-  // file_obj.close();
+  if(output_dendro != ""){
+    std::cout << "dednrogram output file: " << output_dendro << std::endl;
+    ofstream file_obj;
+    file_obj.open(output_dendro.c_str()); 
+    for(size_t i=0;i<n-1;i++){
+        dendro[i].print(file_obj);
+    }
+    file_obj.close();
+  }
 
+  double checksum = parlay::reduce(parlay::delayed_seq<double>(n-1, [&](size_t i){return dendro[i].height;}));
+  cout << "Cost: " << checksum << endl;
+  delete W;
   // Initially each vertex is its own cluster.
   std::vector<int64_t> cluster_ids(n);
   parlay::parallel_for(0, n, [&](std::size_t i) { cluster_ids[i] = i; });

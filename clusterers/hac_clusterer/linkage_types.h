@@ -92,7 +92,7 @@ struct edgeComparator2{
 };
 
 
-enum Method { WARD, COMP, AVG, SINGLE };
+enum Method { WARD, COMP, AVG, SINGLE, AVGSQ };
 
 
 // same as distComplete1, uses array instead of cache
@@ -232,14 +232,14 @@ struct TreeChainInfo{
 
   // update findNN, terminal_nodes and chainNum
   template<class F>
-  inline void next(F *finder){
+  inline void next(F *finder, int round){
     parlay::parallel_for(0, finder->n, [&](std::size_t i){
       is_terminal[i] = false;
     });
     std::size_t C = finder->C;
     parlay::parallel_for(0, C, [&](std::size_t i){
       std::size_t cid = finder->activeClusters[i];
-      flag[i] = getNN(cid) == NO_NEIGH || getNN(getNN(cid)) == NO_NEIGH ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
+      flag[i] = getNN(cid) == NO_NEIGH || finder->justMerge(getNN(cid), round) ;// only merged clusters have negative neighbor in chain ok because -2 won't be in active clusters
       is_terminal[cid] = flag[i];
     });
     chainNum = parlay::pack_into(make_slice(finder->activeClusters).cut(0,C), flag, terminal_nodes);

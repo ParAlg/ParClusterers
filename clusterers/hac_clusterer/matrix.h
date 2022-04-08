@@ -87,7 +87,7 @@ struct SymMatrix{
 // assume the two data points are in dense format
 // assume the two data points have the same dimension
 template <class T>
-T distance(const DataPoint a, const DataPoint b) {
+inline T distancesq(const DataPoint a, const DataPoint b) {
     T sum=0;
     for (std::size_t k=0; k<a.coordinates.size(); k++) {
         float tmp=a.coordinates[k]-b.coordinates[k];
@@ -96,21 +96,32 @@ T distance(const DataPoint a, const DataPoint b) {
     return sum;
 }
 
+template <class T>
+inline T distance(const DataPoint a, const DataPoint b) {
+    return sqrt(distancesq<T>(a,b));
+}
+
+template <class T, class F>
+SymMatrix<T>* getDistanceMatrix(absl::Span<const DataPoint> datapoints, F f) {
+    std::size_t n = datapoints.size();
+    SymMatrix<T> *matrix = new SymMatrix<T>(n);
+    parlay::parallel_for(0, n, [&](size_t i){
+        parlay::parallel_for(i+1, n,[&] (size_t j){
+	        matrix->update(i, j, f(datapoints[i], datapoints[j]));
+        });
+    });
+    matrix->setDiag(0);
+    return matrix;
+}
+
 //return a symmetric matrix representation of the euclidean distance
 // between all pairs of datapoints.
 // assume all points have the same dimension and are in dense format
 template <class T>
-SymMatrix<T> getDistanceMatrix(absl::Span<const DataPoint> datapoints) {
-    std::size_t n = datapoints.size();
-    SymMatrix<T> matrix = SymMatrix<T>(n);
-    parlay::parallel_for(0, n, [&](size_t i){
-        parlay::parallel_for(i+1, n,[&] (size_t j){
-	        matrix.update(i, j, distance<T>(datapoints[i], datapoints[j]));
-        });
-    });
-    matrix.setDiag(0);
-    return matrix;
+SymMatrix<T>* getDistanceMatrix(absl::Span<const DataPoint> datapoints) {
+    return getDistanceMatrix<T>(datapoints, &distance<T>);
 }
+
 
 }  //namespace internal
 }  // namespace in_memory
