@@ -46,11 +46,13 @@ inline double getPointId(pointT p){
         long total_n = (long)n1 * (long)n2;
         // intT eltsPerCacheLine = 128 /sizeof(double);
         if(total_n < LINKAGE_AVE_BRUTE_THRESH){ 
+            double local_d = 0;
             for(int i=0; i< n1; ++i){
                 for(int j=0;j<n2; ++j){
-                    total_d +=  pointDist<pointT>(P1[i], P2[j]);
+                    local_d +=  pointDist<pointT>(P1[i], P2[j]);
                 }
             }
+            total_d.store(local_d);
         }else{
             if(n1 < n2){
                 swap(n1, n2);
@@ -87,34 +89,62 @@ inline double getPointId(pointT p){
         return bruteForceAverage<pointT, pointT*>(P1, P2, n1, n2, true);
     }
 
+   //find the farthest pair of points in t1 and t2
     template<class _objT>
-    inline pair<pair<int, int>, double> bruteForceNearest(parlay::slice<_objT **, _objT **> P1, parlay::slice<_objT **, _objT **> P2){
-        pair<int, int> result;
-        double mind = numeric_limits<double>::max();
-        for(int i=0; i< P1.size(); ++i){
-            for(int j=0;j<P2.size(); ++j){
-            double d = P1[i].pointDist(P2[j]);
-            if(d < mind){
-                result = make_pair(P1[i].idx(),P2[j].idx());
-                mind = d;
-            }else if(d==mind && P2[j].idx()<result.second){
-                result = make_pair(P1[i].idx(),P2[j].idx());
-                mind = d;
+    inline pair<pair<int, int>, double> bruteForceFarthest(parlay::slice<_objT **, _objT **> P1, parlay::slice<_objT **, _objT **> P2){
+        pair<int, int> result = make_pair(-1,-1);
+        double maxd = 0;
+        for(size_t i=0; i< P1.size(); ++i){
+            for(size_t j=0;j< P2.size(); ++j){
+            double d = P1[i]->pointDist(P2[j]);
+            if(d > maxd){
+                result = make_pair(P1[i]->idx(),P2[j]->idx());
+                maxd = d;
             }
+            // else if(d==maxd && P2[j]->idx()<result.second){
+            //     result = make_pair(P1[i]->idx(),P2[j]->idx());
+            //     maxd = d;
+            // }
             }
         }
-        return make_pair(result, mind);
+        return make_pair(result, maxd);
     }
 
-
-
-    //find the farthest pair of points in t1 and t2
     template<int dim, class nodeT, class _objT>
-    inline pair<pair<int, int>, double> bruteForceNearest(nodeT *t1, nodeT *t2){
-        parlay::slice<_objT **, _objT **> P1 = t1->items;
-        parlay::slice<_objT **, _objT **> P2 = t2->items;
-        return bruteForceNearest(P1, P2);
+    inline pair<pair<int, int>, double> bruteForceFarthest(nodeT *t1, nodeT *t2){
+        parlay::slice<_objT **, _objT **> P1 = t1->getItems();
+        parlay::slice<_objT **, _objT **> P2 = t2->getItems();
+        return bruteForceFarthest(P1, P2);
     }
+
+    // template<class _objT>
+    // inline pair<pair<int, int>, double> bruteForceNearest(parlay::slice<_objT **, _objT **> P1, parlay::slice<_objT **, _objT **> P2){
+    //     pair<int, int> result;
+    //     double mind = numeric_limits<double>::max();
+    //     for(int i=0; i< P1.size(); ++i){
+    //         for(int j=0;j<P2.size(); ++j){
+    //         double d = P1[i].pointDist(P2[j]);
+    //         if(d < mind){
+    //             result = make_pair(P1[i].idx(),P2[j].idx());
+    //             mind = d;
+    //         }else if(d==mind && P2[j].idx()<result.second){
+    //             result = make_pair(P1[i].idx(),P2[j].idx());
+    //             mind = d;
+    //         }
+    //         }
+    //     }
+    //     return make_pair(result, mind);
+    // }
+
+
+
+    // //find the farthest pair of points in t1 and t2
+    // template<int dim, class nodeT, class _objT>
+    // inline pair<pair<int, int>, double> bruteForceNearest(nodeT *t1, nodeT *t2){
+    //     parlay::slice<_objT **, _objT **> P1 = t1->getItems();
+    //     parlay::slice<_objT **, _objT **> P2 = t2->getItems();
+    //     return bruteForceNearest(P1, P2);
+    // }
 
 template<int dim>
 struct distComplete {
@@ -124,6 +154,7 @@ struct distComplete {
   typedef tuple<int, int, long> countCacheT;//(round, count, cid), use long to pack to 2^i bytes
 
   static const Method method = COMP;
+  bool squared = false;
   M marker;
   int round = 0;
   int n;
@@ -137,7 +168,7 @@ struct distComplete {
       n = t_uf->size();
       kdtrees = (kdtreeT **) malloc(n*sizeof(kdtreeT *));
       parlay::parallel_for(0,n,[&](int i){
-        kdtrees[i] = build(PP, i);
+        kdtrees[i] = new kdtreeT(PP+i, i);
       });
 
       int PNum =  parlay::num_workers();
@@ -145,7 +176,10 @@ struct distComplete {
       parlay::parallel_for(0, static_cast<size_t>(n) * PNum,[&](size_t i){
         countTbs[i] = make_tuple(1, 0, (long)-1);
       });
-      clusterOffsets = parlay::sequence<int>(n+1, [&](int i){return i;});
+      clusterOffsets = parlay::sequence<int>(n+1);
+      parlay::parallel_for(0, n+1,[&](size_t i){
+        clusterOffsets[i] = i;
+      });
       flags = parlay::sequence<bool>(n);
   }
 
@@ -173,15 +207,15 @@ struct distComplete {
 
   double getDistNaive(int cid1, int cid2, double lb = -1, double ub = numeric_limits<double>::max(), bool par = true){ 
     double result;
-    if(kdtrees[cid1]->getN() + kdtrees[cid2]->getN() < 200){
-      pair<pair<int, int>, double> result = bruteForceFarthest(kdtrees[cid1], kdtrees[cid2]);
+    if(kdtrees[cid1]->size() + kdtrees[cid2]->size() < 200){
+      pair<pair<int, int>, double> result = bruteForceFarthest<dim, kdnodeT, iPoint<dim>>(kdtrees[cid1], kdtrees[cid2]);
       return result.second;
     }
 
     EDGE e;
     if(lb == -1){
-        lb = kdtrees[cid1]->items[0]->pointDist(kdtrees[cid2]->items[0]);
-        e = EDGE(kdtrees[cid1]->items[0]->idx(),kdtrees[cid2]->items[0]->idx(),lb);
+        lb = kdtrees[cid1]->at(0)->pointDist(kdtrees[cid2]->at(0));
+        e = EDGE(kdtrees[cid1]->at(0)->idx(),kdtrees[cid2]->at(0)->idx(),lb);
         if(lb > ub) return LARGER_THAN_UB;
     }else{
         e = EDGE(-1,-1,lb);
@@ -211,15 +245,15 @@ struct distComplete {
       if(finder->C==1) return;
       round = _round;
 
-      int *activeClusters = finder->activeClusters;
+    //   int *activeClusters = finder->activeClusters;
       int  C = finder->C;
       parlay::parallel_for(0, C, [&](int i){
-        clusterOffsets[i] = finder->getNode(activeClusters[i])->size();
+        clusterOffsets[i] = finder->getNode(finder->activeClusters[i])->size();
       });
       parlay::scan_inclusive_inplace(clusterOffsets.cut(0,C));
 
       parlay::parallel_for(0,C,[&](int i){
-        int cid  = activeClusters[i];
+        int cid  = finder->activeClusters[i];
         Node<dim> *clusterNode = finder->getNode(cid);
         if(clusterNode->round == round){//merged this round, build new tree
           int cid1 = clusterNode->left->cId;
@@ -234,7 +268,7 @@ struct distComplete {
       });
 
       if(marker.doMark(C, round)){ 
-          HACTree::singletree<kdnodeT, M, typename M::infoT>(finder->kdtree, &marker, marker.initVal);
+          HACTree::singletree<kdnodeT, M, int>(finder->kdtree, &marker, marker.initVal);
       }
       round++;// when using it, we want to use the next round
     }
@@ -287,11 +321,11 @@ struct distWard {
 
     template<class F>
     inline void update(int round, F *finder){
-        min_n = parlay::min_element(parlay::delayed_seq<double>(finder->C, 
+        min_n = *(parlay::min_element(parlay::delayed_seq<double>(finder->C, 
             [&](size_t i){
                 int cid = finder->activeClusters[i];
                 return finder->getNode(cid)->size();
-            }));
+            })));
         // if(marker.doMark(finder->C, round)){ 
         //     HACTree::singletree<kdnodeT, M, typename M::infoT>(finder->kdtree, &marker, marker.initVal);
         // }
@@ -300,7 +334,7 @@ struct distWard {
 
 template<int dim>
 struct distAverage {
-  typedef point<dim> pointT;
+  typedef iPoint<dim> pointT;
   typedef Node<dim> nodeT;
 
   Method method = AVG;
@@ -311,13 +345,13 @@ struct distAverage {
   parlay::sequence<int> clusterOffsets;  //same order as activeClusters in finder
   pointT *clusteredPts;
 
-  distAverage(pointT *PP, int n, bool t_no_cache){
+  distAverage(iPoint<dim> *PP, int n){
     clusteredPts1 = (pointT *) malloc(n* sizeof(pointT));
     clusteredPts2 = (pointT *) malloc(n* sizeof(pointT));
     clusteredPts = clusteredPts1;
     clusterOffsets = parlay::sequence<int>(n+1);
     parlay::parallel_for(0,n,[&](int i){
-      clusteredPts1[i]=PP[i];
+      clusteredPts1[i]=iPoint<dim>(PP[i], i);
       clusterOffsets[i] = i;
     });
   }

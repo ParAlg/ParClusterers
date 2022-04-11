@@ -199,13 +199,11 @@ namespace HACTree {
       // allocate space for a copy of the items
       allItems = new parlay::sequence<_objT *>(n);
 
-      // parlay::parallel_for(0,n, [&](size_t i)
-      //                      { allItems->at(i) = _items[i]; });
       parlay::parallel_for(0, n1, [&](int i){
-        allItems[i] = t1->items[i];
+        allItems->at(i) = t1->getItem(i);
       });
       parlay::parallel_for(0, n2, [&](int i){
-        allItems[n1+i] = t2->items[i];
+        allItems->at(n1+i) = t2->getItem(i);
       });
 
       // construct self
@@ -311,6 +309,8 @@ namespace HACTree {
     inline bool isLeaf() { return !left; }
 
     inline _objT *getItem(intT i) { return items[i]; }
+
+    inline parlay::slice<_objT **, _objT **> getItems() { return items; }
 
     inline pointT getMax() { return pMax; }
 

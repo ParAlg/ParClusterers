@@ -29,7 +29,7 @@
 namespace research_graph {
 namespace in_memory {
 
-class HACClusterer : public InMemoryMetricClusterer {
+class HACEuclideanClusterer : public InMemoryMetricClusterer {
  public:
     absl::StatusOr<std::vector<int64_t>> Cluster(
       absl::Span<const DataPoint> datapoints,

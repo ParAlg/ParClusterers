@@ -66,13 +66,13 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
   });
   
   if(!finder->no_cache){
-  auto merged = parlay::filter(flags.cut(0, chainNum), [&](std::size_t i){return i!=NO_NEIGH;});
+  auto merged = parlay::filter(flags.cut(0, chainNum), [&](int i){return i!=NO_NEIGH;});
 
 #ifdef TIMING2
 	 if(LINKAGE_DOPRINT(round)){ UTIL::PrintSubtimer(":::merge", t1.next());  cout << "merged.n: " << merged.n << endl;}
 #endif
   // insert to new hashtables and delete old hashtables
-  parlay::parallel_for(0, merged.size(), [&](std::size_t i){
+  parlay::parallel_for(0, merged.size(), [&](int i){
     int newc = merged[i];
     finder->updateDist(newc);
   });
@@ -100,7 +100,7 @@ vector<dendroLine> chain_linkage(TF *finder){
 #endif
 
   int round = 0;
-  bool print = false;
+  // bool print = false;
   while(finder->C > 1 ){
     round ++;
 #ifdef VERBOSE

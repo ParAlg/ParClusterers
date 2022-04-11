@@ -224,8 +224,10 @@ namespace HACTree {
     struct MarkClusterId{
         
         UnionFind::ParUF<int> *uf;
+        int initVal = -1;
 
         MarkClusterId(UnionFind::ParUF<int> *t_uf):uf(t_uf){}
+        MarkClusterId(){}
         inline bool doMark(int C, int round){ return round > 5 && C > 1;}
         inline bool isTopDown(int id){ return id != -1;}
 
@@ -248,7 +250,7 @@ namespace HACTree {
                 Q->getInfo().setCId(id);
             }else{
                 id = uf->find(Q->at(0)->idx());
-                for(int i=0; i<Q->n; ++i){
+                for(int i=0; i<Q->size(); ++i){
                     if(uf->find(Q->at(i)->idx())!= id){
                         Q->getInfo().setCId(-1);
                         return;
@@ -265,7 +267,7 @@ namespace HACTree {
             return uf->find(cid); 
         }
 
-        inline bool Par(nodeT *Q){return Q->n > 2000;}
+        inline bool Par(nodeT *Q){return Q->size() > 2000;}
 
         inline bool Stop(nodeT *Q, int id){
             int cid = Q->getInfo().getCId();
@@ -370,7 +372,10 @@ namespace HACTree {
         typedef node<dim, objT, nodeInfo> kdnodeT;
     
         UnionFind::ParUF<int> *uf;
+        
+        double r;
         int cid;
+        bool no_cache;
         pair<int, double> e;
         countCacheT *tb; //
         nodeT *nodes;
@@ -382,12 +387,11 @@ namespace HACTree {
         edgeComparator2 EC2;
         double eps;
         const bool local = true;
-        bool no_cache;
-
-        RangeQueryCountF(UnionFind::ParUF<int> *t_uf, int t_cid, 
-            nodeT *t_nodes, int *t_rootIdx, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
+        
+        
+        RangeQueryCountF(int t_cid, double _r, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, int C, double _eps):
-            uf(t_uf), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
+            r(_r), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
             distComputer(t_distComputer), eps(_eps){
             EC2 = edgeComparator2(eps);
             e = make_pair(t_edges[cid].second, t_edges[cid].getW());
@@ -396,8 +400,8 @@ namespace HACTree {
             tb = distComputer->initClusterTb(pid, C);//clusterTbs[idx];
 
             tbs = t_tbs;
-            nodes = t_nodes;
-            rootIdx = t_rootIdx;
+            nodes = t_tbs->nodes;
+            rootIdx = t_tbs->rootIdx;
             qnode = getNode(cid);
         }
 
@@ -451,7 +455,7 @@ namespace HACTree {
             if( Rid != -1){
                 int ct; bool reach_thresh;
                 tie(ct, reach_thresh) = incrementTable(Rid, Q->size());
-                if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->getN()) updateDist(Rid, reach_thresh);
+                if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->size()) updateDist(Rid, reach_thresh);
                 return true;
             }else{
                 return false;
@@ -464,7 +468,7 @@ namespace HACTree {
             if(cid == Rid ) return false;
             int ct; bool reach_thresh;
             tie(ct, reach_thresh) = incrementTable(Rid);
-            if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->getN()) updateDist(Rid, reach_thresh);
+            if (reach_thresh || ct ==  distComputer->kdtrees[Rid]->size()) updateDist(Rid, reach_thresh);
             return false;
         }
 
@@ -486,6 +490,7 @@ namespace HACTree {
         typedef node<dim, objT, nodeInfo> kdnodeT;
 
         // UnionFind::ParUF<int> *uf;
+        double r;
         int cid;
         EDGE *edges;
         nodeT *nodes;
@@ -495,13 +500,12 @@ namespace HACTree {
         CacheTables<nodeT> *tb;
         edgeComparator2 EC2;
         distT *distComputer;
-        double r;
         bool no_cache;
         const bool local = false; // writemin after
 
         RangeQueryCenterF(int t_cid, double _r, CacheTables<nodeT> *t_tbs, EDGE *t_edges,
             distT *t_distComputer, bool t_no_cache, int C, double eps):
-            cid(t_cid), r(_r),//clusteredPts(t_clusteredPts), uf(t_uf), 
+            r(_r), cid(t_cid), //clusteredPts(t_clusteredPts), uf(t_uf), 
             distComputer(t_distComputer),
             no_cache(t_no_cache){
                 EC2 = edgeComparator2(eps);
