@@ -10,6 +10,7 @@
 
 #include "finder.h"
 #include "utils/dendro.h"
+#include "dist.h"
 
 using namespace std;
 
@@ -150,6 +151,62 @@ vector<dendroLine> chain_linkage(TF *finder){
 
   return formatDendrogram<dim>(finder->nodes, n, 0);
 }
+}//end of namespace HACTree
 
+  template<int dim>
+  vector<HACTree::dendroLine> runCompleteHAC(parlay::sequence<HACTree::iPoint<dim>>& P, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = P.size();
+    UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+    using distT = HACTree::distComplete<dim>;
+    using F = HACTree::RangeQueryCountF<dim, HACTree::iPoint<dim>, distT>;
+    using TF = HACTree::NNFinder<dim, distT, F>;
+    distT *dist = new distT(uf, P.data());
+    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
+    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    delete finder; delete dist; delete uf;
+    return dendro;
+  }
 
-}}}}
+  template<int dim>
+  vector<HACTree::dendroLine> runAVGHAC(parlay::sequence<HACTree::iPoint<dim>>& P, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = P.size();
+    UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+    using distT = HACTree::distAverage<dim>;
+    using F = HACTree::RangeQueryCenterF<dim, HACTree::iPoint<dim>, distT>;
+    using TF = HACTree::NNFinder<dim, distT, F>;
+    distT *dist = new distT(P.data(), n);
+    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
+    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    delete finder; delete dist; delete uf;
+    return dendro;
+  }
+
+  template<int dim>
+  vector<HACTree::dendroLine> runAVGSQHAC(parlay::sequence<HACTree::iPoint<dim>>& P, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = P.size();
+    UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+    using distT = HACTree::distAverageSq<dim>;
+    using F = HACTree::RangeQueryCenterF<dim, HACTree::iPoint<dim>, distT>;
+    using TF = HACTree::NNFinder<dim, distT, F>;
+    distT *dist = new distT();
+    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
+    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    delete finder; delete dist; delete uf;
+    return dendro;
+  }
+
+  template<int dim>
+  vector<HACTree::dendroLine> runWARDHAC(parlay::sequence<HACTree::iPoint<dim>>& P, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = P.size();
+    UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
+    using distT = HACTree::distWard<dim>;
+    using F = HACTree::RangeQueryCenterF<dim, HACTree::iPoint<dim>, distT>;
+    using TF = HACTree::NNFinder<dim, distT, F>;
+    distT *dist = new distT();
+    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
+    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    delete finder; delete dist; delete uf;
+    return dendro;
+  }
+
+}}}

@@ -8,8 +8,8 @@
 
 #include "parlay/primitives.h"
 
-// g++ -g -std=c++17 -ldl -pthread -DVERBOSE -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
-// g++ -std=c++17 -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+// g++ -g -std=c++20 -ldl -pthread -DVERBOSE -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+// g++ -std=c++20 -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
 
 
 using namespace std;

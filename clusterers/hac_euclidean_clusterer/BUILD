@@ -25,8 +25,7 @@ cc_library(
     name = "clusterer",
     hdrs = ["clusterer.h"],
     deps = [
-        ":unionfind",
-        ":linkage_types",
+        ":utils",
         ':finder',
     ],
 )
@@ -37,9 +36,7 @@ cc_library(
     name = "finder",
     hdrs = ["finder.h"],
     deps = [
-        ":unionfind",
-        ":linkage_types",
-        ':point',
+        ":utils",
         ':kdtree',
     ],
 )
