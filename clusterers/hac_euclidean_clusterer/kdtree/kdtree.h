@@ -427,10 +427,20 @@ namespace HACTree {
         return 0; // intersect
     }
 
+    //find the point of rectangle that is the closest to the circle' center
+    inline pointT pointClosestToCenter(pointT center, pointT pMin, pointT pMax) {
+      pointT p;
+      for (int d = 0; d < dim; ++ d) {
+        p[d] = max(pMin[d], min(center[d], pMax[d]));
+      }
+      return p;
+    }
+
     inline int boxBallCompare(pointT center, double r, pointT pMin, pointT pMax) {
-    double centerToBall = pointBoxDistance(center, pMin, pMax);
-    if(centerToBall <= r) return  boxOverlap;
-    return boxExclude;
+      pointT p = pointClosestToCenter(center, pMin, pMax);
+      double pToCenter = p.pointDistSq(center); //squared distance
+      if(pToCenter <= r*r) return  boxOverlap;
+      return boxExclude;
     }
 
     node();

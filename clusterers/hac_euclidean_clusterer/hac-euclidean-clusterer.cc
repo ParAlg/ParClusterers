@@ -32,67 +32,35 @@ namespace HACTree{
     });
     return P;
   }
-
-  template<int dim>
-  vector<dendroLine> runComplete(absl::Span<const DataPoint> datapoints, UnionFind::ParUF<int> *uf, bool no_cache, int cache_size=32, double eps = 0){
-    std::size_t n = datapoints.size();
-    // copy points
-    parlay::sequence<iPoint<dim>> P = getPoints<dim>(datapoints);
-    using distT = internal::HACTree::distComplete<dim>;
-    using F = internal::HACTree::RangeQueryCountF<dim, iPoint<dim>, distT>;
-    using TF = NNFinder<dim, distT, F>;
-    distT *dist = new distT(uf, P.data());
-    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
-    delete finder; delete dist;
-    return dendro;
-  }
-
-  template<int dim>
-  vector<dendroLine> runAVG(absl::Span<const DataPoint> datapoints, UnionFind::ParUF<int> *uf, bool no_cache, int cache_size=32, double eps = 0){
-    std::size_t n = datapoints.size();
-    // copy points
-    parlay::sequence<iPoint<dim>> P = getPoints<dim>(datapoints);
-    using distT = internal::HACTree::distAverage<dim>;
-    using F = internal::HACTree::RangeQueryCenterF<dim, iPoint<dim>, distT>;
-    using TF = NNFinder<dim, distT, F>;
-    distT *dist = new distT(P.data(), n);
-    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
-    delete finder; delete dist;
-    return dendro;
-  }
-
-  template<int dim>
-  vector<dendroLine> runAVGSQ(absl::Span<const DataPoint> datapoints, UnionFind::ParUF<int> *uf, bool no_cache, int cache_size=32, double eps = 0){
-    std::size_t n = datapoints.size();
-    // copy points
-    parlay::sequence<iPoint<dim>> P = getPoints<dim>(datapoints);
-    using distT = internal::HACTree::distAverageSq<dim>;
-    using F = internal::HACTree::RangeQueryCenterF<dim, iPoint<dim>, distT>;
-    using TF = NNFinder<dim, distT, F>;
-    distT *dist = new distT();
-    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
-    delete finder; delete dist;
-    return dendro;
-  }
-
-  template<int dim>
-  vector<dendroLine> runWARD(absl::Span<const DataPoint> datapoints, UnionFind::ParUF<int> *uf, bool no_cache, int cache_size=32, double eps = 0){
-    std::size_t n = datapoints.size();
-    // copy points
-    parlay::sequence<iPoint<dim>> P = getPoints<dim>(datapoints);
-    using distT = internal::HACTree::distWard<dim>;
-    using F = internal::HACTree::RangeQueryCenterF<dim, iPoint<dim>, distT>;
-    using TF = NNFinder<dim, distT, F>;
-    distT *dist = new distT();
-    TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
-    delete finder; delete dist;
-    return dendro;
-  }
 } //end of namespace HACTree
+  template<int dim>
+  vector<HACTree::dendroLine> runComplete(absl::Span<const DataPoint> datapoints, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = datapoints.size();
+    auto P = HACTree::getPoints<dim>(datapoints); // copy points
+    return runCompleteHAC(P, no_cache, cache_size, eps);
+  }
+
+  template<int dim>
+  vector<HACTree::dendroLine> runAVG(absl::Span<const DataPoint> datapoints, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = datapoints.size();
+    auto P = HACTree::getPoints<dim>(datapoints); // copy points
+    return runAVGHAC(P, no_cache, cache_size, eps);
+  }
+
+  template<int dim>
+  vector<HACTree::dendroLine> runAVGSQ(absl::Span<const DataPoint> datapoints, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = datapoints.size();
+    auto P = HACTree::getPoints<dim>(datapoints); // copy points
+    return runAVGSQHAC(P, no_cache, cache_size, eps);
+  }
+
+  template<int dim>
+  vector<HACTree::dendroLine> runWARD(absl::Span<const DataPoint> datapoints, bool no_cache, int cache_size=32, double eps = 0){
+    std::size_t n = datapoints.size();
+    auto P = HACTree::getPoints<dim>(datapoints); // copy points
+    return runWARDHAC(P, no_cache, cache_size, eps);
+  }
+
 } //end of namespace internal
 
 absl::StatusOr<std::vector<int64_t>> HACEuclideanClusterer::Cluster(
@@ -103,6 +71,7 @@ absl::StatusOr<std::vector<int64_t>> HACEuclideanClusterer::Cluster(
   const HACClustererConfig_LinkageMethod linkage_method = hac_config.linkage_method();
   const HACClustererConfig_Distance distance = hac_config.distance();
   const string output_dendro = hac_config.output_dendro();
+  //TODO: add eps and cache size to config
   bool no_cache = true;
   std::size_t n = datapoints.size();
   if(n < 1){
@@ -115,28 +84,24 @@ absl::StatusOr<std::vector<int64_t>> HACEuclideanClusterer::Cluster(
   }
 // 
   vector<internal::HACTree::dendroLine> dendro;
-  UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
   
   if(linkage_method== HACClustererConfig::COMPLETE && distance == HACClustererConfig::EUCLIDEAN ){
     std::cout << "Linkage method: " << "complete linkage , euclidean distance" << std::endl;
-    dendro = internal::HACTree::runComplete<2>(datapoints, uf, no_cache );
+    dendro = internal::runComplete<2>(datapoints, no_cache );
   }else if(linkage_method== HACClustererConfig::AVERAGE &&  distance == HACClustererConfig::EUCLIDEAN ){
     std::cout << "Linkage method: " << "average linkage, euclidean distance" << std::endl;
-    dendro = internal::HACTree::runAVG<2>(datapoints, uf, no_cache);
+    dendro = internal::runAVG<2>(datapoints, no_cache);
   }else if(linkage_method== HACClustererConfig::AVERAGE &&  distance == HACClustererConfig::EUCLIDEAN_SQ){
     std::cout << "Linkage method: " << "average linkage, squared euclidean distance" << std::endl;
-    dendro = internal::HACTree::runAVGSQ<2>(datapoints, uf, no_cache);
+    dendro = internal::runAVGSQ<2>(datapoints, no_cache);
   }else if(linkage_method== HACClustererConfig::WARD &&  distance == HACClustererConfig::EUCLIDEAN ){
     std::cout << "Linkage method: " << "Ward's linkage, euclidean distance" << std::endl;
-    dendro = internal::HACTree::runWARD<2>(datapoints, uf, no_cache);
+    dendro = internal::runWARD<2>(datapoints, no_cache);
   }else{
-    delete uf;
     std::cerr << "Linkage method = " << linkage_method << std::endl;
     std::cerr << "Distance = " << distance << std::endl;
     return absl::UnimplementedError("Unknown linkage method and distnace metric.");
   }
-
-  delete uf;
 
   if(output_dendro != ""){
     std::cout << "dednrogram output file: " << output_dendro << std::endl;

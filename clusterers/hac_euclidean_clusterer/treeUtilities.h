@@ -15,7 +15,6 @@ using namespace std;
 namespace research_graph {
 namespace in_memory {
 namespace internal {
-
 namespace HACTree {
 
     /////// DualTree Traversal
