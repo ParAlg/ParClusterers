@@ -90,9 +90,7 @@ struct TreeChainInfo{
 
   inline void updateChain(int cid, int nn, double w){
     chain[cid] = nn;
-    pair<double, long> new_pair = make_pair(w,(long)cid);
-    pair<double, long> new_pair2 = make_pair(w,(long)cid);
-    utils::writeMin(&chainRev[nn], new_pair, std::less<pair<double, long>>()); 
+    utils::writeMin(&chainRev[nn], make_pair(w,(long)cid), std::less<pair<double, long> >()); 
   }
   // then in checking, only check for -1
   inline void invalidate(int cid, int code){

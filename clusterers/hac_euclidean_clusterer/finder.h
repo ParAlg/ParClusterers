@@ -100,7 +100,7 @@ class NNFinder {
   inline int rightIdx(int cid){return getNode(cid)->right->idx;}
   inline int cid(int idx){return cid(nodes[idx]);}
   inline bool justMerge(int cid, int round){
-    return round == getNode(uf->find(cid))->getRound();
+    return (size_t)round == getNode(uf->find(cid))->getRound();
   }
 
 
@@ -274,7 +274,7 @@ class NNFinder {
     parlay::parallel_for(0, (TAR1.size()+TAR2.size()), [&](int i){
       auto TA = TAR1.data();
       int offset = 0;
-      if(i >= TAR1.size()){ //switch to process tb2
+      if((size_t)i >= TAR1.size()){ //switch to process tb2
         TA = TAR2.data();
         offset = TAR1.size();
       }

@@ -5,14 +5,10 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "hac-euclidean-clusterer",
     srcs = ["hac-euclidean-clusterer.cc"],
-    hdrs = ["hac-euclidean-clusterer.h"],
+    hdrs = glob(["*.h"]), #"hac-euclidean-clusterer.h"
     deps = [
-        ':point',
-        ':linkage',
-        ':unionfind',
-        ':linkage_types',
-        ':finder',
-        ":clusterer",
+        ":utils",
+        ":kdtree",
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:datapoint",
         "@parcluster//parcluster/api:gbbs-graph",
@@ -73,96 +69,18 @@ cc_library(
 )
 
 cc_library(
-    name = "linkage_types",
-    hdrs = ["linkage_types.h"],
-    deps = [
-    ],
-)
-
-
-cc_library(
     name = "kdtree",
-    hdrs = ["kdtree/kdtree.h"],
+    hdrs = glob(["kdtree/*.h"]),
     deps = [
-        ':treeImpl',
-        ':rangeSearchImpl',
-        ':dualTreeImpl',
-    ],
-)
-
-cc_library(
-    name = "treeImpl",
-    hdrs = ["kdtree/treeImpl.h"],
-    deps = [
-    ],
-)
-
-cc_library(
-    name = "rangeSearchImpl",
-    hdrs = ["kdtree/rangeSearchImpl.h"],
-    deps = [
-    ],
-)
-
-cc_library(
-    name = "dualTreeImpl",
-    hdrs = ["kdtree/dualTreeImpl.h"],
-    deps = [
-    ],
-)
-
-
-
-cc_library(
-    name = "treeUtilities",
-    hdrs = ["treeUtilities.h"],
-    deps = [
-        ":point",
-        ":unionfind",
-        ":linkage_types",
-        ":cacheUtilities",
-        ":utils"
-    ],
-)
-
-cc_library(
-    name = "cacheUtilities",
-    hdrs = ["cacheUtilities.h"],
-    deps = [
-        ':node',
-        "hashtable_parallel"
-    ],
-)
-
-
-cc_library(
-    name = "hashtable_parallel",
-    hdrs = ["hashtable_parallel.h"],
-    deps = [
-        ":utils"
-    ],
-)
-
-cc_library(
-    name = "node",
-    hdrs = ["node.h"],
-    deps = [
-       ":point",
-       ":utils"
+        ":utils",
     ],
 )
 
 cc_library(
     name = "utils",
-    hdrs = ["utils.h"],
+    hdrs = glob(["utils/*.h"]),
     deps = [
     ],
 )
 
 
-cc_library(
-    name = "point",
-    hdrs = ["point.h"],
-    deps = [
-    ],
-)

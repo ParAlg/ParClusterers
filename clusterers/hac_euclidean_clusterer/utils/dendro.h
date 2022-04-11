@@ -4,6 +4,7 @@
 #include <fstream>
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
+#include "parlay/delayed_sequence.h"
 #include "node.h"
 
 using namespace std;
@@ -51,6 +52,10 @@ vector<dendroLine> formatDendrogram(parlay::sequence<Node<dim>> &nodes, std::siz
         dendrogram[i] = dendroLine(left, right, sorted_nodes[i].getHeight(),sorted_nodes[i].size());
     });
     return dendrogram;
+}
+
+double getCheckSum(vector<dendroLine>& dendro){
+    return parlay::reduce(parlay::delayed_seq<double>(dendro.size(), [&](size_t i){return dendro[i].height;}));
 }
 
 }}}}

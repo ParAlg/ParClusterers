@@ -30,7 +30,7 @@ vector<dendroLine> run(char* filename){
     delete finder;
     delete uf;
     delete dist;
-    
+
     return dendro;
 }
 
@@ -51,10 +51,9 @@ int main(int argc, char *argv[]) {
     }
     
     int n = dendro.size()+1;
-
-    double checksum = parlay::reduce(parlay::delayed_seq<double>(n-1, [&](size_t i){return dendro[i].height;}));
-
+    double checksum = getCheckSum(dendro);
     cout << "Cost: " << std::setprecision(10) << checksum << endl;
+
     ofstream file_obj;
     file_obj.open(output); 
     for(size_t i=0;i<n-1;i++){
