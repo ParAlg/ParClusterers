@@ -74,6 +74,24 @@ cc_library(
 )
 
 cc_library(
+    name = "treeUtilities",
+    hdrs = ["treeUtilities.h"],
+    deps = [
+        ":utils",
+        ":cacheUtilities"
+    ],
+)
+
+cc_library(
+    name = "cacheUtilities",
+    hdrs = ["cacheUtilities.h"],
+    deps = [
+        ":utils",
+    ],
+)
+
+
+cc_library(
     name = "utils",
     hdrs = glob(["utils/*.h"]),
     deps = [

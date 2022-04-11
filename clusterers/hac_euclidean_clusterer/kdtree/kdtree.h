@@ -427,7 +427,7 @@ namespace HACTree {
         return 0; // intersect
     }
 
-    //find the point of rectangle that is the closest to the circle' center
+    // find the point of rectangle that is the closest to the circle' center
     inline pointT pointClosestToCenter(pointT center, pointT pMin, pointT pMax) {
       pointT p;
       for (int d = 0; d < dim; ++ d) {
@@ -436,6 +436,7 @@ namespace HACTree {
       return p;
     }
 
+    // https://yal.cc/rectangle-circle-intersection-test/
     inline int boxBallCompare(pointT center, double r, pointT pMin, pointT pMax) {
       pointT p = pointClosestToCenter(center, pMin, pMax);
       double pToCenter = p.pointDistSq(center); //squared distance
