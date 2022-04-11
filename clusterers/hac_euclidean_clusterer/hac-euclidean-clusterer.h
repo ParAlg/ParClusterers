@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PARALLEL_CLUSTERING_CLUSTERERS_HAC_CLUSTERER_H_
-#define PARALLEL_CLUSTERING_CLUSTERERS_HAC_CLUSTERER_H_
+#ifndef PARALLEL_CLUSTERING_CLUSTERERS_HAC_EUCLIDEAN_CLUSTERER_H_
+#define PARALLEL_CLUSTERING_CLUSTERERS_HAC_EUCLIDEAN_CLUSTERER_H_
 
 #include <algorithm>
 #include <iterator>
@@ -39,4 +39,4 @@ class HACEuclideanClusterer : public InMemoryMetricClusterer {
 }  // namespace in_memory
 }  // namespace research_graph
 
-#endif  // PARALLEL_CLUSTERING_CLUSTERERS_HAC_CLUSTERER_H_
+#endif  // PARALLEL_CLUSTERING_CLUSTERERS_HAC_EUCLIDEAN_CLUSTERER_H_
