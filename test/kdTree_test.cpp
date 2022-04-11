@@ -1,8 +1,8 @@
 #include "gbbs/bridge.h"
-#include "clusterers/hac_euclidean_clusterer/point.h"
+#include "clusterers/hac_euclidean_clusterer/utils/point.h"
 #include "clusterers/hac_euclidean_clusterer/kdtree/kdtree.h"
 #include "uniform.h"
-#include "clusterers/hac_euclidean_clusterer/node.h"
+#include "clusterers/hac_euclidean_clusterer/utils/node.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 
