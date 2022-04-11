@@ -4,6 +4,7 @@
 #include "clusterer.h"
 #include "dist.h"
 #include "IO/pointIO.h"
+#include "utils/point.h"
 
 #include "parlay/primitives.h"
 
@@ -23,7 +24,8 @@ vector<dendroLine> run(char* filename){
     using F = RangeQueryCenterF<dim, iPoint<dim>, distT>;
     using TF = NNFinder<dim, distT, F>;
     distT *dist = new distT();
-    TF *finder = new TF(n, P.data(), uf, dist, true); //a no cache finder
+    auto PP = makeIPoint(P);
+    TF *finder = new TF(n, PP.data(), uf, dist, true); //a no cache finder
 
     vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
 

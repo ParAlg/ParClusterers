@@ -30,7 +30,7 @@ class NNFinder {
   
   int C;// number of clusters
   int n;// number of points
-  parlay::sequence<pointT> PP;
+  iPoint<dim>* PP;
   parlay::sequence<int> rootIdx;
   UnionFind::ParUF<intT> *uf;
   parlay::sequence<int> activeClusters; // ids of connected components
@@ -58,13 +58,13 @@ class NNFinder {
     return A;
   }
 
-  NNFinder(int t_n, point<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
+  NNFinder(int t_n, iPoint<dim>* t_P, UnionFind::ParUF<intT> *t_uf, distF *_distComputer, 
     bool t_noCache, int t_cache_size=32, double t_eps = 0, int t_naive_thresh=10): 
     n(t_n), uf(t_uf), no_cache(t_noCache), NAIVE_THRESHOLD(t_naive_thresh), eps(t_eps){
     EC2 = edgeComparator2(eps);
     C = n;
     activeClusters = natural_int_array(n);
-    PP = makeIPoint(t_P, n);
+    PP = t_P;//makeIPoint(t_P, n);
     centers = parlay::sequence<pointT>(n); parlay::parallel_for(0,n,[&](int i){centers[i]=PP[i];});
 
     distComputer = _distComputer;
@@ -82,7 +82,7 @@ class NNFinder {
     cacheTables = new CacheTables<nodeT>(no_cache, n, t_cache_size, this);
 
     nodeIdx.store(n); // have used n nodes
-    kdtree = build<dim, pointT , nodeInfo>(PP, true);
+    kdtree = build<dim, pointT , nodeInfo>(parlay::make_slice(PP, PP+n), true);
   }
 
   ~NNFinder(){

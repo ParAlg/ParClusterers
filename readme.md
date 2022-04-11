@@ -25,6 +25,10 @@ bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACClus
 
 bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/10D_UCI1_19K.pbbs --clusterer_config="hac_clusterer_config {linkage_method: AVERAGE, distance: EUCLIDEAN_SQ, output_dendro:'/Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_uci1'}"
 
+bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACEuclideanClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/2D_GaussianDisc_1K.pbbs --clusterer_config="hac_clusterer_config {linkage_method: AVERAGE, distance: EUCLIDEAN_SQ, output_dendro:'/Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac2_1k'}"
+
+./linkage /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/2D_GaussianDisc_1K.pbbs Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_euc_1k 2
+
 Point set: /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/small/example2.pbbs
 60.1333
 
@@ -33,7 +37,7 @@ Calling clustering.
 Distance: Euclidean Square
 Linkage method: average linkage
 dednrogram output file: /Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_1k
-Cost: 5.98421e+06
+Cost: 5984206.371
 
 Point set: /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/10D_UCI1_19K.pbbs
 Calling clustering.
