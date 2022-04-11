@@ -14,6 +14,7 @@
 
 #include "clusterers/metric_example_clusterer/metric-example-clusterer.h"
 #include "clusterers/hac_clusterer/hac-clusterer.h"
+#include "clusterers/hac_euclidean_clusterer/hac-euclidean-clusterer.h"
 
 
 #include "google/protobuf/text_format.h"
@@ -103,6 +104,8 @@ absl::Status Main() {
     clusterer.reset(new MetricExampleClusterer);
   } else if(clusterer_name == "HACClusterer"){
     clusterer.reset(new HACClusterer);
+  } else if(clusterer_name == "HACEuclideanClusterer"){
+    clusterer.reset(new HACEuclideanClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;

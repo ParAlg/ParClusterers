@@ -5,6 +5,7 @@
 #include <math.h>
 #include <atomic>
 #include <tuple>
+#include <limits>
 #include "point.h"
 #include "parlay/utilities.h"
 #include "parlay/sequence.h"

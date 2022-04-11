@@ -279,7 +279,7 @@ inline void link_terminal_nodes(TF *finder, TreeChainInfo *info, std::size_t rou
 
 }
 
-#define VERBOSE
+// #define VERBOSE
 template<class T, class distT>
 vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
   std::size_t n = M->n;
