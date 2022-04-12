@@ -75,7 +75,7 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
   // insert to new hashtables and delete old hashtables
   parlay::parallel_for(0, merged.size(), [&](int i){
     int newc = merged[i];
-    finder->updateDist(newc);
+    finder->updateDist(newc, round);
   });
 #ifdef TIMING2
 	if(LINKAGE_DOPRINT(round)){ UTIL::PrintSubtimer(":::update dist", t1.next());}

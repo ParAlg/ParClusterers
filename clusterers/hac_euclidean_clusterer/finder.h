@@ -256,21 +256,14 @@ class NNFinder {
     rootIdx[newc] = rootNodeIdx;
   }
 
-  inline void updateDist(int newc){
-    CHECK_NO_CACHE(497)
-    int idx1 = leftIdx(newc);
-    int idx2 = rightIdx(newc);
-    int cid1 = getNode(newc)->left->cId;
-    int cid2 = getNode(newc)->right->cId;
+  inline void updateDist(int newc, int round){
+    int idx1 = leftIdx(newc);  int cid1 = getNode(newc)->left->cId;
+    int idx2 = rightIdx(newc); int cid2 = getNode(newc)->right->cId;
+    
+    auto tb1 = cacheTables->getTable(idx1); auto TAR1 = tb1->entries();
+    auto tb2 = cacheTables->getTable(idx2); auto TAR2 = tb2->entries();
 
-    auto tb1 = cacheTables->getTable(idx1);//cacheTbs[idx1];
-    auto tb2 = cacheTables->getTable(idx2);//cacheTbs[idx2];
-
-    auto TAR1 = tb1->entries();
-    auto TAR2 = tb2->entries();
-    // if(C < 100)cout << "sizes in merge: " << TAR1.n+TAR2.n << "/" << tb1->m + tb2->m << endl;
-    auto newtb = cacheTables->getTable(idx(newc));//cacheTbs[idx(newc)];
-
+    // loop over the union of keys in the two tables
     parlay::parallel_for(0, (TAR1.size()+TAR2.size()), [&](int i){
       auto TA = TAR1.data();
       int offset = 0;
@@ -279,31 +272,26 @@ class NNFinder {
         offset = TAR1.size();
       }
       int j = i-offset;
-      int newc2 = -1;
-      int storedIdx = TA[j].idx; 
-      // if storedIdx is inconsistant, the newc2 has changed and we do not calculate
-      newc2 = uf->find(TA[j].first);
-      if(newc2 != cid1 && newc2 != cid2){
 
+      int storedIdx = TA[j].idx;  // if storedIdx is inconsistant, newc2 merged and we can't reuse it
+      int newc2 = uf->find(TA[j].first);
+      if(newc2 != cid1 && newc2 != cid2){
           bool success = false;
           double d;
           // if newc2 is a merged cluster
-          if(getNode(newc2)->round == getNode(newc)->round){
-            // TA[j].first should == left idx or  right idx
-            if(storedIdx == idx(getNode(newc2)->left) || storedIdx == idx(getNode(newc2)->right)){
+          if(getNode(newc2)->round == round){ // assert(getNode(newc)->round == round)
+            if(storedIdx == leftIdx(newc2) || storedIdx == rightIdx(newc2)){ // TA[j].idx should == left idx or right idx
               success = cacheTables->insert_check(newc, newc2, true, false); // table might not be symmetric, faster than no ins check
               if(success) d = getNewDistN(newc, newc2); 
             }
-            
           }else{
-            // TA[j].first should == idx
-            if(storedIdx == idx(getNode(newc2))){
+            if(storedIdx == idx(newc2)){ // TA[j].idx should == idx
               success = cacheTables->insert_check(newc, newc2, false, false);
               if(success) d = getNewDistO(newc, newc2);
             }
           }
         if(success) { // only insert duplicated entries once 
-          cacheTables->insert_helper(newc, newc2, d, newtb, cacheTables->getTable(idx(newc2)));
+          cacheTables->insert(newc, newc2, d); //, newtb, cacheTables->getTable(idx(newc2))
         }
       }
 
@@ -350,7 +338,7 @@ class NNFinder {
     });
     if(!no_cache){
     parlay::parallel_for(0,n,[&](int cid){
-      cacheTables->insert_helper(cid, edges[cid].second,  edges[cid].getW(), cacheTables->getTable(cid), cacheTables->getTable(edges[cid].second));
+      cacheTables->insert(cid, edges[cid].second,  edges[cid].getW());
     });
     }
   }
