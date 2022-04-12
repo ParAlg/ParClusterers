@@ -43,7 +43,7 @@ namespace HACTree {
         }
 
         inline void BaseCase(nodeT *Q, nodeT *R, int i, int j){
-            auto f = [&](EDGE i, EDGE j) {return (i.getW() < j.getW());};
+            auto f = [&](EDGE i, EDGE j) {return (i.getW() > j.getW());};
             double qrdist = (Q->at(i))->pointDist(*(R->at(j)));
             if(qrdist > ub){
                 utils::writeMin(&e, EDGE(-1,-1,numeric_limits<double>::max()), f);
@@ -389,8 +389,8 @@ namespace HACTree {
         
         
         RangeQueryCountF(int t_cid, double _r, CacheTables<nodeT>*t_tbs, EDGE *t_edges,
-            distT *t_distComputer, bool t_no_cache, int C, double _eps):
-            r(_r), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
+            distT *t_distComputer, UnionFind::ParUF<int> *t_uf, bool t_no_cache, int C, double _eps):
+            uf(t_uf), r(_r), cid(t_cid), no_cache(t_no_cache),//edges(t_edges), 
             distComputer(t_distComputer), eps(_eps){
             EC2 = edgeComparator2(eps);
             e = make_pair(t_edges[cid].second, t_edges[cid].getW());
@@ -503,7 +503,7 @@ namespace HACTree {
         const bool local = false; // writemin after
 
         RangeQueryCenterF(int t_cid, double _r, CacheTables<nodeT> *t_tbs, EDGE *t_edges,
-            distT *t_distComputer, bool t_no_cache, int C, double eps):
+            distT *t_distComputer, UnionFind::ParUF<int> *t_uf, bool t_no_cache, int C, double eps):
             r(_r), cid(t_cid), //clusteredPts(t_clusteredPts), uf(t_uf), 
             distComputer(t_distComputer),
             no_cache(t_no_cache){
