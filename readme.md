@@ -19,7 +19,11 @@ bazel build //clusterers:cluster-in-memory-metric_main -c dbg --config=serial
 
 bazel build //clusterers:cluster-in-memory-metric_main -c dbg --config=serial 
 
-bazel run //clusterers:cluster-in-memory-metric_main -c dbg --config=serial -- --clusterer_name=HACClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/small/example2.pbbs --clusterer_config="hac_clusterer_config {linkage_method: AVERAGE, distance: EUCLIDEAN_SQ, output_dendro:'/Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_simple'}"
+AVGSQ:
+bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/small/example2.pbbs --clusterer_config="hac_clusterer_config {linkage_method: AVERAGE, distance: EUCLIDEAN_SQ, output_dendro:'/Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_simple'}"
+
+Ward:
+bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/small/example2.pbbs --clusterer_config="hac_clusterer_config {linkage_method: WARD, distance: EUCLIDEAN}"
 
 bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACClusterer --input_points=/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/2D_GaussianDisc_1K.pbbs --clusterer_config="hac_clusterer_config {linkage_method: AVERAGE, distance: EUCLIDEAN_SQ, output_dendro:'/Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_1k'}"
 
@@ -30,7 +34,10 @@ bazel run //clusterers:cluster-in-memory-metric_main -- --clusterer_name=HACEucl
 ./linkage /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/2D_GaussianDisc_1K.pbbs Users/sy/Desktop/MIT/clusterer/ParClusterers/outputs/hac_euc_1k 2
 
 Point set: /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/small/example2.pbbs
-60.1333
+avgsq: 60.1333
+ward:  20.90836938
+avg: 16.79327897
+complete: 19.62780549
 
 Point set: /Users/sy/Desktop/MIT/PAPERS/clustering/datasets/2D_GaussianDisc_1K.pbbs
 Calling clustering.

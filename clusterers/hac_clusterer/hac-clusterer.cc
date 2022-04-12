@@ -52,6 +52,10 @@ absl::StatusOr<std::vector<int64_t>> HACClusterer::Cluster(
     std::cout << "Linkage method: " << "average linkage" << std::endl;
     using distT = internal::distAverage<T>;
     dendro = internal::chain_linkage_matrix<T, distT>(W);
+  }else if(linkage_method == HACClustererConfig::WARD){
+    std::cout << "Linkage method: " << "WARD's linkage" << std::endl;
+    using distT = internal::distWard<T>;
+    dendro = internal::chain_linkage_matrix<T, distT>(W);
   }else{ //should not reach here if all methods in proto are implemented
     std::cerr << "Linkage method = " << linkage_method << std::endl;
     return absl::UnimplementedError("Unknown linkage method.");
