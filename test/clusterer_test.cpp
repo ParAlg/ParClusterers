@@ -130,7 +130,7 @@ TEST_F(TwoDGaussianOneKTest, AVG) {
     ASSERT_NEAR(31650.13896, checksum, check_sum_eps);
 }
 
-TEST_F(TwoDGaussianOneKTest, Complete) { //wrong answer
+TEST_F(TwoDGaussianOneKTest, Complete) {
     bool no_cache = true;
     vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
     double checksum = HACTree::getCheckSum(dendro);
