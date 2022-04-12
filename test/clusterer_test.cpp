@@ -8,7 +8,8 @@
 
 using namespace research_graph::in_memory::internal;
 // bazel run //test:clusterer_test
-// TODO: add cache tests
+// ground truth came from clusterer/hac_clusterer which uses a distance matrix
+// TODO: add large datasets test
 string dataset_addr = "/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/";
 
 namespace {
@@ -55,6 +56,34 @@ TEST_F(SimpleTest, Complete) {
 }
 TEST_F(SimpleTest, WARD) {
     bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(20.90836938, checksum, 0.0001);
+}
+
+TEST_F(SimpleTest, AVGSQCache) {
+  bool no_cache = false;
+  // no cache
+  vector<HACTree::dendroLine> dendro = runAVGSQHAC<2>(P, no_cache);
+  double checksum = HACTree::getCheckSum(dendro);
+  ASSERT_NEAR(60.1333, checksum, 0.0001);
+}
+
+TEST_F(SimpleTest, AVGCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runAVGHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(16.79327897, checksum, 0.0001);
+}
+
+TEST_F(SimpleTest, CompleteCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(19.62780549, checksum, 0.0001);
+}
+TEST_F(SimpleTest, WARDCache) {
+    bool no_cache = false;
     vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
     double checksum = HACTree::getCheckSum(dendro);
     ASSERT_NEAR(20.90836938, checksum, 0.0001);
