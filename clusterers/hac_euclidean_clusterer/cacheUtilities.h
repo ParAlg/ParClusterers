@@ -43,18 +43,17 @@ namespace HACTree {
     volatile int idx;
     volatile double dist;
     hashClusterET():first(-1), idx(-1), dist(UNFOUND_TOKEN){}
-    // hashClusterAveET(intT ii, cInfoET jj):first(ii), second(jj){}
     hashClusterET(int ii, int jj, double dd):first(ii), idx(jj), dist(dd){}
     void print(){
       cout << first << " " << idx << " " << dist << endl;
     }
 
     bool operator== (const hashClusterET& y) const
-   { return first == y.first && idx == y.idx && dist == y.dist;// abs(dist - y.dist) < 1e-20; //todo: CHANGE? should only be used for detect empty
+   { return first == y.first && idx == y.idx && dist == y.dist;//should only be used for detect empty, so no eps compare
    }
 
        bool operator!= (const hashClusterET& y) const
-   {  return first != y.first || idx != y.idx || dist != y.dist;// abs(dist - y.dist) > 1e-20;
+   {  return first != y.first || idx != y.idx || dist != y.dist;//should only be used for detect empty, so no eps compare
    }
 
   };
@@ -76,14 +75,6 @@ namespace HACTree {
         // if non TOKEN s is updating in rangeQuery, current entry must have been inserted TOKEN
         // or already exist  with valid idx, so this update cannot be overwritten by a TOKEN update
       }//return s.second > s2.second;}
-      bool replaceQ(eType s, eType* TA, std::size_t h, eType s2) {
-        if(s.dist == CHECK_TOKEN){ // insert check
-          if(s.idx == s2.idx){ return false;} // already exist, no need to compute
-          else{return true;}// wrong index, need to compute
-        }
-        // a real insert, replace
-        return true;
-      }
   };
 
 // TODO: consider changing hashtable to idx -> (idx, dist)

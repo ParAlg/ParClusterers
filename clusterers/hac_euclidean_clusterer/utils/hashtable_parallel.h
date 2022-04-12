@@ -129,7 +129,7 @@ class Table {
       if(c == empty && utils::CAS(&TA[h],c,v)){ 
         return 1; 
       }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
-        if(!hashStruct.replaceQ(v,TA, h, c)){
+        if(!hashStruct.replaceQ(v, c)){
           return 0;
         }else if (utils::CAS(&TA[h],c,v)){ 
           return 1;
@@ -166,7 +166,7 @@ class Table {
       if(c == empty && utils::CAS(&TA[h],c,v)){ 
         return make_tuple(1, false); 
       }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
-        if(!hashStruct.replaceQ(v,TA, h, c)){
+        if(!hashStruct.replaceQ(v, c)){
           return make_tuple(0, false);
         }else if (utils::CAS(&TA[h],c,v)){ 
           return make_tuple(1, false);
