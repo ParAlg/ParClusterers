@@ -130,12 +130,12 @@ TEST_F(TwoDGaussianOneKTest, AVG) {
     ASSERT_NEAR(31650.13896, checksum, check_sum_eps);
 }
 
-// TEST_F(TwoDGaussianOneKTest, Complete) { //segfault
-//     bool no_cache = true;
-//     vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
-//     double checksum = HACTree::getCheckSum(dendro);
-//     ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
-// }
+TEST_F(TwoDGaussianOneKTest, Complete) { //wrong answer
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
+}
 
 TEST_F(TwoDGaussianOneKTest, WARD) {
     bool no_cache = true;
@@ -159,12 +159,12 @@ TEST_F(TwoDGaussianOneKTest, AVGCache) {
     ASSERT_NEAR(31650.13896, checksum, check_sum_eps);
 }
 
-// TEST_F(TwoDGaussianOneKTest, CompleteCache) { //segfault
-//     bool no_cache = false;
-//     vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
-//     double checksum = HACTree::getCheckSum(dendro);
-//     ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
-// }
+TEST_F(TwoDGaussianOneKTest, CompleteCache) { //segfault
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
+}
 
 TEST_F(TwoDGaussianOneKTest, WARDCache) {
     bool no_cache = false;

@@ -290,7 +290,7 @@ vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
   auto flags = parlay::sequence<std::size_t>(n);
 #ifdef VERBOSE
   ofstream file_obj;
-  file_obj.open("/Users/sy/Desktop/MIT/clusterer/ParClusterers/clusterers/hac_euclidean_clusterer/debug/uci1_true.txt"); 
+  file_obj.open("/Users/sy/Desktop/MIT/clusterer/ParClusterers/clusterers/hac_euclidean_clusterer/debug/1k_true_comp.txt"); 
 #endif
   while(finder.C > 1){
     round ++;
@@ -312,7 +312,7 @@ vector<dendroLine> chain_linkage_matrix(SymMatrix<T>* M){
    file_obj << round << "========" << endl;
     for(std::size_t i = 0; i < chainNum; ++i){
       std::size_t cid = info.terminal_nodes[i];
-      file_obj << round << " " << cid << " " << finder.edges[cid].second << " " << finder.edges[cid].getW() << endl; //
+      file_obj << round << " " << cid << " " << finder.edges[cid].second << endl; // << " " << finder.edges[cid].getW() 
     }
 
    file_obj << round << "========" << endl;

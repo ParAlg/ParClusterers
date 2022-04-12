@@ -212,13 +212,11 @@ struct distComplete {
       return result.second;
     }
 
-    EDGE e;
+    EDGE e = EDGE(-1,-1,lb);;
     if(lb == -1){
         lb = kdtrees[cid1]->at(0)->pointDist(kdtrees[cid2]->at(0));
         e = EDGE(kdtrees[cid1]->at(0)->idx(),kdtrees[cid2]->at(0)->idx(),lb);
         if(lb > ub) return LARGER_THAN_UB;
-    }else{
-        e = EDGE(-1,-1,lb);
     }
 
     BCFP<kdnodeT> fComp = BCFP<kdnodeT>(e, ub);//FComp(LDS::EDGE(cid1,cid2, result));

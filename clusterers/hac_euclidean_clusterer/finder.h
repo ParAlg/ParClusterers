@@ -238,7 +238,7 @@ class NNFinder {
       return;
     }
     double r = distComputer->getBall(query, minD)+eps; 
-    Fr fr = Fr(cid, r, cacheTables, edges, distComputer, no_cache, C, eps); 
+    Fr fr = Fr(cid, r, cacheTables, edges, distComputer, uf, no_cache, C, eps); 
     HACTree::rangeTraverse<dim, iPoint<dim>, kdnodeT, Fr>(kdtree, query->center, r, &fr);
 
     if(fr.local){

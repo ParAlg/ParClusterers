@@ -20,7 +20,13 @@ vector<dendroLine> run(char* filename){
     bool no_cache = true;
     auto P0 = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
     parlay::sequence<iPoint<dim>> P = makeIPoint<dim>(P0);
-    return research_graph::in_memory::internal::runAVGHAC<dim>(P, no_cache);
+    // make float precision to match parClusterer results
+    parlay::parallel_for(0,P.size(),[&](int i){
+        for (int d = 0; d < 2; ++d){
+            P[i][d] = double(float( P[i][d] ));
+        }
+    });
+    return research_graph::in_memory::internal::runCompleteHAC<dim>(P, no_cache);
 }
 
 int main(int argc, char *argv[]) {

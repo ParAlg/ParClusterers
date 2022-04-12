@@ -97,7 +97,7 @@ vector<dendroLine> chain_linkage(TF *finder){
 
 #ifdef VERBOSE
  ofstream file_obj;
- file_obj.open("debug/uci1.txt"); 
+ file_obj.open("debug/1k_comp.txt"); 
 #endif
 
   int round = 0;
