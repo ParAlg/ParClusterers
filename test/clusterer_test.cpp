@@ -91,6 +91,90 @@ TEST_F(SimpleTest, WARDCache) {
 
 } // namespace
 
+namespace {
+class TwoDGaussianOneKTest : public testing::Test {
+protected:
+  static void SetUpTestSuite() {
+    // Avoid reallocating static objects if called in subclasses of FooTest.
+    if (P.size() == 0) {
+        string filename = dataset_addr + "2D_GaussianDisc_1K.pbbs";
+        auto P0 = pargeo::pointIO::readPointsFromFile<HACTree::point<2>>(filename.c_str());
+        P = HACTree::makeIPoint<2>(P0);
+    }
+    check_sum_eps = 0.1;
+  }
+
+  static void TearDownTestSuite() {
+    P = parlay::sequence<HACTree::iPoint<2>>();
+  }
+
+  static parlay::sequence<HACTree::iPoint<2>> P;
+  static double check_sum_eps;
+};
+
+parlay::sequence<HACTree::iPoint<2>> TwoDGaussianOneKTest::P;
+double TwoDGaussianOneKTest::check_sum_eps;
+
+TEST_F(TwoDGaussianOneKTest, AVGSQ) {
+  bool no_cache = true;
+  // no cache
+  vector<HACTree::dendroLine> dendro = runAVGSQHAC<2>(P, no_cache);
+  double checksum = HACTree::getCheckSum(dendro);
+  ASSERT_NEAR(5984206.371, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneKTest, AVG) {
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runAVGHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(31650.13896, checksum, check_sum_eps);
+}
+
+// TEST_F(TwoDGaussianOneKTest, Complete) { //segfault
+//     bool no_cache = true;
+//     vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+//     double checksum = HACTree::getCheckSum(dendro);
+//     ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
+// }
+
+TEST_F(TwoDGaussianOneKTest, WARD) {
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(98231.0161, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneKTest, AVGSQCache) {
+  bool no_cache = false;
+  // no cache
+  vector<HACTree::dendroLine> dendro = runAVGSQHAC<2>(P, no_cache);
+  double checksum = HACTree::getCheckSum(dendro);
+  ASSERT_NEAR(5984206.371, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneKTest, AVGCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runAVGHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(31650.13896, checksum, check_sum_eps);
+}
+
+// TEST_F(TwoDGaussianOneKTest, CompleteCache) { //segfault
+//     bool no_cache = false;
+//     vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+//     double checksum = HACTree::getCheckSum(dendro);
+//     ASSERT_NEAR(48308.50497, checksum, check_sum_eps);
+// }
+
+TEST_F(TwoDGaussianOneKTest, WARDCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(98231.0161, checksum, check_sum_eps);
+}
+
+} // namespace
+
 // // Demonstrate some basic assertions.
 // TEST(HelloTest, BasicAssertions) {
 //   // Expect two strings not to be equal.
