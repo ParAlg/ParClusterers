@@ -124,7 +124,6 @@ struct CacheTables{
     // return UNFOUND_TOKEN if not found
     // return distance if found
     inline double find(intT qid, intT rid, intT qIdx = -1, intT  rIdx = -1){
-    CHECK_NO_CACHE(259)
     if(qIdx == -1){
       qIdx = idx(qid);
       rIdx = idx(rid);
@@ -132,12 +131,12 @@ struct CacheTables{
 
     typename distCacheT::eType result;
     bool reach_thresh;
-    tie(result, reach_thresh) = cacheTbs[qIdx]->find_thresh(rid);
+    tie(result, reach_thresh) = cacheTbs[qIdx]->find(rid);
     if(!reach_thresh && result.idx == rIdx){
 	    return result.dist;
     }
     
-    tie(result, reach_thresh) = cacheTbs[rIdx]->find_thresh(qid);
+    tie(result, reach_thresh) = cacheTbs[rIdx]->find(qid);
     if(!reach_thresh && result.idx == qIdx){
 	    return result.dist;
     }
@@ -155,15 +154,15 @@ struct CacheTables{
         intT qIdx = idx(qid);
         intT rIdx = idx(rid);
 
-        cacheTbs[qIdx]->insert_one_update(hashClusterET(rid, rIdx, d));
-        cacheTbs[rIdx]->insert_one_update(hashClusterET(qid, qIdx, d));
+        cacheTbs[qIdx]->insert(hashClusterET(rid, rIdx, d));
+        cacheTbs[rIdx]->insert(hashClusterET(qid, qIdx, d));
   }
 
   // return true & iffull only when insert if sucussful
   // if one is old and one is new, always check tb[new]->old
   // because the one stored in old might be outdated
   // calculate distance if return true
-  // TODO: can we make doSwap=true for all use cases?
+  // TODO: can we make doSwap=true for all use cases? cannot do it iiff inser_thresh does not check idx
   inline bool insert_check(intT qid, intT rid, bool doSwap, bool iffull){
       if(doSwap && qid > rid){
           swap(qid, rid);
@@ -171,11 +170,11 @@ struct CacheTables{
       intT qIdx = idx(qid);
       intT rIdx = idx(rid);
       bool inserted; bool reach_thresh;
-      tie(inserted, reach_thresh) = cacheTbs[qIdx]->insert_thresh(hashClusterET(rid, rIdx, CHECK_TOKEN));
+      tie(inserted, reach_thresh) = cacheTbs[qIdx]->insert(hashClusterET(rid, rIdx, CHECK_TOKEN));
       if(!reach_thresh) return inserted;
 
       if(doSwap){
-        tie(inserted, reach_thresh) = cacheTbs[rIdx]->insert_thresh(hashClusterET(qid, qIdx, CHECK_TOKEN));
+        tie(inserted, reach_thresh) = cacheTbs[rIdx]->insert(hashClusterET(qid, qIdx, CHECK_TOKEN));
         if(!reach_thresh) return inserted;
       }
       
