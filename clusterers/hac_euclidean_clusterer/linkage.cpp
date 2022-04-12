@@ -17,23 +17,10 @@ using namespace research_graph::in_memory::internal::HACTree;
 
 template<int dim>
 vector<dendroLine> run(char* filename){
-    auto P = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
-    int n = P.size();
-    UnionFind::ParUF<int> *uf = new UnionFind::ParUF<int>(n, true);
-    using distT = distAverageSq<dim>;
-    using F = RangeQueryCenterF<dim, iPoint<dim>, distT>;
-    using TF = NNFinder<dim, distT, F>;
-    distT *dist = new distT();
-    auto PP = makeIPoint(P);
-    TF *finder = new TF(n, PP.data(), uf, dist, true); //a no cache finder
-
-    vector<dendroLine> dendro = chain_linkage<dim, TF>(finder);
-
-    delete finder;
-    delete uf;
-    delete dist;
-
-    return dendro;
+    bool no_cache = true;
+    auto P0 = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
+    parlay::sequence<iPoint<dim>> P = makeIPoint<dim>(P0);
+    return research_graph::in_memory::internal::runAVGHAC<dim>(P, no_cache);
 }
 
 int main(int argc, char *argv[]) {

@@ -176,9 +176,9 @@ struct distComplete {
       parlay::parallel_for(0, static_cast<size_t>(n) * PNum,[&](size_t i){
         countTbs[i] = make_tuple(1, 0, (long)-1);
       });
-      clusterOffsets = parlay::sequence<int>(n+1);
-      parlay::parallel_for(0, n+1,[&](size_t i){
-        clusterOffsets[i] = i;
+      clusterOffsets = parlay::sequence<int>(n);
+      parlay::parallel_for(0, n,[&](size_t i){
+        clusterOffsets[i] = i+1; // result of scan([1,1,1,1...])
       });
       flags = parlay::sequence<bool>(n);
   }
@@ -258,8 +258,9 @@ struct distComplete {
         if(clusterNode->round == round){//merged this round, build new tree
           int cid1 = clusterNode->left->cId;
           int cid2 = clusterNode->right->cId;
-          
-          kdtreeT *new_tree = new kdtreeT(kdtrees[cid1], kdtrees[cid2], flags.cut(clusterOffsets[i],clusterOffsets[i+1]));
+          int start = 0;
+          if(i>0) start = clusterOffsets[i-1];
+          kdtreeT *new_tree = new kdtreeT(kdtrees[cid1], kdtrees[cid2], flags.cut(start, clusterOffsets[i]));
           delete kdtrees[cid1];
           delete kdtrees[cid2];
           kdtrees[cid] = new_tree;
@@ -349,10 +350,10 @@ struct distAverage {
     clusteredPts1 = (pointT *) malloc(n* sizeof(pointT));
     clusteredPts2 = (pointT *) malloc(n* sizeof(pointT));
     clusteredPts = clusteredPts1;
-    clusterOffsets = parlay::sequence<int>(n+1);
+    clusterOffsets = parlay::sequence<int>(n);
     parlay::parallel_for(0,n,[&](int i){
       clusteredPts1[i]=iPoint<dim>(PP[i], i);
-      clusterOffsets[i] = i;
+      clusterOffsets[i] = i+1; // the result of scan([1,1,1,1...])
     });
   }
 
@@ -429,7 +430,8 @@ struct distAverage {
       int cid  = activeClusters[i];
       nodeT *clusterNode = finder->getNode(cid);
       int oldOffset = clusterNode->getOffset(); // must save this before setting new
-      int newOffset = clusterOffsets[i];
+      int newOffset = 0;
+      if(i>0) newOffset = clusterOffsets[i-1];
       clusterNode->setOffset(newOffset);
       if(clusterNode->round == round){//merged this round, copy left and right
         nodeT *clusterNodeL = clusterNode->left;
