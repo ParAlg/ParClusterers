@@ -17,12 +17,6 @@
 
 using namespace std;
 
-// extern int g_dim;
-
-// #ifndef A_HASH_LINKAGE_PROB
-// #define A_HASH_LINKAGE_PROB
-// #endif
-
 #ifndef A_HASH_LINKAGE_PROBE_THRESH
 #define A_HASH_LINKAGE_PROBE_THRESH (m)
 #endif
@@ -41,28 +35,19 @@ class Table {
   eType empty;
   HASH hashStruct;
   eType* TA;
-  double load=1;
+  // double load=1;
   using index = size_t;
   using intT = size_t;
   bool is_full;
 
   static void clearA(eType* A, intT n, eType v) {
-    auto f = [&](size_t i) { parlay::assign_uninitialized(A[i], v); };
+    auto f = [&](size_t i) { A[i] = v; };
     parlay::parallel_for(0, n, f, parlay::granularity(n));
   }
-
-  struct notEmptyF { 
-    eType e; notEmptyF(eType _e) : e(_e) {} 
-    int operator() (eType a) {return e != a;}};
 
   index hashToRange(index h) { return static_cast<index>(static_cast<size_t>(h) % m); }
   index firstIndex(kType v) { return hashToRange(hashStruct.hash(v)); }
   index incrementIndex(index h) { return (h + 1 == m) ? 0 : h + 1; }
-  index decrementIndex(index h) { return (h == 0) ? m - 1 : h - 1; }
-  bool lessIndex(index a, index b) {
-    return (a < b) ? (2 * (b - a) < m) : (2 * (a - b) > m);
-  }
-  bool lessEqIndex(index a, index b) { return a == b || lessIndex(a, b); }
 
 
   // Constructor that takes an array for the hash table space.  The
@@ -71,8 +56,6 @@ class Table {
   // of an array.
  Table(intT size, eType* _TA, HASH hashF, bool clear = false) :
     m(size), 
-    // m(100 + static_cast<size_t>(load * size)),
-    // mask(m-1),
     empty(hashF.empty()),
     hashStruct(hashF), 
     TA(_TA),
@@ -81,82 +64,19 @@ class Table {
         if(clear)clearA(TA,m,empty); 
       }
 
-  //for equal keys, first one to arrive at location wins, linear probing
-  // bool insert(eType v) {
-  //   // if(is_full) return 0;
-  //   kType vkey = hashStruct.getKey(v);
-  //   intT h = firstIndex(vkey);
-  //   intT prob_ct = 0;
-  //   while (true) {
-  //     eType c;
-  //     c = TA[h];
-  //     // intT cmp;
-  //     if(c==empty && utils::CAS(&TA[h],c,v)) return 1; 
-  //     else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
-	// if(!hashStruct.replaceQ(v,c))
-	//   return 0;
-	// else if (utils::CAS(&TA[h],c,v)) return 1;
-  //     }
-  //     // move to next bucket
-  //     h = incrementIndex(h);
-  //     prob_ct++;
-  //     if(prob_ct > A_HASH_LINKAGE_PROBE_THRESH){
-  //       // exit(1);
-  //       is_full = true;
-  //       return 0; 
-  //     }
-  //   }
-  //   return 0; // should never get here
-  // }
-
-  // //for equal keys, first one to arrive at location wins, linear probing
-  // if replace CAS fail, will return fail to insert
-  // if multiple updates, arbitrary one succeed
-  // bool insert(eType v) {
-  //   // if(is_full) return 0; can't add this, might update
-  //   kType vkey = hashStruct.getKey(v);
-  //   intT h = firstIndex(vkey);
-  //   intT prob_ct = 0;
-  //   while (true) {
-  //     eType c;
-  //     c = TA[h];
-  //     // intT cmp;
-  //     if(c == empty && utils::CAS(&TA[h],c,v)){ 
-  //       return 1; 
-  //     }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
-  //       if(!hashStruct.replaceQ(v, c)){
-  //         return 0;
-  //       }else if (utils::CAS(&TA[h],c,v)){ 
-  //         return 1;
-  //       }
-  //       return 0;  // if multiple updates, arbitrary one succeed
-  //     }
-  //     // move to next bucket
-  //     h = incrementIndex(h);
-  //     prob_ct++;
-  //     if(prob_ct > A_HASH_LINKAGE_PROBE_THRESH){
-  //       is_full = true;
-  //       return 0; 
-  //     }
-  //   }
-  //   return 0; // should never get here
-  // }
-
   // return <success, reached threshold>
   // //for equal keys, first one to arrive at location wins, linear probing
   // if replace CAS fail, will return fail to insert
   // if multiple updates, arbitrary one succeed
-   //   a new key will bump an existing key up if it has a higher priority? TODO: CHECK, remove this? 
-   // may not work because the table can be full
+  //  can't use priority linear probing, because we need to stop probing when table is full.
+  // TODO: CHECK
   tuple<bool, bool> insert(eType v) {
     // if(is_full) return make_tuple(0, true);  can't add this, might update or return found
     kType vkey = hashStruct.getKey(v);
     intT h = firstIndex(vkey);
     intT prob_ct = 0;
     while (true) {
-      eType c;
-      c = TA[h];
-      // intT cmp;
+      eType c = TA[h];
       if(c == empty && utils::CAS(&TA[h],c,v)){ 
         return make_tuple(1, false); 
       }else if(0 == hashStruct.cmp(vkey,hashStruct.getKey(c))) {
@@ -181,25 +101,6 @@ class Table {
   }
 
   // Returns the value if an equal value is found in the table
-  // otherwise returns the "empty" element.
-  // due to prioritization, can quit early if v is greater than cell //TODO: double check if this is correct
-  // eType find_val(kType v) {
-  //   intT h = firstIndex(v);
-  //   eType c = TA[h]; 
-  //   intT prob_ct = 0;
-  //   while (1) {
-  //     if (c == empty) return empty; 
-  //     else if (!hashStruct.cmp(v,hashStruct.getKey(c))) //TODO: double check if this is correct
-	// return c;
-  //     h = incrementIndex(h);
-  //     c = TA[h];
-  //     prob_ct++;
-  //     if(prob_ct > A_HASH_LINKAGE_PROBE_THRESH){
-  //       return empty; 
-  //     }
-  //   }
-  // }
-
   // <result, reached threshold>
   tuple<eType, bool> find(kType v) {
     intT h = firstIndex(v);
@@ -240,56 +141,6 @@ class Table {
     cout << endl;
   }
 };
-
-// template <class intT>
-// struct hashInt {
-//   typedef intT eType;
-//   typedef intT kType;
-//   eType empty() {return -1;}
-//   kType getKey(eType v) {return v;}
-//   size_t hash(kType v) { return static_cast<size_t>(parlay::hash64(v)); }
-//   int cmp(kType v, kType b) {return (v > b) ? 1 : ((v == b) ? 0 : -1);}
-//   bool replaceQ(eType v, eType b) {return 0;}
-// };
-
-//typedef Table<hashInt> IntTable;
-//static IntTable makeIntTable(int m) {return IntTable(m,hashInt());}
-// template <class intT>
-// static Table<hashInt<intT>> makeIntTable(intT m, float load) {
-//   return Table<hashInt<intT>>(m,hashInt<intT>(),load);}
-
-// template <class KEYHASH, class DTYPE>
-// struct hashPair {
-//   KEYHASH keyHash;
-//   typedef typename KEYHASH::kType kType;
-//   typedef pair<kType,DTYPE>* eType;
-//   eType empty() {return NULL;}
-
-//   hashPair(KEYHASH _k) : keyHash(_k) {}
-
-//   kType getKey(eType v) { return v->first; }
-
-//   uint hash(kType s) { return keyHash.hash(s);}
-//   int cmp(kType s, kType s2) { return keyHash.cmp(s, s2);}
-
-//   bool replaceQ(eType s, eType s2) {
-//     return 0;}//s->second > s2->second;}
-// };
-
-// static _seq<pair<char*,intT>*> removeDuplicates(_seq<pair<char*,intT>*> S) {
-//   return removeDuplicates(S,hashPair<hashStr,intT>(hashStr()));}
-
-// struct hashSimplePair {
-//     typedef int intT;
-//     typedef unsigned int uintT;
-//   typedef pair<intT,intT> eType;
-//   typedef intT kType;
-//   eType empty() {return pair<intT,intT>(-1,-1);}
-//   kType getKey(eType v) { return v.first; }
-//  size_t hash(kType v) { return static_cast<size_t>(parlay::hash64(v)); }
-//   int cmp(intT v, intT b) {return (v > b) ? 1 : ((v == b) ? 0 : -1);}
-//   bool replaceQ(eType s, eType s2) {return 0;}//return s.second > s2.second;}
-// };
 
 
 }

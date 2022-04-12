@@ -286,7 +286,7 @@ class NNFinder {
             }
           }else{
             if(storedIdx == idx(newc2)){ // TA[j].idx should == idx
-              success = cacheTables->insert_check(newc, newc2, false, false);
+              success = cacheTables->insert_check(newc, newc2, true, false);
               if(success) d = getNewDistO(newc, newc2);
             }
           }

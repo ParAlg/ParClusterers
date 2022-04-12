@@ -51,7 +51,7 @@ namespace HACTree {
       kType getKey(eType v) { return v.first; }
       std::size_t hash(kType v) { return static_cast<std::size_t>(parlay::hash32((std::uint32_t)v)); }
       int cmp(kType v, kType b) {return (v > b) ? 1 : ((v == b) ? 0 : -1);}
-      bool replaceQ(eType s, eType s2) { // s is the new value
+      bool replaceQ(eType s, eType s2) { // s is the new value, return true if need to replace s2 with s
         if(s.dist == CHECK_TOKEN){ // insert check
           if(s.idx == s2.idx){ return false;} // already exist, no need to compute
           else{return true;}// wrong index, need to compute
@@ -162,7 +162,6 @@ struct CacheTables{
   // if one is old and one is new, always check tb[new]->old
   // because the one stored in old might be outdated
   // calculate distance if return true
-  // TODO: can we make doSwap=true for all use cases? cannot do it iiff inser_thresh does not check idx
   inline bool insert_check(intT qid, intT rid, bool doSwap, bool iffull){
       if(doSwap && qid > rid){
           swap(qid, rid);
