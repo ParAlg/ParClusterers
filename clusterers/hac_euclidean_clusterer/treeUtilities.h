@@ -218,7 +218,8 @@ namespace HACTree {
     /////// SingleTree Traversal
 
     // mark the if a tree node has points from a single cluster
-    // used for complete linkage
+    // used for complete linkage's range search
+    // used on tree of all points
     template<class nodeT>
     struct MarkClusterId{
         
@@ -268,64 +269,10 @@ namespace HACTree {
 
         inline bool Par(nodeT *Q){return Q->size() > 2000;}
 
+        //the node is already marked by previous rounds, no need to mark again
         inline bool Stop(nodeT *Q, int id){
             int cid = Q->getInfo().getCId();
             return cid != -1 && cid == id;
-        }
-
-    };
-
-    // mark the min_n on a kd-tree of cluster centers, used for ward's linkage
-    // TODO: clean the code to not mark this and only used the global min_n?
-    template<class kdnodeT, class nodeInfo>
-    struct MarkMinN{
-        typedef typename nodeInfo::infoT infoT;
-
-        int *sizes; //sizes of all clusters indexed by cluster id
-        infoT initVal = nodeInfo().initInfoVal();
-
-        MarkMinN(int *t_sizes):sizes(t_sizes){
-        }
-        MarkMinN(){
-        }
-
-        inline bool doMark(int C, int round){ return true;}
-
-        inline bool isTopDown(infoT info){return false;}//{ return get<0>(info) != -1;}
-
-        inline void TopDownNode(kdnodeT *Q, infoT info){
-            if(!isTopDown(info)) return;
-            Q->getInfo().setInfo(info);
-        }
-
-        inline void BottomUpNode(kdnodeT *Q, infoT info){
-            if(isTopDown(info)) return;
-            Q->getInfo().setMinN(min(Q->L()->getInfo().getMinN(), Q->R()->getInfo().getMinN()));
-        }
-
-        inline void BaseCase(kdnodeT *Q, infoT info){
-            if(isTopDown(info)){
-                Q->getInfo().setInfo(info);
-            }else{
-                int id = Q->items[0]->idx();
-                int min_n = sizes[id]; 
-                for(int i=1; i<Q->size(); ++i){
-                    int id_temp = Q->at(i)->idx();
-                    min_n = min(min_n, sizes[id_temp]);  
-                }
-                id = -1;
-                Q->getInfo().setInfo(infoT(id, min_n));
-            }
-        }
-
-        inline infoT SwitchMode(kdnodeT *Q, infoT info){ //must be -1
-            return info;
-        }
-
-        inline bool Par(kdnodeT *Q){return Q->size() > 1000;}
-
-        inline bool Stop(kdnodeT *Q, infoT info){
-            return false;
         }
 
     };
@@ -592,5 +539,51 @@ namespace HACTree {
         }
 
     };
+    // mark the min_n on a kd-tree of cluster centers, used for ward's linkage
+    // will mark id to be -1
+    // template<class kdnodeT, class nodeInfo>
+    // struct MarkMinN{
+    //     typedef typename nodeInfo::infoT infoT;
 
+    //     int *sizes; //sizes of all clusters indexed by cluster id
+    //     infoT initVal = nodeInfo().initInfoVal();
+
+    //     MarkMinN(int *t_sizes):sizes(t_sizes){
+    //     }
+    //     MarkMinN(){
+    //     }
+
+    //     inline bool doMark(int C, int round){ return true;}
+
+    //     inline bool isTopDown(infoT info){return false;}//{ return get<0>(info) != -1;}
+
+    //     inline void TopDownNode(kdnodeT *Q, infoT info){
+    //     }
+
+    //     inline void BottomUpNode(kdnodeT *Q, infoT info){
+    //         Q->getInfo().setMinN(min(Q->L()->getInfo().getMinN(), Q->R()->getInfo().getMinN()));
+    //     }
+
+    //     inline void BaseCase(kdnodeT *Q, infoT info){
+    //             int id = Q->items[0]->idx();
+    //             int min_n = sizes[id]; 
+    //             for(int i=1; i<Q->size(); ++i){
+    //                 int id_temp = Q->at(i)->idx();
+    //                 min_n = min(min_n, sizes[id_temp]);  
+    //             }
+    //             id = -1;
+    //             Q->getInfo().setInfo(infoT(id, min_n));
+    //     }
+
+    //     inline infoT SwitchMode(kdnodeT *Q, infoT info){ //must be -1
+    //         return info;
+    //     }
+
+    //     inline bool Par(kdnodeT *Q){return Q->size() > 1000;}
+
+    //     inline bool Stop(kdnodeT *Q, infoT info){
+    //         return false;
+    //     }
+
+    // };
 }}}}

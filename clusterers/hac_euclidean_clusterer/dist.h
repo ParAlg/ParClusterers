@@ -243,7 +243,6 @@ struct distComplete {
       if(finder->C==1) return;
       round = _round;
 
-    //   int *activeClusters = finder->activeClusters;
       int  C = finder->C;
       parlay::parallel_for(0, C, [&](int i){
         clusterOffsets[i] = finder->getNode(finder->activeClusters[i])->size();
