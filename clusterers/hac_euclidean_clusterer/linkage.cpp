@@ -24,13 +24,13 @@ vector<dendroLine> run(char* filename){
     auto P0 = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
     parlay::sequence<iPoint<dim>> P = makeIPoint<dim>(P0);
     // make float precision to match parClusterer results
-    parlay::parallel_for(0,P.size(),[&](int i){
-        for (int d = 0; d < 2; ++d){
-            P[i][d] = double(float( P[i][d] ));
-        }
-    });
+    // parlay::parallel_for(0,P.size(),[&](int i){
+    //     for (int d = 0; d < 2; ++d){
+    //         P[i][d] = double(float( P[i][d] ));
+    //     }
+    // });
     t.next("load points");
-    return research_graph::in_memory::internal::runAVGHAC<dim>(P, no_cache);
+    return research_graph::in_memory::internal::runAVGSQHAC<dim>(P, no_cache);
 }
 
 int main(int argc, char *argv[]) {
