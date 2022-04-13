@@ -7,10 +7,10 @@
 #include "gmock/gmock.h"
 
 using namespace research_graph::in_memory::internal;
-// bazel run //test:clusterer_test
+// bazel run //test:clusterer_test -- --gtest_filter=SimpleTest*
 // ground truth came from clusterer/hac_clusterer which uses a distance matrix
 // TODO: add large datasets test
-string dataset_addr = "/Users/sy/Desktop/MIT/PAPERS/clustering/datasets/";
+string dataset_addr = "/home/ubuntu/datasets/";
 
 namespace {
 class SimpleTest : public testing::Test {
@@ -171,6 +171,90 @@ TEST_F(TwoDGaussianOneKTest, WARDCache) {
     vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
     double checksum = HACTree::getCheckSum(dendro);
     ASSERT_NEAR(98231.0161, checksum, check_sum_eps);
+}
+
+} // namespace
+
+namespace {
+class TwoDGaussianOneMTest : public testing::Test {
+protected:
+  static void SetUpTestSuite() {
+    // Avoid reallocating static objects if called in subclasses of FooTest.
+    if (P.size() == 0) {
+        string filename = dataset_addr + "2D_GaussianDisc_1M.pbbs";
+        auto P0 = pargeo::pointIO::readPointsFromFile<HACTree::point<2>>(filename.c_str());
+        P = HACTree::makeIPoint<2>(P0);
+    }
+    check_sum_eps = 0.1;
+  }
+
+  static void TearDownTestSuite() {
+    P = parlay::sequence<HACTree::iPoint<2>>();
+  }
+
+  static parlay::sequence<HACTree::iPoint<2>> P;
+  static double check_sum_eps;
+};
+
+parlay::sequence<HACTree::iPoint<2>> TwoDGaussianOneMTest::P;
+double TwoDGaussianOneMTest::check_sum_eps;
+
+TEST_F(TwoDGaussianOneMTest, AVGSQ) {
+  bool no_cache = true;
+  // no cache
+  vector<HACTree::dendroLine> dendro = runAVGSQHAC<2>(P, no_cache);
+  double checksum = HACTree::getCheckSum(dendro);
+  ASSERT_NEAR(1919205291, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, AVG) {
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runAVGHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(11409946.57, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, Complete) {
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(17381491.64, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, WARD) {
+    bool no_cache = true;
+    vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(71831628.31, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, AVGSQCache) {
+  bool no_cache = false;
+  // no cache
+  vector<HACTree::dendroLine> dendro = runAVGSQHAC<2>(P, no_cache);
+  double checksum = HACTree::getCheckSum(dendro);
+  ASSERT_NEAR(1919205291, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, AVGCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runAVGHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(11409946.57, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, CompleteCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runCompleteHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(17381491.64, checksum, check_sum_eps);
+}
+
+TEST_F(TwoDGaussianOneMTest, WARDCache) {
+    bool no_cache = false;
+    vector<HACTree::dendroLine> dendro = runWARDHAC<2>(P, no_cache);
+    double checksum = HACTree::getCheckSum(dendro);
+    ASSERT_NEAR(71831628.31, checksum, check_sum_eps);
 }
 
 } // namespace
