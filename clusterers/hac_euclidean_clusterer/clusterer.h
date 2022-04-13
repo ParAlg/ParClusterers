@@ -162,7 +162,7 @@ vector<dendroLine> chain_linkage(TF *finder){
     using TF = HACTree::NNFinder<dim, distT, F>;
     distT *dist = new distT(uf, P.data());
     TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    vector<HACTree::dendroLine> dendro = HACTree::chain_linkage<dim, TF>(finder);
     delete finder; delete dist; delete uf;
     return dendro;
   }
@@ -176,7 +176,7 @@ vector<dendroLine> chain_linkage(TF *finder){
     using TF = HACTree::NNFinder<dim, distT, F>;
     distT *dist = new distT(P.data(), n);
     TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    vector<HACTree::dendroLine> dendro = HACTree::chain_linkage<dim, TF>(finder);
     delete finder; delete dist; delete uf;
     return dendro;
   }
@@ -190,7 +190,7 @@ vector<dendroLine> chain_linkage(TF *finder){
     using TF = HACTree::NNFinder<dim, distT, F>;
     distT *dist = new distT();
     TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    vector<HACTree::dendroLine> dendro = HACTree::chain_linkage<dim, TF>(finder);
     delete finder; delete dist; delete uf;
     return dendro;
   }
@@ -204,7 +204,7 @@ vector<dendroLine> chain_linkage(TF *finder){
     using TF = HACTree::NNFinder<dim, distT, F>;
     distT *dist = new distT();
     TF *finder = new TF(n, P.data(), uf, dist, no_cache, cache_size, eps); //a no cache finder
-    vector<HACTree::dendroLine> dendro = chain_linkage<dim, TF>(finder);
+    vector<HACTree::dendroLine> dendro = HACTree::chain_linkage<dim, TF>(finder);
     delete finder; delete dist; delete uf;
     return dendro;
   }
