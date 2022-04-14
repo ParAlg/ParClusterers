@@ -228,7 +228,8 @@ namespace HACTree {
   class node
   {
 
-  protected:
+  // protected:
+  public:
     using intT = int;
 
     using floatT = double;
@@ -289,7 +290,7 @@ namespace HACTree {
 
     void constructParallel(nodeT *space, parlay::slice<bool *, bool *> flags, intT leafSize);
 
-  public:
+  // public:
     using objT = _objT;
 
     static constexpr int dim = _dim;
