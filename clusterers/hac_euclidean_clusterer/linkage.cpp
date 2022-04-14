@@ -20,7 +20,7 @@ using parlay::internal::timer;
 
 template<int dim>
 vector<dendroLine> run(char* filename){
-    bool no_cache = true;
+    bool no_cache = false;
     timer t;t.start();
     auto P0 = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
     parlay::sequence<iPoint<dim>> P = makeIPoint<dim>(P0);
@@ -31,7 +31,7 @@ vector<dendroLine> run(char* filename){
     //     }
     // });
     t.next("load points");
-    return research_graph::in_memory::internal::runWARDHAC<dim>(P, no_cache);
+    return research_graph::in_memory::internal::runAVGHAC<dim>(P, no_cache);
 }
 
 int main(int argc, char *argv[]) {
