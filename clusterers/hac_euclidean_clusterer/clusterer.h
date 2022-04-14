@@ -11,8 +11,10 @@
 #include "finder.h"
 #include "utils/dendro.h"
 #include "dist.h"
+#include "parlay/internal/get_time.h"
 
 using namespace std;
+using parlay::internal::timer;
 
 namespace research_graph {
 namespace in_memory {
@@ -38,7 +40,7 @@ inline void chain_find_nn(int chainNum, TF *finder, TreeChainInfo *info){
 }
 
 template<class TF>
-inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChainInfo *info, int round, parlay::sequence<int>& flags){
+inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChainInfo *info, int round, parlay::slice<int *, int*> flags){
   int chainNum = info->chainNum;
   EDGE *edges = finder->edges;
   
@@ -70,7 +72,7 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
   auto merged = parlay::filter(flags.cut(0, chainNum), [&](int i){return i!=NO_NEIGH;});
 
 #ifdef TIMING2
-	 if(LINKAGE_DOPRINT(round)){ UTIL::PrintSubtimer(":::merge", t1.next());  cout << "merged.n: " << merged.n << endl;}
+	 t1.next("merge");
 #endif
   // insert to new hashtables and delete old hashtables
   parlay::parallel_for(0, merged.size(), [&](int i){
@@ -78,7 +80,7 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
     finder->updateDist(newc, round);
   });
 #ifdef TIMING2
-	if(LINKAGE_DOPRINT(round)){ UTIL::PrintSubtimer(":::update dist", t1.next());}
+    t1.next("update dist");
 #endif
   } //  end !no_cache
 
@@ -88,13 +90,11 @@ inline void link_terminal_nodes(UnionFind::ParUF<int> *uf, TF *finder, TreeChain
 template<int dim, class TF>
 vector<dendroLine> chain_linkage(TF *finder){
   // cout << "hash table size " << finder->hashTableSize << endl;
-  
   UnionFind::ParUF<int> *uf = finder->uf;
   int n = finder->n;
   int chainNum = n;
-  TreeChainInfo *info = new TreeChainInfo(n, finder->eps);
+  TreeChainInfo info = TreeChainInfo(n, finder->eps);
   parlay::sequence<int> flags = parlay::sequence<int>(chainNum);// used in linkterminalnodes
-
 #ifdef VERBOSE
  ofstream file_obj;
  file_obj.open("debug/1k_comp.txt"); 
@@ -110,7 +110,7 @@ vector<dendroLine> chain_linkage(TF *finder){
     std::cout << endl;
     std::cout << "Round " << round << endl;
     std::cout << "Comp Num " <<  finder->C << endl;
-    std::cout << "Chain # " <<  info->chainNum << endl;//}else{print = false;}
+    std::cout << "Chain # " <<  info.chainNum << endl;//}else{print = false;}
   // if(round >= 10)  exit(1);
 #endif
   // if(round >= 2 && info->chainNum == 0) zero_chain_debug(finder, round, info); 
@@ -119,9 +119,9 @@ vector<dendroLine> chain_linkage(TF *finder){
       exit(1);
   }
   if(round == 1){
-    finder->initChain(info);
+    finder->initChain(&info);
   }else{
-    chain_find_nn<TF>(chainNum, finder, info);
+    chain_find_nn<TF>(chainNum, finder, &info);
   }
 
 #ifdef VERBOSE
@@ -136,19 +136,14 @@ vector<dendroLine> chain_linkage(TF *finder){
 
    file_obj << round << "========" << endl;
 #endif
-
-    link_terminal_nodes<TF>(uf, finder, info, round, flags);
+    link_terminal_nodes<TF>(uf, finder, &info, round, parlay::make_slice(flags));
     // get ready for next round
     finder->updateActiveClusters(round);
     finder->distComputer->update(round, finder);
-    info->next(finder, round);
-    chainNum = info->chainNum;
-//   t1.next();
+    info.next(finder, round);
+    chainNum = info.chainNum;
   }
-  // UTIL::PrintFunctionItem("CLINK", "rounds", round);
-  delete info;
   // finder->distComputer->postProcess(finder);
-
   return formatDendrogram<dim>(finder->nodes, n, 0);
 }
 }//end of namespace HACTree

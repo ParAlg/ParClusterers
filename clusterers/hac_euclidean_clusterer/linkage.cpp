@@ -11,7 +11,8 @@
 
 // g++ -g -std=c++20 -ldl -pthread -DVERBOSE -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
 // g++ -O3 -std=c++20 -mcx16  -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
-
+//  g++ -O3 -std=c++17 -mcx16  -ldl -pthread -I../../external/gbbs/external/parlaylib/include linkage.cpp -o linkage
+// -DPARLAY_CILKPLUS 
 
 using namespace std;
 using namespace research_graph::in_memory::internal::HACTree;
@@ -19,7 +20,7 @@ using parlay::internal::timer;
 
 template<int dim>
 vector<dendroLine> run(char* filename){
-    bool no_cache = false;
+    bool no_cache = true;
     timer t;t.start();
     auto P0 = pargeo::pointIO::readPointsFromFile<point<dim>>(filename);
     parlay::sequence<iPoint<dim>> P = makeIPoint<dim>(P0);
@@ -30,7 +31,7 @@ vector<dendroLine> run(char* filename){
     //     }
     // });
     t.next("load points");
-    return research_graph::in_memory::internal::runAVGSQHAC<dim>(P, no_cache);
+    return research_graph::in_memory::internal::runWARDHAC<dim>(P, no_cache);
 }
 
 int main(int argc, char *argv[]) {
