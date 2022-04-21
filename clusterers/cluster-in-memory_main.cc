@@ -244,24 +244,22 @@ absl::Status Main() {
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
 
   std::size_t n = 0;
+  // TODO(jeshi): This is assuming we will always call stats
   if (float_weighted) {
     const auto edge_list{
         gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
+                                             edge_list, is_symmetric_graph));
+    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
                                              edge_list, is_symmetric_graph));
   } else {
     const auto edge_list{
         gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
                                              edge_list, is_symmetric_graph));
+    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
+                                             edge_list, is_symmetric_graph));
   }
-  // Must initialize the list allocator for GBBS, to support parallelism.
-  // The list allocator seeds using the number of vertices in the input graph.
-  FakeGraph fake_graph{n};
-  gbbs::alloc_init(fake_graph);
-
-  // TODO(jeshi): This is assuming we will always call stats
-  stats.MutableGraph()->graph_ = clusterer->MutableGraph()->graph_;
 
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read");
