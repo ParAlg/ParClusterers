@@ -245,7 +245,7 @@ absl::Status Main() {
 
   std::size_t n = 0;
   // TODO(jeshi): This is assuming we will always call stats
-  if (float_weighted) {
+  /*if (float_weighted) {
     const auto edge_list{
         gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
@@ -253,7 +253,7 @@ absl::Status Main() {
     const auto edge_list_stats = edge_list;
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
                                              edge_list_stats, is_symmetric_graph));
-  } else {
+  } else {*/
     const auto edge_list{
         gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
@@ -261,7 +261,7 @@ absl::Status Main() {
     const auto edge_list_stats = edge_list;
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
                                              edge_list_stats, is_symmetric_graph));
-  }
+  //}
 
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read");
