@@ -250,15 +250,17 @@ absl::Status Main() {
         gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
                                              edge_list, is_symmetric_graph));
+    const auto edge_list_stats = edge_list;
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
-                                             edge_list, is_symmetric_graph));
+                                             edge_list_stats, is_symmetric_graph));
   } else {
     const auto edge_list{
         gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
                                              edge_list, is_symmetric_graph));
+    const auto edge_list_stats = edge_list;
     ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
-                                             edge_list, is_symmetric_graph));
+                                             edge_list_stats, is_symmetric_graph));
   }
 
   auto end_read = std::chrono::steady_clock::now();
