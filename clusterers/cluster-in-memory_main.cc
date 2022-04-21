@@ -240,24 +240,26 @@ absl::Status Main() {
 
   auto begin_read = std::chrono::steady_clock::now();
   std::string input_file = absl::GetFlag(FLAGS_input_graph);
-  // bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph); //
-  // Assume symmetric
+  bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph);
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
 
-  gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> g;
+  std::size_t n = 0;
   if (float_weighted) {
-    auto G = gbbs::gbbs_io::read_weighted_symmetric_graph<float>(
-        input_file.c_str(), false, false);
-    // Transform to pointer graph
-    g = CopyGraph(G);
+    const auto edge_list{
+        gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
+    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
+                                             edge_list, is_symmetric_graph));
   } else {
-    auto G = gbbs::gbbs_io::read_unweighted_symmetric_graph(input_file.c_str(),
-                                                            false, false);
-    // Transform to pointer graph
-    g = CopyGraph(G);
+    const auto edge_list{
+        gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
+    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
+                                             edge_list, is_symmetric_graph));
   }
-  clusterer->MutableGraph()->graph_ = std::make_shared<
-      gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>>(g);
+  // Must initialize the list allocator for GBBS, to support parallelism.
+  // The list allocator seeds using the number of vertices in the input graph.
+  FakeGraph fake_graph{n};
+  gbbs::alloc_init(fake_graph);
+
   // TODO(jeshi): This is assuming we will always call stats
   stats.MutableGraph()->graph_ = clusterer->MutableGraph()->graph_;
 
