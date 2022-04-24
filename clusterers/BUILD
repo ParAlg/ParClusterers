@@ -54,6 +54,8 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
         "@parcluster//parcluster/api:in-memory-clusterer-base",
+        "@parcluster//parcluster/api/parallel:parallel-graph-utils",
+        "@gbbs//benchmarks/Connectivity/SimpleUnionAsync:Connectivity",
     ],
 )
 

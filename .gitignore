@@ -2,3 +2,12 @@
 
 .*.swp
 .*.swo
+
+
+outputs/*
+clusterers/hac_euclidean_clusterer
+spatial_clusters/
+.DS_Store
+.vscode/
+datasets/
+external/.DS_Store

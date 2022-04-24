@@ -1,4 +1,5 @@
 #include "clusterers/clustering_stats.h"
+#include "stats_connectivity.h"
 
 namespace research_graph::in_memory {
 
