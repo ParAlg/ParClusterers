@@ -19,6 +19,7 @@ namespace research_graph::in_memory {
 // return a subgraph that has the vertices in V
 // the ids in subgraph do not neccessarily corresponds to the original graph's node id
 // the number of nodes in the new subgraph = V.size()
+// labels[i] is the cluster id of vertex i
 gbbs::symmetric_graph<gbbs::symmetric_vertex, float> GetSubgraph(const GbbsGraph& graph_, const std::vector<InMemoryClusterer::NodeId>& V, const std::vector<int>& labels, bool keep_ids = false){
     using Wgh = float;
     using uintE = gbbs::uintE;
@@ -65,12 +66,36 @@ gbbs::symmetric_graph<gbbs::symmetric_vertex, float> GetSubgraph(const GbbsGraph
 
 }
 
+std::vector<int> GetLabels(const InMemoryClusterer::Clustering& clustering, std::size_t n){
+    auto labels = std::vector<int>(n);
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        parlay::parallel_for(0, clustering[i].size(), [&] (size_t j) {
+            labels[clustering[i][j]] = i;
+        });
+    });
+    return labels;
+}
+
 std::vector<bool> ClusterConnectivity(const InMemoryClusterer::Clustering& clustering, const GbbsGraph& graph_) {
-//   std::size_t n = graph_.Graph()->n;
+  std::size_t n = graph_.Graph()->n;
   std::vector<bool> result = std::vector<bool>(clustering.size());
-  auto labels = gbbs::simple_union_find::SimpleUnionAsync(*graph_.Graph());
-  std::size_t cc = gbbs::simple_union_find::num_cc(labels);
-  std::cout << cc << std::endl;
+
+  if(clustering.size()==1){
+    auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(*graph_.Graph());
+    std::size_t cc = gbbs::simple_union_find::num_cc(cc_labels);
+    result[0] = cc==1;
+    return result;
+  }
+
+//   std::cout << cc << std::endl;
+
+    auto labels = GetLabels(clustering, n);
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        auto G = GetSubgraph(graph_, clustering[i], labels);
+        auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(G);
+        std::size_t cc = gbbs::simple_union_find::num_cc(cc_labels);
+        result[i] = cc==1;
+    });
 
   // can also loop over edges on-the-fly and use unionfind
 
