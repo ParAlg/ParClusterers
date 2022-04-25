@@ -271,7 +271,7 @@ std::vector<double> ClusterDiameter(const InMemoryClusterer::Clustering& cluster
         result[i] = *(parlay::max_element(distances));
     });
 //   }
-  for(double l:result) std::cout << l << std::endl;
+//   for(double l:result) std::cout << l << std::endl;
   return result;
 }
 
