@@ -6,6 +6,7 @@
 
 #include "absl/status/statusor.h"
 #include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
+#include "external/gbbs/benchmarks/TriangleCounting/ShunTangwongsan15/Triangle.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -51,6 +52,52 @@ gbbs::symmetric_graph<gbbs::symmetric_vertex, float> GetSubgraph(const GbbsGraph
             if(labels[u]==labels[v]){
                 flags[offset+j] = true;
                 edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v],wgh);
+            }
+        };
+        graph_.Graph()->get_vertex(vert).out_neighbors().map_with_index(map_f);
+    });
+
+    auto subgraph_edges = parlay::pack(edges, flags);
+
+    if(keep_ids){
+        return gbbs::sym_graph_from_edges(subgraph_edges, graph_.Graph()->n);
+    }else{
+        return gbbs::sym_graph_from_edges(subgraph_edges, n);
+    }
+
+}
+
+gbbs::symmetric_graph<gbbs::symmetric_vertex, gbbs::empty> GetSubgraphUnwighted(const GbbsGraph& graph_, const std::vector<InMemoryClusterer::NodeId>& V, const std::vector<int>& labels, bool keep_ids = false){
+    using Wgh = gbbs::empty;
+    using uintE = gbbs::uintE;
+    // auto G = graph_.Graph();
+    std::size_t n = V.size();
+    auto offsets = parlay::sequence<size_t>::from_function(
+      n, [&](size_t i) { return graph_.Graph()->get_vertex(V[i]).out_degree(); }); //double check, is numbers in V corresponding to the graph nodes?
+    auto new_m = parlay::scan_inclusive_inplace(offsets);
+    auto edges = parlay::sequence<std::tuple<uintE, uintE, Wgh>>::uninitialized(new_m);
+    auto flags = parlay::sequence<bool>(new_m, false); // flag[i] = true if the edge should be in the subgraph
+
+    auto map =  parlay::sequence<InMemoryClusterer::NodeId>::uninitialized(graph_.Graph()->n); // map from original graph id to new id in subgraph
+    if(keep_ids){
+    parlay::parallel_for(0, n, [&] (size_t i) {
+        map[V[i]] = V[i];
+    });
+    }else{
+    parlay::parallel_for(0, n, [&] (size_t i) {
+        map[V[i]] = i;
+    });
+    }
+
+
+    // copy edges in the subgraph to edges, and mark true in flags
+    parlay::parallel_for(0, n, [&] (size_t i) {
+        uintE vert = V[i];
+        std::size_t offset = i==0 ? 0 : offsets[i-1];
+        auto map_f = [&] (const auto& u, const auto& v, const auto& wgh, const auto& j) {
+            if(labels[u]==labels[v]){
+                flags[offset+j] = true;
+                edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v]);
             }
         };
         graph_.Graph()->get_vertex(vert).out_neighbors().map_with_index(map_f);
@@ -159,5 +206,44 @@ std::vector<double> ClusterEdgeDensity(const InMemoryClusterer::Clustering& clus
 //   for(double l:result) std::cout << l << std::endl;
   return result;
 }
+
+
+template<class Graph>
+std::size_t getNumWedges(Graph* G){
+    auto wedges = parlay::delayed_seq<size_t>(
+      G->n, [&](size_t i) { 
+          std::size_t d = G->get_vertex(i).out_degree(); 
+          return d*(d-1)/2;
+    });
+    return parlay::reduce(wedges);
+}
+
+// if no wedge, density is 0
+std::vector<double> ClusterTriangleDensity(const InMemoryClusterer::Clustering& clustering, const GbbsGraph& graph_) {
+  std::size_t n = graph_.Graph()->n;
+  auto result = std::vector<double>(clustering.size());
+  auto f = [&] (gbbs::uintE u, gbbs::uintE v, gbbs::uintE w) { };
+
+//   if(clustering.size()==1){ //does not work because could not match 'symmetric_graph' against 'symmetric_ptr_graph'
+//     size_t num_tri = gbbs::Triangle_degree_ordering(*graph_.Graph(), f); 
+//     size_t num_wedges = getNumWedges(graph_.Graph());
+//     result[0] = ((double)num_tri) / ((double)num_wedges);
+//   }else{
+    auto labels = GetLabels(clustering, n);
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        auto G = GetSubgraphUnwighted(graph_, clustering[i], labels); //have to use unweighted graph, otherwise result is wrong
+        size_t num_wedges = getNumWedges(&G);
+        if(num_wedges == 0){
+          result[i] = 0;
+        }else{
+          size_t num_tri = gbbs::Triangle_degree_ordering(G, f);
+          result[i] = ((double)num_tri) / ((double)num_wedges);
+        }
+    });
+//   }
+  for(double l:result) std::cout << l << std::endl;
+  return result;
+}
+
 
 }  // namespace research_graph::in_memory

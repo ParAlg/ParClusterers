@@ -56,6 +56,7 @@ cc_library(
         "@parcluster//parcluster/api:in-memory-clusterer-base",
         "@parcluster//parcluster/api/parallel:parallel-graph-utils",
         "@gbbs//benchmarks/Connectivity/SimpleUnionAsync:Connectivity",
+        "@gbbs//benchmarks/TriangleCounting/ShunTangwongsan15:Triangle",
     ],
 )
 
