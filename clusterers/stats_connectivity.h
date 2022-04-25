@@ -66,6 +66,32 @@ gbbs::symmetric_graph<gbbs::symmetric_vertex, float> GetSubgraph(const GbbsGraph
 
 }
 
+// return the number of edges in a subgraph that has the vertices in V
+// labels[i] is the cluster id of vertex i
+std::size_t GetSubgraphNumEdges(const GbbsGraph& graph_, const std::vector<InMemoryClusterer::NodeId>& V, const std::vector<int>& labels){
+    using uintE = gbbs::uintE;
+    // auto G = graph_.Graph();
+    std::size_t n = V.size();
+    auto offsets = parlay::sequence<size_t>::from_function(
+      n, [&](size_t i) { return graph_.Graph()->get_vertex(V[i]).out_degree(); }); //double check, is numbers in V corresponding to the graph nodes?
+    auto new_m = parlay::scan_inclusive_inplace(offsets);
+    auto flags = parlay::sequence<size_t>(new_m, 0); // flag[i] = true if the edge should be in the subgraph
+    // mark true in flags where an edge is in subgraph
+    parlay::parallel_for(0, n, [&] (size_t i) {
+        uintE vert = V[i];
+        std::size_t offset = i==0 ? 0 : offsets[i-1];
+        auto map_f = [&] (const auto& u, const auto& v, const auto& wgh, const auto& j) {
+            if(labels[u]==labels[v]){
+                flags[offset+j] = 1;
+            }
+        };
+        graph_.Graph()->get_vertex(vert).out_neighbors().map_with_index(map_f);
+    });
+
+    return parlay::reduce(flags);
+
+}
+
 std::vector<int> GetLabels(const InMemoryClusterer::Clustering& clustering, std::size_t n){
     auto labels = std::vector<int>(n);
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
@@ -100,7 +126,6 @@ std::vector<bool> ClusterConnectivity(const InMemoryClusterer::Clustering& clust
     auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(*graph_.Graph());
     std::size_t cc = num_cc(cc_labels);
     result[0] = cc==1;
-    // std::cout << cc << std::endl;
     return result;
   }
 
@@ -112,8 +137,26 @@ std::vector<bool> ClusterConnectivity(const InMemoryClusterer::Clustering& clust
         result[i] = cc==1;
     });
 
-    for(bool l:result) std::cout << l << std::endl;
+    // for(bool l:result) std::cout << l << std::endl;
 
+  return result;
+}
+
+std::vector<double> ClusterEdgeDensity(const InMemoryClusterer::Clustering& clustering, const GbbsGraph& graph_) {
+  std::size_t n = graph_.Graph()->n;
+  auto result = std::vector<double>(clustering.size());
+
+  if(clustering.size()==1){
+    result[0] = ((double)graph_.Graph()->m) / ((double)n*(n-1));
+  }else{
+    auto labels = GetLabels(clustering, n);
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        size_t m_subgraph = GetSubgraphNumEdges(graph_, clustering[i], labels);
+        double m_total = clustering[i].size()*(clustering[i].size()-1);
+        result[i] = ((double)m_subgraph) / ((double)m_total);
+    });
+  }
+//   for(double l:result) std::cout << l << std::endl;
   return result;
 }
 
