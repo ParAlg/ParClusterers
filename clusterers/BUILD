@@ -57,6 +57,7 @@ cc_library(
         "@parcluster//parcluster/api/parallel:parallel-graph-utils",
         "@gbbs//benchmarks/Connectivity/SimpleUnionAsync:Connectivity",
         "@gbbs//benchmarks/TriangleCounting/ShunTangwongsan15:Triangle",
+        "@gbbs//benchmarks/GeneralWeightSSSP/BellmanFord:BellmanFord",
     ],
 )
 

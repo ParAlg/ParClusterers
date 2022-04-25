@@ -7,6 +7,7 @@
 #include "absl/status/statusor.h"
 #include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 #include "external/gbbs/benchmarks/TriangleCounting/ShunTangwongsan15/Triangle.h"
+#include "external/gbbs/benchmarks/GeneralWeightSSSP/BellmanFord/BellmanFord.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -239,6 +240,35 @@ std::vector<double> ClusterTriangleDensity(const InMemoryClusterer::Clustering& 
           size_t num_tri = gbbs::Triangle_degree_ordering(G, f);
           result[i] = ((double)num_tri) / ((double)num_wedges);
         }
+    });
+//   }
+//   for(double l:result) std::cout << l << std::endl;
+  return result;
+}
+
+
+std::vector<double> ClusterDiameter(const InMemoryClusterer::Clustering& clustering, const GbbsGraph& graph_) {
+  std::size_t n = graph_.Graph()->n;
+  auto result = std::vector<double>(clustering.size());
+
+//   if(clustering.size()==1){ //does not work because could not match 'symmetric_graph' against 'symmetric_ptr_graph'
+//     size_t num_tri = gbbs::Triangle_degree_ordering(*graph_.Graph(), f); 
+//     size_t num_wedges = getNumWedges(graph_.Graph());
+//     result[0] = ((double)num_tri) / ((double)num_wedges);
+//   }else{
+    auto labels = GetLabels(clustering, n);
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        auto G = GetSubgraph(graph_, clustering[i], labels); 
+        auto distances = parlay::sequence<float>::uninitialized(clustering[i].size());
+        parlay::parallel_for(0, clustering[i].size(), [&] (size_t j) {
+            auto SP = gbbs::BellmanFord(G, j, false); //use j because the subgraph is re-indexed
+            distances[j] = *(parlay::max_element(SP));            
+            // std::cout << "====" << std::endl;
+            // std::cout << clustering[i][j] << std::endl;
+            // for(float l:SP) std::cout << l << std::endl;
+            // std::cout << "==" << std::endl;
+        });
+        result[i] = *(parlay::max_element(distances));
     });
 //   }
   for(double l:result) std::cout << l << std::endl;
