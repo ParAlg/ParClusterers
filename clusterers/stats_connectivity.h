@@ -76,40 +76,43 @@ std::vector<int> GetLabels(const InMemoryClusterer::Clustering& clustering, std:
     return labels;
 }
 
+// copy from gbbs::simple_union_find::num_cc, removed printing statement
+template <class Seq>
+inline size_t num_cc(Seq& labels) {
+  size_t n = labels.size();
+  auto flags = parlay::sequence<gbbs::uintE>::from_function(n + 1, [&](size_t i) { return 0; });
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    if (!flags[labels[i]]) {
+      flags[labels[i]] = 1;
+    }
+  }, gbbs::kDefaultGranularity);
+  parlay::scan_inplace(flags);
+//   std::cout << "# n_cc = " << flags[n] << "\n";
+  return flags[n];
+}
+
+
 std::vector<bool> ClusterConnectivity(const InMemoryClusterer::Clustering& clustering, const GbbsGraph& graph_) {
   std::size_t n = graph_.Graph()->n;
   std::vector<bool> result = std::vector<bool>(clustering.size());
 
   if(clustering.size()==1){
     auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(*graph_.Graph());
-    std::size_t cc = gbbs::simple_union_find::num_cc(cc_labels);
+    std::size_t cc = num_cc(cc_labels);
     result[0] = cc==1;
+    // std::cout << cc << std::endl;
     return result;
   }
-
-//   std::cout << cc << std::endl;
 
     auto labels = GetLabels(clustering, n);
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
         auto G = GetSubgraph(graph_, clustering[i], labels);
         auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(G);
-        std::size_t cc = gbbs::simple_union_find::num_cc(cc_labels);
+        std::size_t cc = num_cc(cc_labels);
         result[i] = cc==1;
     });
 
-  // can also loop over edges on-the-fly and use unionfind
-
-//   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-//   parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-//     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-//       gbbs::simple_union_find::unite_impl(u, v, clusters);
-//     };
-//     graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
-//   });
-
-//   parlay::parallel_for(0, n, [&] (size_t i) {
-//     gbbs::simple_union_find::find_compress(i, clusters);
-//   });
+    for(bool l:result) std::cout << l << std::endl;
 
   return result;
 }
