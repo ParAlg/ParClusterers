@@ -132,7 +132,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
     });
   }
   RETURN_IF_ERROR(graph->FinishImport());
-  return absl::OkStatus(); 
+  return n; 
 }
 
 template <class Graph>
