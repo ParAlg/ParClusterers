@@ -48,11 +48,13 @@ ABSL_FLAG(std::string, input_graph, "",
           "Input file pattern of a graph. Should be in edge list format "
           "(SNAP format).");
 
+ABSL_FLAG(bool, is_gbbs_format, false,
+          "Use this flag if the input file format is in the GBBS format."
+          "Otherwise, the expectation is that the input file format is in"
+          "an edge list format (or SNAP format).");
+
 ABSL_FLAG(std::string, output_clustering, "",
           "Output filename of a clustering.");
-
-ABSL_FLAG(std::string, output_statistics, "",
-          "Output filename for clustering statistics.");
 
 ABSL_FLAG(bool, is_symmetric_graph, true,
           "Without this flag, the program expects the edge list to represent "
@@ -63,13 +65,6 @@ ABSL_FLAG(bool, float_weighted, false,
           "Use this flag if the edge list is weighted with 32-bit floats. If "
           "this flag is not set, then the graph is assumed to be unweighted, "
           "and edge weights are automatically set to 1.");
-
-ABSL_FLAG(std::string, input_communities, "",
-          "Input file pattern of a list of communities; tab separated nodes, "
-          "lines separating communities.");
-
-ABSL_FLAG(std::string, statistics_config, "",
-          "Text-format research_graph.in_memory.ClusteringStatsConfig proto.");
 
 namespace research_graph {
 namespace in_memory {
@@ -91,6 +86,52 @@ double DoubleFromWeight(double weight) { return weight; }
 
 float FloatFromWeight(float weight) { return weight; }
 float FloatFromWeight(gbbs::empty weight) { return static_cast<float>(1); }
+
+absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
+  InMemoryClusterer::Graph* graph, bool float_weighted) {
+  std::size_t n = 0;
+  if (float_weighted){
+    std::size_t m;
+    uintT* offsets;
+    std::tuple<uintE, float>* edges;
+    std::tie(n, m, offsets, edges) =
+      gbbs::gbbs_io::internal::parse_weighted_graph<float>(input_file.c_str(),
+                                                           false, false);
+    graph->PrepareImport(n);
+    parlay::parallel_for(0, n, [&](std::size_t i){
+      std::size_t degree = offsets[i+1] - offsets[i];
+      std::vector<std::pair<gbbs::uintE, double>> outgoing_edges(degree);
+      parlay::parallel_for(0, degree, [&](std::size_t j){
+        outgoing_edges[j] =
+          std::make_pair(std::get<0>(edges[offsets[i] + j]),
+                         static_cast<double>(std::get<1>(edges[offsets[i] + j])));
+      });
+      InMemoryClusterer::Graph::AdjacencyList adjacency_list{
+        static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
+      RETURN_IF_ERROR(graph->Import(adjacency_list));
+    });
+  } else {
+    std::size_t m;
+    uintT* offsets;
+    uintE* edges;
+    std::tie(n, m, offsets, edges) =
+      gbbs::gbbs_io::internal::parse_unweighted_graph(input_file.c_str(),
+                                                      false, false);
+    graph->PrepareImport(n);
+    parlay::parallel_for(0, n, [&](std::size_t i){
+      std::size_t degree = offsets[i+1] - offsets[i];
+      std::vector<std::pair<gbbs::uintE, double>> outgoing_edges(degree);
+      parlay::parallel_for(0, degree, [&](std::size_t j){
+        outgoing_edges[j] = std::make_pair(edges[offsets[i] + j], 1);
+      });
+      InMemoryClusterer::Graph::AdjacencyList adjacency_list{
+        static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
+      RETURN_IF_ERROR(graph->Import(adjacency_list));
+    });
+  }
+  RETURN_IF_ERROR(graph->FinishImport());
+  return absl::OkStatus(); 
+}
 
 template <class Graph>
 absl::Status GbbsGraphToInMemoryClustererGraph(InMemoryClusterer::Graph* graph,
@@ -227,40 +268,28 @@ absl::Status Main() {
     return absl::UnimplementedError("Unknown clusterer.");
   }
 
-  ClusteringStats stats;
-  ClusteringStatsConfig stats_config;
-  std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
-  if (!google::protobuf::TextFormat::ParseFromString(clusterer_stats_config,
-                                                     &stats_config)) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Cannot parse --statistics_config as a text-format "
-                        "research_graph.in_memory.ClusteringStatsConfig proto: %s",
-                        clusterer_stats_config));
-  }
-
   auto begin_read = std::chrono::steady_clock::now();
   std::string input_file = absl::GetFlag(FLAGS_input_graph);
   bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph);
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
+  bool is_gbbs_format = absl::GetFlag(FLAGS_is_gbbs_format);
 
   std::size_t n = 0;
-  // TODO(jeshi): This is assuming we will always call stats
-  if (float_weighted) {
-    const auto edge_list{
-        gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
-    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
-                                             edge_list, is_symmetric_graph));
-    const auto edge_list_stats = edge_list;
-    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
-                                             edge_list_stats, is_symmetric_graph));
+  if (!is_gbbs_format) {
+    if (float_weighted) {
+      const auto edge_list{
+          gbbs::gbbs_io::read_weighted_edge_list<float>(input_file.c_str())};
+      ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
+                                               edge_list, is_symmetric_graph));
+    } else {
+      const auto edge_list{
+          gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
+      ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
+                                               edge_list, is_symmetric_graph));
+    }
   } else {
-    const auto edge_list{
-        gbbs::gbbs_io::read_unweighted_edge_list(input_file.c_str())};
-    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(clusterer->MutableGraph(),
-                                             edge_list, is_symmetric_graph));
-    const auto edge_list_stats = edge_list;
-    ASSIGN_OR_RETURN(n, WriteEdgeListAsGraph(stats.MutableGraph(),
-                                             edge_list_stats, is_symmetric_graph));
+    ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
+      input_file, clusterer->MutableGraph(), float_weighted));
   }
 
   auto end_read = std::chrono::steady_clock::now();
@@ -284,19 +313,10 @@ absl::Status Main() {
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
 
-  std::string input_communities = absl::GetFlag(FLAGS_input_communities);
-  std::string output_stats_file = absl::GetFlag(FLAGS_output_statistics);
-  auto clustering_stats = stats.GetStats(clusterings[0],
-    absl::GetFlag(FLAGS_input_graph), stats_config);
-  // TODO(jeshi): Properly write stats to file
-  std::cout << "Graph name from stats: " << clustering_stats.filename() << std::endl;
-
   std::string output_file = absl::GetFlag(FLAGS_output_clustering);
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
   return WriteClustering(output_file.c_str(), clusterings[0]);
-
-  // return absl::OkStatus();
 }
 
 }  // namespace
