@@ -27,55 +27,6 @@ float FloatFromWeight(gbbs::empty weight) { return static_cast<float>(1); }
 absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
   InMemoryClusterer::Graph* graph, bool float_weighted);
 
-template <class Graph>
-absl::Status GbbsGraphToInMemoryClustererGraph(InMemoryClusterer::Graph* graph,
-                                               Graph& gbbs_graph) {
-  using weight_type = typename Graph::weight_type;
-  for (std::size_t i = 0; i < gbbs_graph.n; i++) {
-    auto vertex = gbbs_graph.get_vertex(i);
-    std::vector<std::pair<gbbs::uintE, double>> outgoing_edges(
-        vertex.out_degree());
-    gbbs::uintE index = 0;
-    auto add_outgoing_edge = [&](gbbs::uintE, const gbbs::uintE neighbor,
-                                 weight_type wgh) {
-      outgoing_edges[index] = std::make_pair(static_cast<gbbs::uintE>(neighbor),
-                                             DoubleFromWeight(wgh));
-      index++;
-    };
-    vertex.out_neighbors().map(add_outgoing_edge, false);
-    InMemoryClusterer::Graph::AdjacencyList adjacency_list{
-        static_cast<InMemoryClusterer::NodeId>(i), 1,
-        std::move(outgoing_edges)};
-    RETURN_IF_ERROR(graph->Import(adjacency_list));
-  }
-  RETURN_IF_ERROR(graph->FinishImport());
-  return absl::OkStatus();
-}
-
-template <typename Weight>
-absl::StatusOr<std::size_t> WriteEdgeListAsGraph(
-    InMemoryClusterer::Graph* graph,
-    const std::vector<gbbs::gbbs_io::Edge<Weight>>& edge_list,
-    bool is_symmetric_graph) {
-  std::size_t n = 0;
-  if (is_symmetric_graph) {
-    auto gbbs_graph{gbbs::gbbs_io::edge_list_to_symmetric_graph(edge_list)};
-    n = gbbs_graph.n;
-    auto status = GbbsGraphToInMemoryClustererGraph<
-        gbbs::symmetric_graph<gbbs::symmetric_vertex, Weight>>(graph,
-                                                               gbbs_graph);
-    RETURN_IF_ERROR(status);
-  } else {
-    auto gbbs_graph{gbbs::gbbs_io::edge_list_to_asymmetric_graph(edge_list)};
-    n = gbbs_graph.n;
-    auto status = GbbsGraphToInMemoryClustererGraph<
-        gbbs::asymmetric_graph<gbbs::asymmetric_vertex, Weight>>(graph,
-                                                                 gbbs_graph);
-    RETURN_IF_ERROR(status);
-  }
-  return n;
-}
-
 absl::StatusOr<std::size_t> ReadEdgeListGraphFormat(const std::string& input_file,
   InMemoryClusterer::Graph* graph, bool float_weighted, bool is_symmetric_graph);
 
