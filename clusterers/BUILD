@@ -80,7 +80,6 @@ cc_library(
     srcs = ["cluster-in-memory_main.cc"],
     deps = [
         ":all-clusterers",
-        ":clustering_stats",
         ":gbbs_graph_io",
         "//external:gflags",
         "@com_google_absl//absl/base",
@@ -101,6 +100,34 @@ cc_binary(
     deps = [
         ":cluster-in-memory_main_lib",
         ":all-clusterers",
+        "//external:gflags",
+    ],
+)
+
+cc_library(
+    name = "stats-in-memory_main_lib",
+    srcs = ["stats-in-memory_main.cc"],
+    deps = [
+        ":clustering_stats",
+        ":gbbs_graph_io",
+        "//external:gflags",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_protobuf//:protobuf",
+        "@parcluster//parcluster/api:config_cc_proto",
+        "@parcluster//parcluster/api:in-memory-clusterer-base",
+    ],
+)
+
+cc_binary(
+    name = "stats-in-memory_main",
+    deps = [
+        ":stats-in-memory_main_lib",
         "//external:gflags",
     ],
 )
