@@ -116,7 +116,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
     gbbs::uintT* offsets;
     gbbs::uintE* edges;
     std::tie(n, m, offsets, edges) =
-      gbbs::gbbs_io::internal::parse_unweighted_graph(input_file.c_str(),
+      gbbs::gbbs_io::parse_unweighted_graph(input_file.c_str(),
                                                       false, false);
     RETURN_IF_ERROR(graph->PrepareImport(n));
     parlay::parallel_for(0, n, [&](std::size_t i){
