@@ -101,6 +101,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
     });
+    gbbs::free_array(offsets, n + 1);
+    gbbs::free_array(edges, m);
   } else {
     std::size_t m;
     gbbs::uintT* offsets;
@@ -120,6 +122,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
     });
+    gbbs::free_array(offsets, n + 1);
+    gbbs::free_array(edges, m);
   }
   RETURN_IF_ERROR(graph->FinishImport());
   return n; 
