@@ -97,7 +97,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
                          static_cast<double>(std::get<1>(edges[offsets[i] + j])));
       });
       InMemoryClusterer::Graph::AdjacencyList adjacency_list{
-        static_cast<InMemoryClusterer::NodeId>(i), 1, outgoing_edges};
+        static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
     });
@@ -118,7 +118,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
         outgoing_edges[j] = std::make_pair(edges[offsets[i] + j], 1);
       });
       InMemoryClusterer::Graph::AdjacencyList adjacency_list{
-        static_cast<InMemoryClusterer::NodeId>(i), 1, outgoing_edges};
+        static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
     });
