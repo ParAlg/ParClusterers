@@ -92,8 +92,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
   std::size_t n = 0;
   if (float_weighted){
     std::size_t m;
-    uintT* offsets;
-    std::tuple<uintE, float>* edges;
+    gbbs::uintT* offsets;
+    std::tuple<gbbs::uintE, float>* edges;
     std::tie(n, m, offsets, edges) =
       gbbs::gbbs_io::internal::parse_weighted_graph<float>(input_file.c_str(),
                                                            false, false);
@@ -112,8 +112,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
     });
   } else {
     std::size_t m;
-    uintT* offsets;
-    uintE* edges;
+    gbbs::uintT* offsets;
+    gbbs::uintE* edges;
     std::tie(n, m, offsets, edges) =
       gbbs::gbbs_io::internal::parse_unweighted_graph(input_file.c_str(),
                                                       false, false);
