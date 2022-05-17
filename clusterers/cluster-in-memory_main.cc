@@ -97,7 +97,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
     std::tie(n, m, offsets, edges) =
       gbbs::gbbs_io::internal::parse_weighted_graph<float>(input_file.c_str(),
                                                            false, false);
-    graph->PrepareImport(n);
+    RETURN_IF_ERROR(graph->PrepareImport(n));
     parlay::parallel_for(0, n, [&](std::size_t i){
       std::size_t degree = offsets[i+1] - offsets[i];
       std::vector<std::pair<gbbs::uintE, double>> outgoing_edges(degree);
@@ -108,7 +108,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
       });
       InMemoryClusterer::Graph::AdjacencyList adjacency_list{
         static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
-      RETURN_IF_ERROR(graph->Import(adjacency_list));
+      // TODO(jeshi): Ignoring error
+      graph->Import(adjacency_list);
     });
   } else {
     std::size_t m;
@@ -117,7 +118,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
     std::tie(n, m, offsets, edges) =
       gbbs::gbbs_io::internal::parse_unweighted_graph(input_file.c_str(),
                                                       false, false);
-    graph->PrepareImport(n);
+    RETURN_IF_ERROR(graph->PrepareImport(n));
     parlay::parallel_for(0, n, [&](std::size_t i){
       std::size_t degree = offsets[i+1] - offsets[i];
       std::vector<std::pair<gbbs::uintE, double>> outgoing_edges(degree);
@@ -126,7 +127,8 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
       });
       InMemoryClusterer::Graph::AdjacencyList adjacency_list{
         static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
-      RETURN_IF_ERROR(graph->Import(adjacency_list));
+      // TODO(jeshi): Ignoring error
+      graph->Import(adjacency_list);
     });
   }
   RETURN_IF_ERROR(graph->FinishImport());
