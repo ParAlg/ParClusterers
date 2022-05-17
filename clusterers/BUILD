@@ -24,6 +24,24 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "gbbs_graph_io",
+    srcs = ["gbbs_graph_io.cc"],
+    hdrs = ["gbbs_graph_io.h"],
+    deps = [
+        "//external:gflags",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@parcluster//parcluster/api:in-memory-clusterer-base",
+        "@parcluster//parcluster/api:gbbs-graph",
+    ],
+)
+
 proto_library(
     name = "clustering_stats_proto",
     srcs = [
@@ -63,6 +81,7 @@ cc_library(
     deps = [
         ":all-clusterers",
         ":clustering_stats",
+        ":gbbs_graph_io",
         "//external:gflags",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/flags:flag",
