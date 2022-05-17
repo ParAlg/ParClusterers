@@ -126,10 +126,10 @@ absl::Status Main() {
   // TODO(jeshi): This is assuming we will always call stats
   if (!is_gbbs_format) {
     ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
-      input_file, stats->MutableGraph(), float_weighted, is_symmetric_graph));
+      input_file, stats.MutableGraph(), float_weighted, is_symmetric_graph));
   } else {
     ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
-      input_file, stats->MutableGraph(), float_weighted));
+      input_file, stats.MutableGraph(), float_weighted));
   }
 
   auto end_read = std::chrono::steady_clock::now();
