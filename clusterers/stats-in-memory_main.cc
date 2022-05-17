@@ -105,36 +105,6 @@ absl::StatusOr<InMemoryClusterer::Clustering> ReadClustering(const char* filenam
 }
 
 absl::Status Main() {
-  std::string clusterer_name = absl::GetFlag(FLAGS_clusterer_name);
-
-  ClustererConfig config;
-  std::string clusterer_config = absl::GetFlag(FLAGS_clusterer_config);
-  if (!google::protobuf::TextFormat::ParseFromString(clusterer_config,
-                                                     &config)) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Cannot parse --clusterer_config as a text-format "
-                        "research_graph.in_memory.ClustererConfig proto: %s",
-                        clusterer_config));
-  }
-
-  std::unique_ptr<InMemoryClusterer> clusterer;
-  bool is_hierarchical = false;
-  if (clusterer_name == "ParallelAffinityClusterer") {
-    clusterer.reset(new ParallelAffinityClusterer);
-  } else if (clusterer_name == "ExampleClusterer") {
-    clusterer.reset(new ExampleClusterer);
-  } else if (clusterer_name == "LDDClusterer") {
-    clusterer.reset(new LDDClusterer);
-  }  else if (clusterer_name == "ConnectivityClusterer") {
-    clusterer.reset(new ConnectivityClusterer);
-  }  else if (clusterer_name == "KCoreClusterer") {
-    clusterer.reset(new KCoreClusterer);
-  }
-  else {
-    std::cerr << "Clusterer name = " << clusterer_name << std::endl;
-    return absl::UnimplementedError("Unknown clusterer.");
-  }
-
   ClusteringStats stats;
   ClusteringStatsConfig stats_config;
   std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
