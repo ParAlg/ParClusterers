@@ -19,6 +19,12 @@ namespace in_memory {
 
 namespace internal {
 
+double DoubleFromWeight(gbbs::empty weight) { return static_cast<double>(1); }
+double DoubleFromWeight(double weight) { return weight; }
+
+float FloatFromWeight(float weight) { return weight; }
+float FloatFromWeight(gbbs::empty weight) { return static_cast<float>(1); }
+
 template <class Graph>
 absl::Status GbbsGraphToInMemoryClustererGraph(InMemoryClusterer::Graph* graph,
                                                Graph& gbbs_graph) {

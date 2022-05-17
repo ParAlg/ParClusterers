@@ -17,12 +17,6 @@
 namespace research_graph {
 namespace in_memory {
 
-double DoubleFromWeight(gbbs::empty weight) { return static_cast<double>(1); }
-double DoubleFromWeight(double weight) { return weight; }
-
-float FloatFromWeight(float weight) { return weight; }
-float FloatFromWeight(gbbs::empty weight) { return static_cast<float>(1); }
-
 // TODO(jeshi): This always assumes a symmetric graph
 absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
   InMemoryClusterer::Graph* graph, bool float_weighted);
