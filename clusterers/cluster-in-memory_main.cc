@@ -99,7 +99,7 @@ absl::Status Main() {
   std::string clusterer_name = absl::GetFlag(FLAGS_clusterer_name);
 
   ClustererConfig config;
-  // "any_config {[type.googleapis.com/research_graph.in_memory.example_clusterer.ExampleClustererConfig] { ... }}"
+  // "any_config {[type.googleapis.com/research_graph.in_memory.ExampleClustererConfig] { ... }}"
   std::string clusterer_config = absl::GetFlag(FLAGS_clusterer_config);
 
   std::unique_ptr<InMemoryClusterer> clusterer;

@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package research_graph.in_memory.example_clusterer;
+package research_graph.in_memory;
 
 
 message ExampleClustererConfig {
