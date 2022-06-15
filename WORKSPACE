@@ -126,7 +126,7 @@ rules_proto_toolchains()
 git_repository(
     name = "com_google_protobuf",
     remote = "https://github.com/protocolbuffers/protobuf.git",
-    tag = "v3.9.2",
+    tag = "v3.21.0",
 )
 
 http_archive(
