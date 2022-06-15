@@ -19,7 +19,7 @@ namespace in_memory {
 absl::StatusOr<ExampleClusterer::Clustering>
 ExampleClusterer::Cluster(const ClustererConfig& config) const {
   ExampleClustererConfig example_config;
-  config.any_config().unpack(&example_config);
+  config.any_config().Unpack<ExampleClustererConfig>(&example_config);
   std::cout << "Num iterations: " << example_config.num_iterations() << std::endl;
   std::size_t n = graph_.Graph()->n;
 
