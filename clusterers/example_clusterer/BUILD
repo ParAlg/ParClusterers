@@ -2,11 +2,24 @@ licenses(["notice"])
 
 package(default_visibility = ["//visibility:public"])
 
+proto_library(
+    name = "example_config_proto",
+    srcs = [
+        "example_config.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "example_config_cc_proto",
+    deps = [":example_config_proto"],
+)
+
 cc_library(
     name = "example-clusterer",
     srcs = ["example-clusterer.cc"],
     hdrs = ["example-clusterer.h"],
     deps = [
+        ":example_config_cc_proto",
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:in-memory-clusterer-base",

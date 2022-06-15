@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package research_graph.in_memory.example_clusterer;
+
+
+message ExampleClustererConfig {
+  optional int32 num_iterations = 1 [default = 4];
+}

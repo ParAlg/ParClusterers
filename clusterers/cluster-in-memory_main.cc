@@ -99,14 +99,8 @@ absl::Status Main() {
   std::string clusterer_name = absl::GetFlag(FLAGS_clusterer_name);
 
   ClustererConfig config;
+  // "any_config {[type.googleapis.com/research_graph.in_memory.example_clusterer.ExampleClustererConfig] { ... }}"
   std::string clusterer_config = absl::GetFlag(FLAGS_clusterer_config);
-  if (!google::protobuf::TextFormat::ParseFromString(clusterer_config,
-                                                     &config)) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Cannot parse --clusterer_config as a text-format "
-                        "research_graph.in_memory.ClustererConfig proto: %s",
-                        clusterer_config));
-  }
 
   std::unique_ptr<InMemoryClusterer> clusterer;
   bool is_hierarchical = false;
@@ -124,6 +118,14 @@ absl::Status Main() {
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
     return absl::UnimplementedError("Unknown clusterer.");
+  }
+
+  if (!google::protobuf::TextFormat::ParseFromString(clusterer_config,
+                                                     &config)) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot parse --clusterer_config as a text-format "
+                        "research_graph.in_memory.ClustererConfig proto: %s",
+                        clusterer_config));
   }
 
   auto begin_read = std::chrono::steady_clock::now();

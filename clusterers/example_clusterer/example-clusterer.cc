@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
+#include "clusterers/example_clusterer/example_config.pb.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -17,6 +18,9 @@ namespace in_memory {
 
 absl::StatusOr<ExampleClusterer::Clustering>
 ExampleClusterer::Cluster(const ClustererConfig& config) const {
+  ExampleClustererConfig example_config;
+  config.any_config().UnpackTo(&example_config);
+  std::cout << "Num iterations: " << example_config.num_iterations() << std::endl;
   std::size_t n = graph_.Graph()->n;
 
   // Initially each vertex is its own cluster.
