@@ -23,7 +23,7 @@
 
 namespace research_graph::in_memory {
 
-void split(const std::string& s, char delim, std::vector<InMemoryClusterer::NodeId>& elems) {
+inline void split(const std::string& s, char delim, std::vector<InMemoryClusterer::NodeId>& elems) {
   std::stringstream ss;
   ss.str(s);
   std::string item;

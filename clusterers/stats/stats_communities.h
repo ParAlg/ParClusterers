@@ -24,7 +24,7 @@
 
 namespace research_graph::in_memory {
 
-absl::Status ReadCommunities(const char* filename,
+inline absl::Status ReadCommunities(const char* filename,
   std::vector<std::vector<gbbs::uintE>>& communities) {
   std::ifstream infile(filename);
   if (!infile.is_open()) {
@@ -40,7 +40,7 @@ absl::Status ReadCommunities(const char* filename,
   return absl::OkStatus();
 }
 //parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering) {
+inline absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering) {
   std::vector<std::vector<gbbs::uintE>> communities;
   ReadCommunities(filename, communities);
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
