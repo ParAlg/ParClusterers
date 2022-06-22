@@ -38,19 +38,21 @@ absl::Status ReadCommunities(const char* filename,
   }
   return absl::OkStatus();
 }
-
+//parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
 absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering) {
   std::vector<std::vector<gbbs::uintE>> communities;
   ReadCommunities(filename, communities);
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
   // recall = num correct results (matches b/w clustering and comm) / num relevant results (in comm)
-  gbbs::sequence<double> precision_vec(communities.size(), [](std::size_t i){return 0;});
-  gbbs::sequence<double> recall_vec(communities.size(), [](std::size_t i){return 0;});
-  pbbs::parallel_for(0, clustering.size(), [&](std::size_t i) {
+  parlay::sequence<double> precision_vec = parlay::sequence<double>::from_function(
+    communities.size(), [](std::size_t i){return 0;});
+  parlay::sequence<double> recall_vec = parlay::sequence<double>::from_function(
+    communities.size(), [](std::size_t i){return 0;});
+  parlay::parallel_for(0, clustering.size(), [&](std::size_t i) {
     auto cluster = clustering[i];
     std::sort(cluster.begin(), cluster.end());
   });
-  pbbs::parallel_for(0, communities.size(), [&](std::size_t j) {
+  parlay::parallel_for(0, communities.size(), [&](std::size_t j) {
     auto community = communities[j];
     std::vector<gbbs::uintE> intersect(community.size());
     std::size_t max_intersect = 0;
@@ -70,8 +72,8 @@ absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::C
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
   });
-  double avg_precision = pbbslib::reduce_add(precision_vec);
-  double avg_recall = pbbslib::reduce_add(recall_vec);
+  double avg_precision = parlay::reduce(precision_vec);
+  double avg_recall = parlay::reduce(recall_vec);
   avg_precision /= communities.size();
   avg_recall /= communities.size();
   std::cout << "Avg precision: " << std::setprecision(17) << avg_precision << std::endl;
