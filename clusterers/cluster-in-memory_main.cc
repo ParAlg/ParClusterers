@@ -99,7 +99,7 @@ bool IsAnyProto(const std::string& clusterer_name){
   return (clusterer_name == "ExampleClusterer");
 }
 
-std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
+std::string FormatClustererConfig(const std::string& clusterer_name, std::string& clusterer_config){
   if (!IsAnyProto(clusterer_name)) return clusterer_config;
   std::size_t index_left_brace = clusterer_config.find('{');
   std::size_t index_right_brace = clusterer_config.rfind('}');
