@@ -99,18 +99,22 @@ bool IsAnyProto(const std::string& clusterer_name){
   return (clusterer_name == "ExampleClusterer");
 }
 
-std::string FormatClustererConfig(const std::string& clusterer_name, std::string& clusterer_config){
+std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
   if (!IsAnyProto(clusterer_name)) return clusterer_config;
   std::size_t index_left_brace = clusterer_config.find('{');
   std::size_t index_right_brace = clusterer_config.rfind('}');
   if (index_left_brace == std::string::npos || index_right_brace == std::string::npos) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Cannot find left or right brace in --clusterer_config: %s",
-                        clusterer_config));
+    std::cerr << "Cannot find left or right brace in --clusterer_config: " << clusterer_config << std::endl;
+    exit(0);
+    //return absl::InvalidArgumentError(
+    //    absl::StrFormat("Cannot find left or right brace in --clusterer_config: %s",
+    //                    clusterer_config));
   } else if (index_right_brace < index_left_brace) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Last right brace cannot be before first left brace --clusterer_config: %s",
-                        clusterer_config));
+    std::cerr << "Last right brace cannot be before first left brace --clusterer_config: " << clusterer_config << std::endl;
+    exit(0);
+    //return absl::InvalidArgumentError(
+    //    absl::StrFormat("Last right brace cannot be before first left brace --clusterer_config: %s",
+    //                    clusterer_config));
   }
   std::string clusterer_config_formatted = "any_config {[type.googleapis.com/research_graph.in_memory.";
   clusterer_config_formatted.append(clusterer_name);
