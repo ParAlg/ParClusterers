@@ -28,6 +28,7 @@
 #include "clusterers/clustering_stats.h"
 #include "clusterers/clustering_stats.pb.h"
 #include "clusterers/gbbs_graph_io.h"
+#include "clusterers/stats/stats_utils.h"
 #include "google/protobuf/text_format.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
@@ -80,15 +81,6 @@ void PrintTime(std::chrono::steady_clock::time_point begin,
             << std::endl;
 }
 
-void split(const std::string& s, char delim, std::vector<InMemoryClusterer::NodeId>& elems) {
-  std::stringstream ss;
-  ss.str(s);
-  std::string item;
-  while (std::getline(ss, item, delim)) {
-    elems.push_back(std::stoi(item));
-  }
-}
-
 absl::StatusOr<InMemoryClusterer::Clustering> ReadClustering(const char* filename){
   InMemoryClusterer::Clustering clustering;
   std::ifstream file{filename};
@@ -105,7 +97,6 @@ absl::StatusOr<InMemoryClusterer::Clustering> ReadClustering(const char* filenam
 }
 
 absl::Status Main() {
-  ClusteringStats stats;
   ClusteringStatsConfig stats_config;
   std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
   if (!google::protobuf::TextFormat::ParseFromString(clusterer_stats_config,
@@ -123,13 +114,14 @@ absl::Status Main() {
   bool is_gbbs_format = absl::GetFlag(FLAGS_is_gbbs_format);
 
   std::size_t n = 0;
+  GbbsGraph graph;
   // TODO(jeshi): This is assuming we will always call stats
   if (!is_gbbs_format) {
     ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
-      input_file, stats.MutableGraph(), float_weighted, is_symmetric_graph));
+      input_file, &graph, float_weighted, is_symmetric_graph));
   } else {
     ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
-      input_file, stats.MutableGraph(), float_weighted));
+      input_file, &graph, float_weighted));
   }
 
   auto end_read = std::chrono::steady_clock::now();
@@ -143,10 +135,10 @@ absl::Status Main() {
   std::string input_clustering = absl::GetFlag(FLAGS_input_clustering);
   ASSIGN_OR_RETURN(clustering, ReadClustering(input_clustering.c_str()));
 
-  std::string input_communities = absl::GetFlag(FLAGS_input_communities);
   std::string output_stats_file = absl::GetFlag(FLAGS_output_statistics);
-  auto clustering_stats = stats.GetStats(clustering,
-    absl::GetFlag(FLAGS_input_graph), stats_config);
+
+  auto clustering_stats = GetStats(graph, clustering,
+    absl::GetFlag(FLAGS_input_graph), absl::GetFlag(FLAGS_input_communities), stats_config);
   // TODO(jeshi): Properly write stats to file
   std::cout << "Graph name from stats: " << clustering_stats.filename() << std::endl;
 

@@ -12,23 +12,17 @@
 
 #include "google/protobuf/text_format.h"
 #include "clusterers/clustering_stats.pb.h"
+#include "clusterers/stats/stats_communities.h"
+#include "clusterers/stats/stats_utils.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
 namespace research_graph::in_memory {
 
-class ClusteringStats{
- public:
-  ClusteringStatistics GetStats(const InMemoryClusterer::Clustering& clustering,
-      const std::string& input_graph,
-      const ClusteringStatsConfig& clustering_stats_config);
-  GbbsGraph* MutableGraph() { return &graph_; }
-
- private:
-  GbbsGraph graph_;
-  ClusteringStatistics clustering_stats_;
-};
+ClusteringStatistics GetStats(const GbbsGraph& graph, const InMemoryClusterer::Clustering& clustering,
+  const std::string& input_graph, const std::string& input_communities,
+  const ClusteringStatsConfig& clustering_stats_config);
 
 }  // namespace research_graph::in_memory
 

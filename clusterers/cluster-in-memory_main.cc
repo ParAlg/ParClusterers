@@ -95,6 +95,31 @@ absl::Status WriteClustering(const char* filename,
   return absl::OkStatus();
 }
 
+bool IsAnyProto(const std::string& clusterer_name){
+  return (clusterer_name == "ExampleClusterer");
+}
+
+std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
+  if (!IsAnyProto(clusterer_name)) return clusterer_config;
+  std::size_t index_left_brace = clusterer_config.find('{');
+  std::size_t index_right_brace = clusterer_config.rfind('}');
+  if (index_left_brace == std::string::npos || index_right_brace == std::string::npos) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot find left or right brace in --clusterer_config: %s",
+                        clusterer_config));
+  } else if (index_right_brace < index_left_brace) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Last right brace cannot be before first left brace --clusterer_config: %s",
+                        clusterer_config));
+  }
+  std::string clusterer_config_formatted = "any_config {[type.googleapis.com/research_graph.in_memory.";
+  clusterer_config_formatted.append(clusterer_name);
+  clusterer_config_formatted.append("Config]");
+  clusterer_config_formatted.append(clusterer_config, index_left_brace, index_right_brace - index_left_brace + 1);
+  clusterer_config_formatted.append("}");
+  return clusterer_config_formatted;
+}
+
 absl::Status Main() {
   std::string clusterer_name = absl::GetFlag(FLAGS_clusterer_name);
 
@@ -120,12 +145,13 @@ absl::Status Main() {
     return absl::UnimplementedError("Unknown clusterer.");
   }
 
-  if (!google::protobuf::TextFormat::ParseFromString(clusterer_config,
+  std::string formatted_clusterer_config = FormatClustererConfig(clusterer_name, clusterer_config);
+  if (!google::protobuf::TextFormat::ParseFromString(formatted_clusterer_config,
                                                      &config)) {
     return absl::InvalidArgumentError(
         absl::StrFormat("Cannot parse --clusterer_config as a text-format "
                         "research_graph.in_memory.ClustererConfig proto: %s",
-                        clusterer_config));
+                        formatted_clusterer_config));
   }
 
   auto begin_read = std::chrono::steady_clock::now();
