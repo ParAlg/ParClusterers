@@ -60,7 +60,6 @@ cc_library(
     hdrs = ["clustering_stats.h"],
     deps = [
         ":clustering_stats_cc_proto",
-        "//clusterers/stats:stats_utils",
         "//clusterers/stats:stats_communities",
         "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:status_macros",
@@ -112,6 +111,7 @@ cc_library(
     deps = [
         ":clustering_stats",
         ":gbbs_graph_io",
+        "//clusterers/stats:stats_utils",
         "//external:gflags",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/flags:flag",
