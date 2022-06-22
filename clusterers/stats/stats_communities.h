@@ -24,6 +24,7 @@
 
 namespace research_graph::in_memory {
 
+// TODO(jeshi): bad coding practice fix
 inline absl::Status ReadCommunities(const char* filename,
   std::vector<std::vector<gbbs::uintE>>& communities) {
   std::ifstream infile(filename);
