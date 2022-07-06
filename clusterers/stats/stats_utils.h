@@ -35,8 +35,8 @@ inline void split(const std::string& s, char delim, std::vector<InMemoryClustere
 template <class T>
 inline void set_aggregate_statistics(std::size_t size, T& data, AggregateStatistics* aggregate_stats){
   double sum = 0;
-  uintE min = UINT_E_MAX;
-  uintE max = 0;
+  gbbs::uintE min = UINT_E_MAX;
+  gbbs::uintE max = 0;
   for (std::size_t i = 0; i < size; i++) {
     sum += data(i);
     if (data(i) < min) min = data(i);
