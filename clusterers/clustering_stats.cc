@@ -6,12 +6,17 @@ ClusteringStatistics GetStats(const GbbsGraph& graph,
   const InMemoryClusterer::Clustering& clustering,
   const std::string& input_graph, const std::string& input_communities,
   const ClusteringStatsConfig& clustering_stats_config) {
-    ClusteringStatistics clustering_stats;
-    clustering_stats.set_filename(input_graph);
+  ClusteringStatistics clustering_stats;
+  clustering_stats.set_filename(input_graph);
+  clustinerg_stats.set_num_clusters(clustering.size());
 
-    if (!input_communities.empty()) CompareCommunities(input_communities.c_str(), clustering);
+  set_aggregate_statistics(clustering.size(), [&](std::size_t i) {
+    return clustering[ii].size();
+  }, clustering_stats.mutable_size());
 
-    return clustering_stats;
-  }
+  if (!input_communities.empty()) CompareCommunities(input_communities.c_str(), clustering, &clustering_stats);
+
+  return clustering_stats;
+}
 
 }  // namespace research_graph::in_memory

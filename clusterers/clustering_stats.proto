@@ -6,7 +6,17 @@ message ClusteringStatsConfig {
   optional bool tmp = 1;
 }
 
+message AggregateStatistics {
+  optional double average = 1;
+  optional double minimum = 2;
+  optional double maximum = 3;
+}
+
 message ClusteringStatistics {
   // Original graph filename
   optional string filename = 1;
+  optional long num_clusters = 2;
+  optional AggregateStatistics size = 3;
+  optional AggregateStatistics community_precision = 4;
+  optional AggregateStatistics community_recall = 5;
 }

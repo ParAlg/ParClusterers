@@ -40,8 +40,8 @@ inline absl::Status ReadCommunities(const char* filename,
   }
   return absl::OkStatus();
 }
-//parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-inline absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering) {
+
+inline absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats) {
   std::vector<std::vector<gbbs::uintE>> communities;
   ReadCommunities(filename, communities);
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
@@ -74,28 +74,22 @@ inline absl::Status CompareCommunities(const char* filename, const InMemoryClust
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
   });
-  double avg_precision = parlay::reduce(precision_vec);
+
+  set_aggregate_statistics(precision_vec.size(), [&](std::size_t i) {
+    return precision_vec[i];
+  }, clustering_stats->mutable_community_precision());
+
+  set_aggregate_statistics(recall_vec.size(), [&](std::size_t i) {
+    return recall_vec[i];
+  }, clustering_stats->mutable_community_recall());
+
+  /*double avg_precision = parlay::reduce(precision_vec);
   double avg_recall = parlay::reduce(recall_vec);
   avg_precision /= communities.size();
   avg_recall /= communities.size();
   std::cout << "Avg precision: " << std::setprecision(17) << avg_precision << std::endl;
-  std::cout << "Avg recall: " << std::setprecision(17) << avg_recall << std::endl;
+  std::cout << "Avg recall: " << std::setprecision(17) << avg_recall << std::endl;*/
 
-  std::size_t min_size = UINT_E_MAX;
-  std::size_t max_size = 0;
-  double avg_size = 0;
-  for (std::size_t i = 0; i < clustering.size(); i++) {
-    auto sz = clustering[i].size();
-    assert(sz > 0);
-    if (sz < min_size) min_size = sz;
-    if (sz > max_size) max_size = sz;
-    avg_size += sz;
-  }
-  avg_size /= clustering.size();
-  std::cout << "Num comm: " << clustering.size() << std::endl;
-  std::cout << "Min size: " << min_size << std::endl;
-  std::cout << "Max size: " << max_size << std::endl;
-  std::cout << "Avg size: " << avg_size << std::endl;
   return absl::OkStatus();
 }
 

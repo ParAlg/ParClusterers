@@ -32,6 +32,21 @@ inline void split(const std::string& s, char delim, std::vector<InMemoryClustere
   }
 }
 
+template <class T>
+inline void set_aggregate_statistics(std::size_t size, T& data, AggregateStatistics* aggregate_stats){
+  double sum = 0;
+  uintE min = UINT_E_MAX;
+  uintE max = 0;
+  for (std::size_t i = 0; i < size; i++) {
+    sum += data(i);
+    if (data(i) < min) min = data(i);
+    if (data(i) > max) max = data(i);
+  }
+  aggregate_stats->set_average(sum / size);
+  aggregate_stats->set_minimum(min);
+  aggregate_stats->set_maximum(max);
+}
+
 }  // namespace research_graph::in_memory
 
 #endif  // RESEARCH_GRAPH_IN_MEMORY_CLUSTERING_STATS_UTILS_H_

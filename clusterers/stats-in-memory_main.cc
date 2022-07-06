@@ -30,6 +30,7 @@
 #include "clusterers/gbbs_graph_io.h"
 #include "clusterers/stats/stats_utils.h"
 #include "google/protobuf/text_format.h"
+#include "google/protobuf/util/json_util.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
@@ -96,6 +97,23 @@ absl::StatusOr<InMemoryClusterer::Clustering> ReadClustering(const char* filenam
   return clustering;
 }
 
+std::string ProtoToJson(const google::protobuf::Message& proto)
+{
+  std::string json;
+  google::protobuf::util::MessageToJsonString(proto, &json);
+  return json;
+}
+
+absl::Status WriteStatistics(const char* filename,
+                             const ClusteringStatistics& clustering_stats) {
+  std::ofstream file{filename};
+  if (!file.is_open()) {
+    return absl::NotFoundError("Unable to open file.");
+  }
+  file << ProtoToJson(clustering_stats);
+  return absl::OkStatus();
+}
+
 absl::Status Main() {
   ClusteringStatsConfig stats_config;
   std::string clusterer_stats_config = absl::GetFlag(FLAGS_statistics_config);
@@ -139,10 +157,9 @@ absl::Status Main() {
 
   auto clustering_stats = GetStats(graph, clustering,
     absl::GetFlag(FLAGS_input_graph), absl::GetFlag(FLAGS_input_communities), stats_config);
-  // TODO(jeshi): Properly write stats to file
-  std::cout << "Graph name from stats: " << clustering_stats.filename() << std::endl;
 
-  return absl::OkStatus();
+  std::string output_file = absl::GetFlag(FLAGS_output_statistics);
+  return WriteStatistics(output_file.c_str(), clustering_stats);
 }
 
 }  // namespace
