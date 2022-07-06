@@ -75,13 +75,15 @@ inline absl::Status CompareCommunities(const char* filename, const InMemoryClust
       (double) max_intersect / (double) communities[j].size();
   });
 
-  set_aggregate_statistics(precision_vec.size(), [&](std::size_t i) {
+  auto precision_func = [&](std::size_t i) {
     return precision_vec[i];
-  }, clustering_stats->mutable_community_precision());
+  };
+  set_aggregate_statistics(precision_vec.size(), precision_func, clustering_stats->mutable_community_precision());
 
-  set_aggregate_statistics(recall_vec.size(), [&](std::size_t i) {
+  auto recall_func = [&](std::size_t i) {
     return recall_vec[i];
-  }, clustering_stats->mutable_community_recall());
+  };
+  set_aggregate_statistics(recall_vec.size(), recall_func, clustering_stats->mutable_community_recall());
 
   /*double avg_precision = parlay::reduce(precision_vec);
   double avg_recall = parlay::reduce(recall_vec);
