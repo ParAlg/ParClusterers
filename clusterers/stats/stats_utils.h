@@ -33,7 +33,7 @@ inline void split(const std::string& s, char delim, std::vector<InMemoryClustere
 }
 
 template <class T>
-inline void set_aggregate_statistics(std::size_t size, T& data, AggregateStatistics* aggregate_stats){
+inline void set_aggregate_statistics(std::size_t size, const T& data, AggregateStatistics* aggregate_stats){
   double sum = 0;
   gbbs::uintE min = UINT_E_MAX;
   gbbs::uintE max = 0;
