@@ -77,7 +77,7 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
     double modularity = 0;
     for (std::size_t i = 0; i < n; i++) {
       auto vtx = graph.Graph()->get_vertex(i);
-      auto map_out = [&](uintE u, uintE nbhr, float w){
+      auto map_out = [&](gbbs::uintE u, gbbs::uintE nbhr, float w){
         total_edge_weight++;
         if (cluster_ids[i] == cluster_ids[nbhr]) {
           modularity++;
