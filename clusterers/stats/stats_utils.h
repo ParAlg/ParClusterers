@@ -33,7 +33,7 @@ inline void split(const std::string& s, char delim, std::vector<InMemoryClustere
 }
 
 template <class T>
-inline void set_aggregate_statistics(std::size_t size, const T& data, AggregateStatistics* aggregate_stats){
+inline void set_distribution_stats(std::size_t size, const T& data, DistributionStatistics* distribution_stats){
   double sum = 0;
   gbbs::uintE min = UINT_E_MAX;
   gbbs::uintE max = 0;
@@ -42,9 +42,11 @@ inline void set_aggregate_statistics(std::size_t size, const T& data, AggregateS
     if (data(i) < min) min = data(i);
     if (data(i) > max) max = data(i);
   }
-  aggregate_stats->set_average(sum / size);
-  aggregate_stats->set_minimum(min);
-  aggregate_stats->set_maximum(max);
+  distribution_stats->set_count(size);
+  distribution_stats->set_total(sum);
+  distribution_stats->set_mean(sum / size);
+  distribution_stats->set_minimum(min);
+  distribution_stats->set_maximum(max);
 }
 
 }  // namespace research_graph::in_memory

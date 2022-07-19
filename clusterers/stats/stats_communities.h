@@ -78,12 +78,12 @@ inline absl::Status CompareCommunities(const char* filename, const InMemoryClust
   auto precision_func = [&](std::size_t i) {
     return precision_vec[i];
   };
-  set_aggregate_statistics(precision_vec.size(), precision_func, clustering_stats->mutable_community_precision());
+  set_distribution_stats(precision_vec.size(), precision_func, clustering_stats->mutable_community_precision());
 
   auto recall_func = [&](std::size_t i) {
     return recall_vec[i];
   };
-  set_aggregate_statistics(recall_vec.size(), recall_func, clustering_stats->mutable_community_recall());
+  set_distribution_stats(recall_vec.size(), recall_func, clustering_stats->mutable_community_recall());
 
   /*double avg_precision = parlay::reduce(precision_vec);
   double avg_recall = parlay::reduce(recall_vec);

@@ -3,20 +3,27 @@ syntax = "proto2";
 package research_graph.in_memory;
 
 message ClusteringStatsConfig {
-  optional bool tmp = 1;
+  repeated double correlation_resolutions = 0;
+  repeated double correlation_edge_weight_offsets = 1;
+  repeated double modularity_resolutions = 2;
 }
 
-message AggregateStatistics {
-  optional double average = 1;
+message DistributionStats {
   optional double minimum = 2;
   optional double maximum = 3;
+  optional double mean = 5;
+  optional double total = 6;
+  optional int64 count = 8;
 }
 
 message ClusteringStatistics {
   // Original graph filename
   optional string filename = 1;
-  optional int32 num_clusters = 2;
-  optional AggregateStatistics size = 3;
-  optional AggregateStatistics community_precision = 4;
-  optional AggregateStatistics community_recall = 5;
+  optional uint64 number_nodes = 2;
+  optional int32 number_clusters = 3;
+  optional DistributionStats cluster_sizes = 13;
+  optional DistributionStats community_precision = 20;
+  optional DistributionStats community_recall = 21;
+  repeated double correlation_objective = 22;
+  repeated double modularity_objective = 23;
 }
