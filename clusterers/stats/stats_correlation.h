@@ -48,8 +48,8 @@ inline absl::Status ComputeCorrelationObjective(const GbbsGraph& graph,
           return (weight - edge_weight_offset[k]) / 2;
         return 0;
       };
-      shifted_edge_weight[i] = graph.Graph()->get_vertex(i).reduceOutNgh<double>(
-          i, intra_cluster_sum_map_f, add_m);
+      shifted_edge_weight[i] = graph.Graph()->get_vertex(i).out_neighbors().reduce(
+          intra_cluster_sum_map_f, add_m);
     });
     double objective = parlay::reduace_add(shifted_edge_weight);
   
@@ -77,16 +77,13 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
     double modularity = 0;
     for (std::size_t i = 0; i < n; i++) {
       auto vtx = graph.Graph()->get_vertex(i);
-      auto nbhrs = vtx.getOutNeighbors();
-      double deg_i = vtx.getOutDegree();
-      for (std::size_t j = 0; j < deg_i; j++) {
+      auto map_out = [&](uintE u, uintE nbhr, float w){
         total_edge_weight++;
-        auto nbhr = std::get<0>(nbhrs[j]);
-        //double deg_nbhr = graph.get_vertex(nbhr).getOutDegree();
         if (cluster_ids[i] == cluster_ids[nbhr]) {
           modularity++;
         }
-      }
+      });
+      vtx.out_neighbors().map(map_out, false);
     }
     //modularity = modularity / 2; // avoid double counting
     for (std::size_t i = 0; i < clustering.size(); i++) {
@@ -94,7 +91,7 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
       for (std::size_t j = 0; j < clustering[i].size(); j++) {
         auto vtx_id = clustering[i][j];
         auto vtx = graph.Graph()->get_vertex(vtx_id);
-        degree += vtx.getOutDegree();
+        degree += vtx.out_degree();
       }
       modularity -= (resolution[k] * degree * degree) / (total_edge_weight);
     }
