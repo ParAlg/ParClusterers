@@ -51,13 +51,13 @@ inline absl::Status ComputeCorrelationObjective(const GbbsGraph& graph,
       shifted_edge_weight[i] = graph.Graph()->get_vertex(i).out_neighbors().reduce(
           intra_cluster_sum_map_f, add_m);
     });
-    double objective = parlay::reduace_add(shifted_edge_weight);
+    double objective = parlay::reduce(shifted_edge_weight);
   
     auto resolution_seq = parlay::delayed_seq<double>(n, [&](std::size_t i) {
-      return cluster_weights_[cluster_ids[i]]; // cluster_weight
+      return clustering[cluster_ids[i]].size(); // cluster_weight
       //return node_weights_[i] * (cluster_weight - node_weights_[i]);
     });
-    objective -= resolution[k] * parlay::reduce_add(resolution_seq) / 2;
+    objective -= resolution[k] * parlay::reduce(resolution_seq) / 2;
   
     clustering_stats->add_correlation_objective(objective);
   }
