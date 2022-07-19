@@ -82,7 +82,7 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
         if (cluster_ids[i] == cluster_ids[nbhr]) {
           modularity++;
         }
-      });
+      };
       vtx.out_neighbors().map(map_out, false);
     }
     //modularity = modularity / 2; // avoid double counting
