@@ -49,13 +49,13 @@ def readConfig(filename):
           clusterer_config_names = len(clusterers)*[None]
         elif split[0].startswith("Graphs"):
           graphs = [x.strip() for x in split[1].split(';')]
-        elif split[0].startswith("Number of threads"):
+        elif split[0].startswith("Number of threads") and len(split) > 1:
           num_threads = [x.strip() for x in split[1].split(';')]
-        elif split[0].startswith("Number of rounds"):
-          num_rounds = int(split[1])
-        elif split[0].startswith("Timeout"):
+        elif split[0].startswith("Number of rounds") and len(split) > 1:
+          num_rounds = 1 if split[1] == "" else int(split[1])
+        elif split[0].startswith("Timeout") and len(split) > 1:
           timeout = split[1]
-        elif split[0].startswith("GBBS format"):
+        elif split[0].startswith("GBBS format") and len(split) > 1:
           gbbs_format = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
@@ -77,7 +77,7 @@ def readConfig(filename):
   num_threads = [""] if num_threads is None or not num_threads else num_threads
   timeout = "" if (timeout is None or timeout == "" or timeout == "NONE") else "timeout " + timeout
   num_rounds = 1 if (num_rounds is None) else num_rounds
-  gbbs_format = "false" if (gbbs_format is None) else gbbs_format
+  gbbs_format = "false" if (gbbs_format is None or gbbs_format == "") else gbbs_format
 
 def printAll():
   print(clusterers)
