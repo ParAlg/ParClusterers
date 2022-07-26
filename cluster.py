@@ -58,15 +58,15 @@ def readConfig(filename):
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0].startswith(clusterer_name):
-              clusterer_config_names[index] = filename.next().strip()
+              clusterer_config_names[index] = in_file.next().strip()
               current_configs = []
-              next_line = filename.next().strip()
+              next_line = in_file.next().strip()
               while next_line:
                 arg_name = next_line.split(':', 1)
                 arg_name[0] = arg_name[0].strip()
                 args = [x.strip() for x in arg_name[1].split(';')]
                 current_configs.append([arg_name[0] + ": " + x for x in args])
-                next_line = filename.next().strip()
+                next_line = in_file.next().strip()
               clusterer_configs[index] = makeConfigCombos(current_configs)
               break
 
