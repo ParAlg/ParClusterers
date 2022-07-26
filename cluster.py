@@ -93,7 +93,7 @@ def runAll(config_filename):
             use_thread = "" if (thread == "ALL") else "NUM_THREADS=" + thread
             use_timeout = "" if (timeout == "NONE") else "timeout " + timeout
             use_input_graph = input_directory + graph
-            ss = (use_thread + " " + use_timeout + " bazel run //clustering:cluster-in-memory_main -- --"
+            ss = (use_thread + " " + use_timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
             "input_graph=" + use_input_graph + " --clusterer_name=" + clusterer + " "
             "--clusterer_config='" + clusterer_config_names[clusterer_idx] + "{" + config + "}' "
             "--output_clustering=" + out_clustering)
