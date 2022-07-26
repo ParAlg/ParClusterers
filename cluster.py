@@ -38,6 +38,7 @@ def readConfig(filename):
     for line in filename:
       line = line.strip()
       split = [x.strip() for x in line.split(':')]
+      print(split)
       if split:
         if split[0].startswith("Input directory"):
           input_directory = split[1]
