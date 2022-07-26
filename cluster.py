@@ -88,3 +88,10 @@ def runAll(config_filename):
             "--output_clustering=" + out_clustering)
             out = shellGetOutput(ss)
             appendToFile(out, out_filename)
+
+def main():
+  args = sys.argv[1:]
+  runAll(args[0])
+
+if __name__ == "__main__":
+  main()
