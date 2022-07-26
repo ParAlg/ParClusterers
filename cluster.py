@@ -25,6 +25,7 @@ def appendToFile(out, filename):
     out_file.writelines(out)
 
 def makeConfigCombos(current_configs):
+  print(current_configs)
   config_combos = itertools.product(*current_configs)
   config_combos_formatted = []
   for config in config_combos:
@@ -35,9 +36,6 @@ def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
   clusterers = []
   with open(filename, "r") as in_file:
-    in_file.seek(0, 2)      # go to end of file
-    eof = in_file.tell()    # get end-of-file position
-    in_file.seek(0, 0)
     for line in in_file:
       line = line.strip()
       split = [x.strip() for x in line.split(':')]
@@ -69,9 +67,10 @@ def readConfig(filename):
                 arg_name[0] = arg_name[0].strip()
                 args = [x.strip() for x in arg_name[1].split(';')]
                 current_configs.append([arg_name[0] + ": " + x for x in args])
-                if in_file.tell() == eof:
+                try:
+                  next_line = in_file.next().strip()
+                except StopIteration as err:
                   break
-                next_line = in_file.next().strip()
               clusterer_configs[index] = makeConfigCombos(current_configs)
               break
 
