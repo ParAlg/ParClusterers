@@ -74,6 +74,10 @@ def readConfig(filename):
                   break
               clusterer_configs[index] = makeConfigCombos(current_configs)
               break
+  num_threads = [""] if num_threads is None or not num_threads else num_threads
+  timeout = "" if (timeout is None or timeout == "" or timeout == "NONE") else "timeout " + timeout
+  num_rounds = 1 if (num_rounds is None) else num_rounds
+  gbbs_format = "false" if (gbbs_format is None) else gbbs_format
 
 def printAll():
   print(clusterers)
@@ -93,10 +97,9 @@ def runAll(config_filename):
           out_filename = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + ".out"
           for i in range(num_rounds):
             out_clustering = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i) + ".cluster"
-            use_thread = "" if (thread == "ALL") else "NUM_THREADS=" + thread
-            use_timeout = "" if (timeout == "NONE") else "timeout " + timeout
+            use_thread = "" if (thread == "" or thread == "ALL") else "NUM_THREADS=" + thread
             use_input_graph = input_directory + graph
-            ss = (use_thread + " " + use_timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
+            ss = (use_thread + " " + timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
             "input_graph=" + use_input_graph + " --is_gbbs_format=" + gbbs_format + " --clusterer_name=" + clusterer + " "
             "--clusterer_config='" + config_prefix + config + config_postfix + "' "
             "--output_clustering=" + out_clustering)
