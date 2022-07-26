@@ -44,13 +44,13 @@ def readConfig(filename):
         elif split[0].startswith("Output directory"):
           output_directory = split[1]
         elif split[0].startswith("Clusterers"):
-          clusterers = [x.strip() for x in line[1].split(';')]
+          clusterers = [x.strip() for x in split[1].split(';')]
           clusterer_configs = len(clusterers)*[None]
           clusterer_config_names = len(clusterers)*[None]
         elif split[0].startswith("Graphs"):
-          graphs = [x.strip() for x in line[1].split(';')]
+          graphs = [x.strip() for x in split[1].split(';')]
         elif split[0].startswith("Number of threads"):
-          num_threads = [x.strip() for x in line[1].split(';')]
+          num_threads = [x.strip() for x in split[1].split(';')]
         elif split[0].startswith("Number of rounds"):
           num_rounds = int(split[1])
         elif split[0].startswith("Timeout"):
