@@ -6,8 +6,6 @@ import subprocess
 import re
 import itertools
 
-input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
-
 def signal_handler(signal,frame):
   print "bye\n"
   sys.exit(0)
@@ -72,9 +70,12 @@ def readConfig(filename):
               clusterer_configs[index] = makeConfigCombos(current_configs)
               break
 
+def printAll():
+  print(input_directory)
 
 def runAll(config_filename):
   readConfig(config_filename)
+  printAll()
   for clusterer_idx, clusterer in enumerate(clusterers):
     for graph_idx, graph in enumerate(graphs):
       for thread_idx, thread in enumerate(num_threads):
