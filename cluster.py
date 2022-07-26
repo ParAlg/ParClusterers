@@ -6,6 +6,8 @@ import subprocess
 import re
 import itertools
 
+input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
+
 def signal_handler(signal,frame):
   print "bye\n"
   sys.exit(0)
