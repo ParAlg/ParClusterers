@@ -87,9 +87,9 @@ def runAll(config_filename):
     for graph_idx, graph in enumerate(graphs):
       for thread_idx, thread in enumerate(num_threads):
         for config_idx, config in enumerate(clusterer_configs[clusterer_idx]):
-          out_filename = output_directory + clusterer + "_" + graph_idx + "_" + thread + "_" + config_idx + ".out"
+          out_filename = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + ".out"
           for i in range(num_rounds):
-            out_clustering = output_directory + clusterer + "_" + graph_idx + "_" + thread + "_" + config_idx + "_" + str(i) + ".cluster"
+            out_clustering = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i) + ".cluster"
             use_thread = "" if (thread == "ALL") else "NUM_THREADS=" + thread
             use_timeout = "" if (timeout == "NONE") else "timeout " + timeout
             use_input_graph = input_directory + graph
