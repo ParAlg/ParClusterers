@@ -32,7 +32,7 @@ def makeConfigCombos(current_configs):
   return config_combos_formatted
 
 def readConfig(filename):
-  global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
+  global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names, gbbs_format
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
@@ -55,6 +55,8 @@ def readConfig(filename):
           num_rounds = int(split[1])
         elif split[0].startswith("Timeout"):
           timeout = split[1]
+        elif split[0].startswith("GBBS format"):
+          gbbs_format = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0].startswith(clusterer_name):
@@ -95,7 +97,7 @@ def runAll(config_filename):
             use_timeout = "" if (timeout == "NONE") else "timeout " + timeout
             use_input_graph = input_directory + graph
             ss = (use_thread + " " + use_timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
-            "input_graph=" + use_input_graph + " --clusterer_name=" + clusterer + " "
+            "input_graph=" + use_input_graph + " --is_gbbs_format=" + gbbs_format + " --clusterer_name=" + clusterer + " "
             "--clusterer_config='" + config_prefix + config + config_postfix + "' "
             "--output_clustering=" + out_clustering)
             out = shellGetOutput(ss)

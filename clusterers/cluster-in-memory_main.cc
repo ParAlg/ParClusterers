@@ -100,7 +100,7 @@ bool IsAnyProto(const std::string& clusterer_name){
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
-  if (!IsAnyProto(clusterer_name)) return clusterer_config;
+  if (clusterer_config == "" || !IsAnyProto(clusterer_name)) return clusterer_config;
   std::size_t index_left_brace = clusterer_config.find('{');
   std::size_t index_right_brace = clusterer_config.rfind('}');
   if (index_left_brace == std::string::npos || index_right_brace == std::string::npos) {
