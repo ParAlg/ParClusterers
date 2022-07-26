@@ -32,7 +32,7 @@ def makeConfigCombos(current_configs):
   return config_combos_formatted
 
 def readConfig(filename):
-  global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names, gbbs_format
+  global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names, gbbs_format = None
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
