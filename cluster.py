@@ -25,7 +25,6 @@ def appendToFile(out, filename):
     out_file.writelines(out)
 
 def makeConfigCombos(current_configs):
-  print(current_configs)
   config_combos = itertools.product(*current_configs)
   config_combos_formatted = []
   for config in config_combos:
@@ -85,7 +84,10 @@ def runAll(config_filename):
   for clusterer_idx, clusterer in enumerate(clusterers):
     for graph_idx, graph in enumerate(graphs):
       for thread_idx, thread in enumerate(num_threads):
-        for config_idx, config in enumerate(clusterer_configs[clusterer_idx]):
+        configs = clusterer_configs[clusterer_idx] if clusterer_configs[clusterer_idx] is not None else [""]
+        config_prefix = clusterer_config_names[clusterer_idx] + "{" if clusterer_configs[clusterer_idx] is not None else ""
+        config_postfix = "}" if clusterer_configs[clusterer_idx] is not None else ""
+        for config_idx, config in enumerate(configs):
           out_filename = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + ".out"
           for i in range(num_rounds):
             out_clustering = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i) + ".cluster"
@@ -94,7 +96,7 @@ def runAll(config_filename):
             use_input_graph = input_directory + graph
             ss = (use_thread + " " + use_timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
             "input_graph=" + use_input_graph + " --clusterer_name=" + clusterer + " "
-            "--clusterer_config='" + clusterer_config_names[clusterer_idx] + "{" + config + "}' "
+            "--clusterer_config='" + config_prefix + config + config_postfix + "' "
             "--output_clustering=" + out_clustering)
             out = shellGetOutput(ss)
             appendToFile(out, out_filename)
