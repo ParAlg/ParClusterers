@@ -98,7 +98,7 @@ def runAll(config_filename):
             out_prefix = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             out_filename = out_prefix + ".out"
             out_clustering = out_prefix + ".cluster"
-            use_thread = "" if (thread == "" or thread == "ALL") else "NUM_THREADS=" + thread
+            use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
             use_input_graph = input_directory + graph
             ss = (use_thread + " " + timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
             "input_graph=" + use_input_graph + " --is_gbbs_format=" + gbbs_format + " --clusterer_name=" + clusterer + " "
