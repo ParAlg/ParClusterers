@@ -33,6 +33,7 @@ def makeConfigCombos(current_configs):
 
 def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
+  clusterers = []
   with open(filename, "r") as in_file:
     for line in filename:
       line = line.strip()
