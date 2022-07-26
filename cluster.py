@@ -94,9 +94,10 @@ def runAll(config_filename):
         config_prefix = clusterer_config_names[clusterer_idx] + "{" if clusterer_configs[clusterer_idx] is not None else ""
         config_postfix = "}" if clusterer_configs[clusterer_idx] is not None else ""
         for config_idx, config in enumerate(configs):
-          out_filename = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + ".out"
           for i in range(num_rounds):
-            out_clustering = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i) + ".cluster"
+            out_prefix = output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
+            out_filename = out_prefix + ".out"
+            out_clustering = out_prefix + ".cluster"
             use_thread = "" if (thread == "" or thread == "ALL") else "NUM_THREADS=" + thread
             use_input_graph = input_directory + graph
             ss = (use_thread + " " + timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
