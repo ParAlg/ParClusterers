@@ -71,7 +71,7 @@ def readConfig(filename):
               break
 
 def printAll():
-  print(input_directory)
+  print(clusterer_configs)
 
 def runAll(config_filename):
   readConfig(config_filename)
