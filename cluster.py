@@ -35,10 +35,9 @@ def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads, clusterer_configs, num_rounds, timeout, clusterer_config_names
   clusterers = []
   with open(filename, "r") as in_file:
-    for line in filename:
+    for line in file:
       line = line.strip()
       split = [x.strip() for x in line.split(':')]
-      print(split)
       if split:
         if split[0].startswith("Input directory"):
           input_directory = split[1]
