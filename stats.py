@@ -22,7 +22,7 @@ def runAll(config_filename, stats_config_filename):
             out_statistics = out_prefix + ".stats"
             in_clustering = out_prefix + ".cluster"
             use_input_graph = runner_utils.input_directory + graph
-            use_input_communities = "" if not runner_utils.communities else "--input_communities=" + runner_utils.input_communities[graph_idx]
+            use_input_communities = "" if not runner_utils.communities else "--input_communities=" + runner_utils.communities[graph_idx]
             ss = ("bazel run //clusterers:stats-in-memory_main -- "
             "--input_graph=" + use_input_graph + " "
             "--is_gbbs_format=" + runner_utils.gbbs_format + " "
