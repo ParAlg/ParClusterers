@@ -82,23 +82,23 @@ def readConfig(filename):
   num_rounds = 1 if (num_rounds is None) else num_rounds
   gbbs_format = "false" if (gbbs_format is None or gbbs_format == "") else gbbs_format
 
-  def readStatsConfig(filename):
-    global communities, stats_config
-    communities = []
-    stats_config_list = []
-    with open(filename, "r") as in_file:
-      for line in in_file:
-        line = line.strip()
-        split = [x.strip() for x in line.split(':')]
-        if split:
-          if split[0].startswith("Input communities") and len(split) > 1:
-            communities = [x.strip() for x in split[1].split(';')]
-          elif split[0].startswith("statistics_config"):
-            next_line = in_file.next().strip()
-            while next_line != "":
-              stats_config_list.append(next_line)
-              try:
-                next_line = in_file.next().strip()
-              except StopIteration as err:
-                break
-            stats_config = ",".join(stats_config_list)
+def readStatsConfig(filename):
+  global communities, stats_config
+  communities = []
+  stats_config_list = []
+  with open(filename, "r") as in_file:
+    for line in in_file:
+      line = line.strip()
+      split = [x.strip() for x in line.split(':')]
+      if split:
+        if split[0].startswith("Input communities") and len(split) > 1:
+          communities = [x.strip() for x in split[1].split(';')]
+        elif split[0].startswith("statistics_config"):
+          next_line = in_file.next().strip()
+          while next_line != "":
+            stats_config_list.append(next_line)
+            try:
+              next_line = in_file.next().strip()
+            except StopIteration as err:
+              break
+          stats_config = ",".join(stats_config_list)
