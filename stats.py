@@ -18,7 +18,7 @@ def runAll(config_filename, stats_config_filename):
         config_postfix = "}" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
         for config_idx, config in enumerate(configs):
           for i in range(runner_utils.num_rounds):
-            out_prefix = runner_utils.output_directory + runner_utils.clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
+            out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             out_statistics = out_prefix + ".stats"
             in_clustering = out_prefix + ".cluster"
             use_input_graph = runner_utils.input_directory + graph
