@@ -86,6 +86,7 @@ def readStatsConfig(filename):
   global communities, stats_config
   communities = []
   stats_config_list = []
+  stats_config = ""
   with open(filename, "r") as in_file:
     for line in in_file:
       line = line.strip()
