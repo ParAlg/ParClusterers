@@ -28,7 +28,7 @@ def runAll(config_filename, stats_config_filename):
             "--is_gbbs_format=" + runner_utils.gbbs_format + " "
             "--input_clustering=" + in_clustering + " "
             "--output_statistics=" + out_statistics + " " + use_input_communities + " "
-            "--statistics_config='{" + runner_utils.stats_config + "}'")
+            "--statistics_config='" + runner_utils.stats_config + "'")
             out = runner_utils.shellGetOutput(ss)
             # runner_utils.appendToFile(ss + "\n", out_filename)
             # runner_utils.appendToFile(out, out_filename)
