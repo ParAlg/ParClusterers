@@ -9,7 +9,7 @@ import runner_utils
 
 def runAll(config_filename, stats_config_filename):
   runner_utils.readConfig(config_filename)
-  runner_utils.readStatsConfig(stats_config_filename)
+  runner_utils.readStatsConfig(config_filename, stats_config_filename)
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
       for thread_idx, thread in enumerate(runner_utils.num_threads):
@@ -35,7 +35,7 @@ def runAll(config_filename, stats_config_filename):
 
 def main():
   args = sys.argv[1:]
-  runAll(args[0])
+  runAll(args[0], args[1])
 
 if __name__ == "__main__":
   main()
