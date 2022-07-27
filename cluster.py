@@ -23,7 +23,7 @@ def runAll(config_filename):
             use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
             use_input_graph = runner_utils.input_directory + graph
             ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
-            "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --clusterer_name=" + runner_utils.clusterer + " "
+            "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --clusterer_name=" + clusterer + " "
             "--clusterer_config='" + config_prefix + config + config_postfix + "' "
             "--output_clustering=" + out_clustering)
             out = runner_utils.shellGetOutput(ss)
