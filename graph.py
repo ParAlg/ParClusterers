@@ -19,6 +19,8 @@ def plotAll(xes, yes, labels):
   for label_idx, label_name in enumerate(labels):
     ax.scatter(xes[label_idx], yes[label_idx], color=colors[label_idx], label=label_name)
   ax.legend()
+  ax.set_xlabel(xes)
+  ax.set_ylabel(yes)
   plt.savefig('tmp.png')
 
 def runAll(config_filename, stats_config_filename):
