@@ -36,8 +36,8 @@ def runAll(config_filename, stats_config_filename):
     labels = runner_utils.num_threads
   elif legend == "Config":
     labels = ["Config " + str(x) for x in range(len(configs))]
-  xes = [] * len(labels)
-  yes = [] * len(labels)
+  xes = [[] for x in range(len(labels))]
+  yes = [[] for x in range(len(labels))]
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
       for thread_idx, thread in enumerate(runner_utils.num_threads):
@@ -61,7 +61,6 @@ def runAll(config_filename, stats_config_filename):
             out_statistics_string = out_statistics_file.read()
             out_statistics_file.close()
             parse_out_statistics = json.loads(out_statistics_string)
-            print(parse_out_statistics[x_axis][x_axis_modifier])
             xes[index].append(float(parse_out_statistics[x_axis][x_axis_modifier]))
             yes[index].append(float(parse_out_statistics[y_axis][y_axis_modifier]))
   plotAll(xes, yes, labels)
