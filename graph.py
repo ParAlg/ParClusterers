@@ -13,14 +13,14 @@ import matplotlib.cm as cm
 import json
 import runner_utils
 
-def plotAll(xes, yes, labels):
+def plotAll(xes, yes, labels, x_label, y_label):
   colors = cm.rainbow(np.linspace(0, 1, len(labels)))
   fig, ax = plt.subplots()
   for label_idx, label_name in enumerate(labels):
     ax.scatter(xes[label_idx], yes[label_idx], color=colors[label_idx], label=label_name)
   ax.legend()
-  ax.set_xlabel(xes)
-  ax.set_ylabel(yes)
+  ax.set_xlabel(x_label)
+  ax.set_ylabel(y_label)
   plt.savefig('tmp.png')
 
 def runAll(config_filename, stats_config_filename):
@@ -67,7 +67,7 @@ def runAll(config_filename, stats_config_filename):
             parse_out_statistics = json.loads(out_statistics_string)
             xes[index].append(float(parse_out_statistics[x_axis][x_axis_modifier]))
             yes[index].append(float(parse_out_statistics[y_axis][y_axis_modifier]))
-  plotAll(xes, yes, labels)
+  plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier, y_axis + " " + y_axis_modifier)
 
 def main():
   args = sys.argv[1:]
