@@ -20,9 +20,9 @@ def plotAll(xes, yes, labels):
   plt.savefig('tmp.png')
 
 def runAll(config_filename, stats_config_filename):
-  x_axis = "precision"
+  x_axis = "communityPrecision"
   x_axis_modifier = "mean"
-  y_axis = "recall"
+  y_axis = "communityRecall"
   y_axis_modifier = "mean"
   legend = "Graphs"
   runner_utils.readConfig(config_filename)
@@ -38,7 +38,6 @@ def runAll(config_filename, stats_config_filename):
     labels = ["Config " + str(x) for x in range(len(configs))]
   xes = [] * len(labels)
   yes = [] * len(labels)
-  print(len(labels))
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
       for thread_idx, thread in enumerate(runner_utils.num_threads):
@@ -55,7 +54,6 @@ def runAll(config_filename, stats_config_filename):
             index = thread_idx
           elif legend == "Config":
             index = config_idx
-          print(index)
           for i in range(runner_utils.num_rounds):
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             out_statistics = out_prefix + ".stats"
