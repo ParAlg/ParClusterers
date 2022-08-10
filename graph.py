@@ -38,6 +38,7 @@ def runAll(config_filename, stats_config_filename):
     labels = ["Config " + str(x) for x in range(len(configs))]
   xes = [] * len(labels)
   yes = [] * len(labels)
+  print(len(labels))
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
       for thread_idx, thread in enumerate(runner_utils.num_threads):
