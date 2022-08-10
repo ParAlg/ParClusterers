@@ -55,6 +55,7 @@ def runAll(config_filename, stats_config_filename):
             index = thread_idx
           elif legend == "Config":
             index = config_idx
+          print(index)
           for i in range(runner_utils.num_rounds):
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             out_statistics = out_prefix + ".stats"
