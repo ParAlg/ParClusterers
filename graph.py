@@ -61,6 +61,7 @@ def runAll(config_filename, stats_config_filename):
             out_statistics_string = out_statistics_file.read()
             out_statistics_file.close()
             parse_out_statistics = json.loads(out_statistics_string)
+            print(parse_out_statistics[x_axis][x_axis_modifier])
             xes[index].append(float(parse_out_statistics[x_axis][x_axis_modifier]))
             yes[index].append(float(parse_out_statistics[y_axis][y_axis_modifier]))
   plotAll(xes, yes, labels)
