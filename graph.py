@@ -25,13 +25,14 @@ def plotAll(xes, yes, labels, x_label, y_label, graph_name):
 
 def isNumber(s, modifier_index, index):
   try:
+    print(s)
     float(s)
     return float(s)
-  except ValueError, TypeError:
+  except TypeError:
     try:
       float(s[modifier_index])
       return float(s[modifier_index])
-    except ValueError, TypeError:
+    except TypeError:
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
