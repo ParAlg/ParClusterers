@@ -25,7 +25,6 @@ def plotAll(xes, yes, labels, x_label, y_label, graph_name):
 
 def isNumber(s, modifier_index, index):
   try:
-    print(s)
     float(s)
     return float(s)
   except TypeError:
@@ -77,7 +76,7 @@ def configPlotAll(
             parse_out_statistics = json.loads(out_statistics_string)
             xes[index].append(isNumber(parse_out_statistics[x_axis], x_axis_modifier, x_axis_index))
             yes[index].append(isNumber(parse_out_statistics[y_axis], y_axis_modifier, y_axis_index))
-  plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier + " " + x_axis_index, y_axis + " " + y_axis_modifier + " " + y_axis_index, runner_utils.output_directory + graph_name)
+  plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier + " " + str(x_axis_index), y_axis + " " + y_axis_modifier + " " + str(y_axis_index), runner_utils.output_directory + graph_name)
 
 def runAll(config_filename, stats_config_filename, graph_config_filename):
   runner_utils.readConfig(config_filename)
