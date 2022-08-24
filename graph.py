@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 import json
 import runner_utils
 
-def readClusterTime(in_file):
+def readClusterTime(filename):
   with open(filename, "r") as in_file:
     for line in in_file:
       line = line.strip()
