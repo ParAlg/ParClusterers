@@ -32,7 +32,8 @@ def isNumber(s, modifier_index, index):
       float(s[modifier_index])
       return float(s[modifier_index])
     except TypeError:
-      print(s[modifier_index][index])
+      print(s[modifier_index])
+      print(index)
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
