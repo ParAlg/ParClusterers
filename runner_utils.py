@@ -122,23 +122,25 @@ def readGraphConfig(filename):
       split = [x.strip() for x in line.split(':')]
       if split:
         if split[0].startswith("x axis"):
-          x_axis.append(split[1])
-          if len(split) > 2:
-            x_axis_modifier.append(split[2])
+          split = [x.strip() for x in split[1].split(' ')]
+          x_axis.append(split[0])
+          if len(split) > 1:
+            x_axis_modifier.append(split[1])
           else:
             x_axis_modifier.append("")
-          if len(split) > 3:
-            x_axis_index.append(int(split[3]))
+          if len(split) > 2:
+            x_axis_index.append(int(split[2]))
           else:
             x_axis_index.append(0)
         elif split[0].startswith("y axis"):
-          y_axis.append(split[1])
-          if len(split) > 2:
-            y_axis_modifier.append(split[2])
+          split = [x.strip() for x in split[1].split(' ')]
+          y_axis.append(split[0])
+          if len(split) > 1:
+            y_axis_modifier.append(split[1])
           else:
             y_axis_modifier.append("")
-          if len(split) > 3:
-            y_axis_index.append(int(split[3]))
+          if len(split) > 2:
+            y_axis_index.append(int(split[2]))
           else:
             y_axis_index.append(0)
         elif split[0].startswith("Legend"):
