@@ -128,10 +128,6 @@ def readGraphConfig(filename):
             x_axis_modifier.append(split[1])
           else:
             x_axis_modifier.append("")
-          if len(split) > 2:
-            x_axis_index.append(int(split[2]))
-          else:
-            x_axis_index.append(0)
         elif split[0].startswith("y axis"):
           split = [x.strip() for x in split[1].split(' ')]
           y_axis.append(split[0])
@@ -139,10 +135,6 @@ def readGraphConfig(filename):
             y_axis_modifier.append(split[1])
           else:
             y_axis_modifier.append("")
-          if len(split) > 2:
-            y_axis_index.append(int(split[2]))
-          else:
-            y_axis_index.append(0)
         elif split[0].startswith("Legend"):
           legend.append(split[1])
         elif split[0].startswith("Graph filename"):
