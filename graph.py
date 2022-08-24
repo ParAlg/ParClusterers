@@ -84,7 +84,7 @@ def runAll(config_filename, stats_config_filename, graph_config_filename):
   runner_utils.readGraphConfig(graph_config_filename)
   for i in range(len(runner_utils.output_graph_filename)):
     configPlotAll(
-      runner_utils.x_axis[i], runner_utils.x_axis_moodifier[i],
+      runner_utils.x_axis[i], runner_utils.x_axis_modifier[i],
       runner_utils.x_axis_index[i], runner_utils.y_axis[i],
       runner_utils.y_axis_modifier[i], runner_utils.y_axis_index[i],
       runner_utils.legend[i], runner_utils.output_graph_filename[i])
