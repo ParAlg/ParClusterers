@@ -29,10 +29,10 @@ def isNumber(s, modifier_index, index):
     return float(s)
   except TypeError:
     try:
-      print(s[modifier_index])
       float(s[modifier_index])
       return float(s[modifier_index])
     except TypeError:
+      print(s[modifier_index][index])
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
