@@ -13,6 +13,16 @@ import matplotlib.cm as cm
 import json
 import runner_utils
 
+def readClusterTime(in_file):
+  with open(filename, "r") as in_file:
+    for line in in_file:
+      line = line.strip()
+      split = [x.strip() for x in line.split(':')]
+      if split:
+        if split[0].startswith("Cluster Time"):
+          return float(split[1])
+  return 0
+
 def plotAll(xes, yes, labels, x_label, y_label, graph_name):
   colors = cm.rainbow(np.linspace(0, 1, len(labels)))
   fig, ax = plt.subplots()
@@ -32,7 +42,6 @@ def isNumber(s, modifier_index):
       float(s[modifier_index])
       return float(s[modifier_index])
     except TypeError:
-      print(s)
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
@@ -74,8 +83,14 @@ def configPlotAll(
             out_statistics_string = out_statistics_file.read()
             out_statistics_file.close()
             parse_out_statistics = json.loads(out_statistics_string)
-            xes[index].append(isNumber(parse_out_statistics[x_axis], x_axis_modifier))
-            yes[index].append(isNumber(parse_out_statistics[y_axis], y_axis_modifier))
+            if (x_axis != "clusterTime"):
+              xes[index].append(isNumber(parse_out_statistics[x_axis], x_axis_modifier))
+            else:
+              xes[index].append(readClusterTime(out_prefix + ".out"))
+            if (y_axis != "clusterTime"):
+              yes[index].append(isNumber(parse_out_statistics[y_axis], y_axis_modifier))
+            else:
+              yes[index].append(readClusterTime(out_prefix + ".out"))
   plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier, y_axis + " " + y_axis_modifier, runner_utils.output_directory + graph_name)
 
 def runAll(config_filename, stats_config_filename, graph_config_filename):
