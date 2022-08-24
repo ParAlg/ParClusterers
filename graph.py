@@ -27,11 +27,11 @@ def isNumber(s, modifier_index, index):
   try:
     float(s)
     return float(s)
-  except ValueError:
+  except ValueError, TypeError:
     try:
       float(s[modifier_index])
       return float(s[modifier_index])
-    except ValueError:
+    except ValueError, TypeError:
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
