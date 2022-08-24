@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 import json
 import runner_utils
 
-def plotAll(xes, yes, labels, x_label, y_label):
+def plotAll(xes, yes, labels, x_label, y_label, graph_name):
   colors = cm.rainbow(np.linspace(0, 1, len(labels)))
   fig, ax = plt.subplots()
   for label_idx, label_name in enumerate(labels):
@@ -21,16 +21,25 @@ def plotAll(xes, yes, labels, x_label, y_label):
   ax.legend()
   ax.set_xlabel(x_label)
   ax.set_ylabel(y_label)
-  plt.savefig('tmp.png')
+  plt.savefig(graph_name)
 
-def runAll(config_filename, stats_config_filename):
-  x_axis = "communityPrecision"
-  x_axis_modifier = "mean"
-  y_axis = "communityRecall"
-  y_axis_modifier = "mean"
-  legend = "Graphs"
-  runner_utils.readConfig(config_filename)
-  runner_utils.readStatsConfig(stats_config_filename)
+def isNumber(s, modifier_index, index):
+  try:
+    float(s)
+    return float(s)
+  except ValueError:
+    try:
+      float(s[modifier_index])
+      return float(s[modifier_index])
+    except ValueError:
+      #s = s.replace("{", "")
+      #s = s.replace("}", "")
+      #s_list = [x.strip() for x in s.split(',')]
+      return float(s[modifier_index][index])
+
+def configPlotAll(
+  x_axis, x_axis_modifier, x_axis_index, y_axis, y_axis_modifier, y_axis_index,
+  legend, graph_name):
   labels = []
   if legend == "Graphs":
     labels = runner_utils.graphs
@@ -65,13 +74,24 @@ def runAll(config_filename, stats_config_filename):
             out_statistics_string = out_statistics_file.read()
             out_statistics_file.close()
             parse_out_statistics = json.loads(out_statistics_string)
-            xes[index].append(float(parse_out_statistics[x_axis][x_axis_modifier]))
-            yes[index].append(float(parse_out_statistics[y_axis][y_axis_modifier]))
-  plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier, y_axis + " " + y_axis_modifier)
+            xes[index].append(isNumber(parse_out_statistics[x_axis], x_axis_modifier, x_axis_index))
+            yes[index].append(isNumber(parse_out_statistics[y_axis], y_axis_modifier, y_axis_index))
+  plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier + " " + x_axis_index, y_axis + " " + y_axis_modifier + " " + y_axis_index, runner_utils.output_directory + graph_name)
+
+def runAll(config_filename, stats_config_filename, graph_config_filename):
+  runner_utils.readConfig(config_filename)
+  runner_utils.readStatsConfig(stats_config_filename)
+  runner_utils.readGraphConfig(graph_config_filename)
+  for i in range(len(runner_utils.output_graph_filename)):
+    configPlotAll(
+      runner_utils.x_axis[i], runner_utils.x_axis_moodifier[i],
+      runner_utils.x_axis_index[i], runner_utils.y_axis[i],
+      runner_utils.y_axis_modifier[i], runner_utils.y_axis_index[i],
+      runner_utils.legend[i], runner_utils.output_graph_filename[i])
 
 def main():
   args = sys.argv[1:]
-  runAll(args[0], args[1])
+  runAll(args[0], args[1], args[2])
 
 if __name__ == "__main__":
   main()

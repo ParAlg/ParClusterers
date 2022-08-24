@@ -103,3 +103,45 @@ def readStatsConfig(filename):
             except StopIteration as err:
               break
           stats_config = ",".join(stats_config_list)
+
+def readGraphConfig(filename):
+  global x_axis, x_axis_index, x_axis_modifier
+  global y_axis, y_axis_index, y_axis_modifier
+  global legend, output_graph_filename
+  x_axis = []
+  x_axis_index = []
+  x_axis_modifier = []
+  y_axis = []
+  y_axis_index = []
+  y_axis_modifier = []
+  legend = []
+  output_graph_filename = []
+  with open(filename, "r") as in_file:
+    for line in in_file:
+      line = line.strip()
+      split = [x.strip() for x in line.split(':')]
+      if split:
+        if split[0].startswith("x axis"):
+          x_axis.append(split[1])
+          if len(split) > 2:
+            x_axis_modifier.append(split[2])
+          else:
+            x_axis_modifier.append("")
+          if len(split) > 3:
+            x_axis_index.append(int(split[3]))
+          else:
+            x_axis_index.append(0)
+        elif split[0].startswith("y axis"):
+          y_axis.append(split[1])
+          if len(split) > 2:
+            y_axis_modifier.append(split[2])
+          else:
+            y_axis_modifier.append("")
+          if len(split) > 3:
+            y_axis_index.append(int(split[3]))
+          else:
+            y_axis_index.append(0)
+        elif split[0].startswith("Legend"):
+          legend.append(split[1])
+        elif split[0].startswith("Graph filename"):
+          output_graph_filename.append(split[1])
