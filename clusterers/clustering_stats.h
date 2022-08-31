@@ -14,6 +14,7 @@
 #include "clusterers/clustering_stats.pb.h"
 #include "clusterers/stats/stats_communities.h"
 #include "clusterers/stats/stats_correlation.h"
+#include "clusterers/stats/stats_diameter.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
