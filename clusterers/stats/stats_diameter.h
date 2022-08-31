@@ -55,16 +55,19 @@ auto BellmanFordNoPrint(Graph& G, gbbs::uintE start) {
     Frontier = std::move(output);
     round++;
   }
-  auto dist_im_f = [&](size_t i) {
-    return (SP[i] == (std::numeric_limits<Distance>::max())) ? 0 : SP[i];
-  };
   return SP;
 }
 
 inline absl::Status ComputeDiameter(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
+
+  const bool compute_diameter = clustering_stats_config.compute_diameter();
   
+  if (!compute_diameter) {
+    return absl::OkStatus();
+  }
+
   parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
       auto G = get_subgraph(graph, clustering[i], cluster_ids); 
       auto distances = parlay::sequence<float>::uninitialized(clustering[i].size());
