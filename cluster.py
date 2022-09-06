@@ -10,22 +10,23 @@ import runner_utils
 # Graph must be in edge format
 def runTectonic(clusterer, graph, graph_idx, round):
   python_ver = "python2"
-  gcc_ver = "g++-12"
+  gplusplus_ver = "g++-12"
   use_input_graph = runner_utils.input_directory + graph
   out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(round)
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
   runner_utils.shellGetOutput("(cd external/Tectonic/mace && make)")
-  runner_utils.shellGetOutput(gcc_ver + " -std=c++11 -o external/Tectonic/tree-clusters external/Tectonic/tree-clusters.cpp")
+  runner_utils.shellGetOutput(gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters external/Tectonic/tree-clusters.cpp")
   # Timing from here
   start_time = time.time()
   num_vert = runner_utils.shellGetOutput(python_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace")
   runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
   runner_utils.shellGetOutput(python_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
   runner_utils.shellGetOutput(python_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
-  runner_utils.shellGetOutput("external/Tectonic/tree-clusters " + out_prefix + ".weighted " + num_vert + " > " + out_clustering)
+  cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters " + out_prefix + ".weighted " + num_vert)
   end_time = time.time()
   # Output running time to out_filename
+  runner_utils.appendToFile(cluster, out_clustering)
   runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time), out_filename)
 
 #cd external/Tectonic/
