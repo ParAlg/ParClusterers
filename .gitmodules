@@ -6,4 +6,4 @@
 	url = https://github.com/ParAlg/gbbs.git
 [submodule "external/Tectonic"]
 	path = external/Tectonic
-	url = https://github.com/tsourolampis/Tectonic.git
+	url = https://github.com/jeshi96/Tectonic.git
