@@ -35,8 +35,8 @@ inline void split(const std::string& s, char delim, std::vector<InMemoryClustere
 template <class T>
 inline void set_distribution_stats(std::size_t size, const T& data, DistributionStats* distribution_stats){
   double sum = 0;
-  gbbs::uintE min = UINT_E_MAX;
-  gbbs::uintE max = 0;
+  double min = std::numeric_limits<double>::max();
+  double max = std::numeric_limits<double>::lowest();
   for (std::size_t i = 0; i < size; i++) {
     sum += data(i);
     if (data(i) < min) min = data(i);

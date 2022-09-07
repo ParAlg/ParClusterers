@@ -67,6 +67,7 @@ inline absl::Status ComputeDiameter(const GbbsGraph& graph,
   if (!compute_diameter) {
     return absl::OkStatus();
   }
+  parlay::sequence<double> diameter_vec = parlay::sequence<double>::uninitialized(clustering.size());
 
   parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
       auto G = get_subgraph(graph, clustering[i], cluster_ids); 
@@ -76,8 +77,13 @@ inline absl::Status ComputeDiameter(const GbbsGraph& graph,
           distances[j] = *(parlay::max_element(SP));            
       });
       auto diameter = *(parlay::max_element(distances));
-      clustering_stats->add_diameter(diameter);
+      diameter_vec[i] = diameter;
   });
+
+  auto diameter_func = [&](std::size_t i) {
+    return diameter_vec[i];
+  };
+  set_distribution_stats(diameter_vec.size(), diameter_func, clustering_stats->mutable_diameter());
 
   return absl::OkStatus();
 }
