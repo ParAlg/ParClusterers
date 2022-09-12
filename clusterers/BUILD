@@ -63,6 +63,7 @@ cc_library(
         "//clusterers/stats:stats_utils",
         "//clusterers/stats:stats_communities",
         "//clusterers/stats:stats_correlation",
+        "//clusterers/stats:stats_diameter",
         "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:status_macros",
         "//external:gflags",
