@@ -31,6 +31,18 @@ def makeConfigCombos(current_configs):
     config_combos_formatted.append(",".join(config))
   return config_combos_formatted
 
+def readSystemConfig(filename):
+  global gplusplus_ver, python2_ver
+  with open(filename, "r") as in_file:
+    for line in in_file:
+      line = line.strip()
+      split = [x.strip() for x in line.split(':')]
+      if split:
+        if split[0].startswith("g++"):
+          gplusplus_ver = split[1]
+        elif split[0].startswith("Python v2"):
+          python2_ver = split[1]
+
 def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads
   global clusterer_configs, num_rounds, timeout, clusterer_config_names
