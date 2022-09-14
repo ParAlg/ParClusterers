@@ -13,7 +13,7 @@ signal.signal(signal.SIGINT,signal_handler)
 
 def shellGetOutput(str1) :
   process = subprocess.Popen(str1,shell=True,stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE, universal_newlines=True)
   output, err = process.communicate()
   
   if (len(err) > 0):
