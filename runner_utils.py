@@ -7,7 +7,7 @@ import re
 import itertools
 
 def signal_handler(signal,frame):
-  print "bye\n"
+  print("bye\n")
   sys.exit(0)
 signal.signal(signal.SIGINT,signal_handler)
 
