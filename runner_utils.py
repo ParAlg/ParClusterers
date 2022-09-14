@@ -75,16 +75,16 @@ def readConfig(filename):
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0].startswith(clusterer_name):
-              clusterer_config_names[index] = in_file.next().strip()
+              clusterer_config_names[index] = in_file.readline().strip()
               current_configs = []
-              next_line = in_file.next().strip()
+              next_line = in_file.readline().strip()
               while next_line != "":
                 arg_name = next_line.split(':', 1)
                 arg_name[0] = arg_name[0].strip()
                 args = [x.strip() for x in arg_name[1].split(';')]
                 current_configs.append([arg_name[0] + ": " + x for x in args])
                 try:
-                  next_line = in_file.next().strip()
+                  next_line = in_file.readline().strip()
                 except StopIteration as err:
                   break
               clusterer_configs[index] = makeConfigCombos(current_configs)
@@ -107,11 +107,11 @@ def readStatsConfig(filename):
         if split[0].startswith("Input communities") and len(split) > 1:
           communities = [x.strip() for x in split[1].split(';')]
         elif split[0].startswith("statistics_config"):
-          next_line = in_file.next().strip()
+          next_line = in_file.readline().strip()
           while next_line != "":
             stats_config_list.append(next_line)
             try:
-              next_line = in_file.next().strip()
+              next_line = in_file.readline().strip()
             except StopIteration as err:
               break
           stats_config = ",".join(stats_config_list)
