@@ -1,6 +1,8 @@
 import networkit as nk
 import runner_utils
 import time
+import io
+from contextlib import redirect_stdout
 
 def runNetworKitPLM(G, config):
   use_refine = False
@@ -25,10 +27,15 @@ def runNetworKitPLM(G, config):
         use_turbo = True if config_split[1].startswith("True") else False
       elif config_split[0].startswith("recurse"):
         use_recurse = True if config_split[1].startswith("True") else False
-  start_time = time.time()
-  communities = nk.community.detectCommunities(G, algo=nk.community.PLM(G, refine=use_refine, gamma=use_gamma, par=use_par, maxIter=use_maxIter, turbo=use_turbo, recurse=use_recurse))
-  end_time = time.time()
-  return str(end_time - start_time), communities
+  f = io.StringIO()
+  with redirect_stdout(f):
+    start_time = time.time()
+    #Communities detected in 0.76547 [s]
+    communities = nk.community.detectCommunities(G, algo=nk.community.PLM(G, refine=use_refine, gamma=use_gamma, par=use_par, maxIter=use_maxIter, turbo=use_turbo, recurse=use_recurse))
+    end_time = time.time()
+  out = f.getvalue()
+  # str(end_time - start_time)
+  return out, communities
 
 def runNetworKitPLP(G, config):
   use_updateThreshold = None
@@ -41,10 +48,13 @@ def runNetworKitPLP(G, config):
         use_updateThreshold = int(config_split[1])
       elif config_split[0].startswith("maxIterations"):
         use_maxIterations = int(config_split[1])
-  start_time = time.time()
-  communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
-  end_time = time.time()
-  return str(end_time - start_time), communities
+  f = io.StringIO()
+  with redirect_stdout(f):
+    start_time = time.time()
+    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
+    end_time = time.time()
+  out = f.getvalue()
+  return out, communities
 
 def runNetworKitParallelLeiden(G, config):
   use_randomize = True
@@ -60,10 +70,21 @@ def runNetworKitParallelLeiden(G, config):
         use_iterations = int(config_split[1])
       elif config_split[0].startswith("gamma"):
         use_gamma = float(config_split[1])
-  start_time = time.time()
-  communities = nk.community.detectCommunities(G, algo=nk.community.ParallelLeiden(G, randomize=use_randomize, iterations=use_iterations, gamma=use_gamma))
-  end_time = time.time()
-  return str(end_time - start_time), communities
+  f = io.StringIO()
+  with redirect_stdout(f):
+    start_time = time.time()
+    communities = nk.community.detectCommunities(G, algo=nk.community.ParallelLeiden(G, randomize=use_randomize, iterations=use_iterations, gamma=use_gamma))
+    end_time = time.time()
+  out = f.getvalue()
+  return out, communities
+
+def extractNetworKitTime(out):
+  split = [x.strip() for x in out.split('\n')]
+  for line in split:
+    if line.startswith("Communities detected in"):
+      line_split = [x.strip() for x in line.split(' ')]
+      return line_split[3]
+  return ""
 
 def runNetworKit(clusterer, graph, thread, config, out_prefix):
   if (runner_utils.gbbs_format == "true"):
@@ -84,7 +105,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
     print_time, communities = runNetworKitParallelLeiden(G, config)
   else:
     raise ValueError("NetworKit clusterer not supported")
-  runner_utils.appendToFile("Cluster Time: " + print_time, out_filename)
+  runner_utils.appendToFile(print_time, out_filename)
+  runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time), out_filename)
   communities.compact()
   cluster_index = 0
   cluster_list = communities.getMembers(cluster_index)
