@@ -1,5 +1,6 @@
 import networkit as nk
 import runner_utils
+import time
 
 def runNetworKitPLM(G, config):
   use_refine = False
