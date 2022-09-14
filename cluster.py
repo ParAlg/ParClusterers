@@ -5,10 +5,13 @@ import time
 import subprocess
 import re
 import itertools
+import cluster_nk
 import runner_utils
 
 # Graph must be in edge format
 def runTectonic(clusterer, graph, graph_idx, round):
+  if (runner_utils.gbbs_format == "true"):
+    raise ValueError("Tectonic can only be run using edge list format")
   args = sys.argv[1:]
   runner_utils.readSystemConfig(args[1])
   use_input_graph = runner_utils.input_directory + graph
@@ -54,17 +57,20 @@ def runAll(config_filename):
         for config_idx, config in enumerate(configs):
           for i in range(runner_utils.num_rounds):
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
-            out_filename = out_prefix + ".out"
-            out_clustering = out_prefix + ".cluster"
-            use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
-            use_input_graph = runner_utils.input_directory + graph
-            ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
-            "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --clusterer_name=" + clusterer + " "
-            "--clusterer_config='" + config_prefix + config + config_postfix + "' "
-            "--output_clustering=" + out_clustering)
-            out = runner_utils.shellGetOutput(ss)
-            runner_utils.appendToFile(ss + "\n", out_filename)
-            runner_utils.appendToFile(out, out_filename)
+            if clusterer.startswith("NetworKit"):
+              cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
+            else:
+              out_filename = out_prefix + ".out"
+              out_clustering = out_prefix + ".cluster"
+              use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
+              use_input_graph = runner_utils.input_directory + graph
+              ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
+              "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --clusterer_name=" + clusterer + " "
+              "--clusterer_config='" + config_prefix + config + config_postfix + "' "
+              "--output_clustering=" + out_clustering)
+              out = runner_utils.shellGetOutput(ss)
+              runner_utils.appendToFile(ss + "\n", out_filename)
+              runner_utils.appendToFile(out, out_filename)
 
 def main():
   args = sys.argv[1:]
