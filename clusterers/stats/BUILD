@@ -80,5 +80,6 @@ cc_library(
         "@com_google_protobuf//:protobuf",
         "@parcluster//parcluster/api:in-memory-clusterer-base",
         "@gbbs//benchmarks/GeneralWeightSSSP/BellmanFord:BellmanFord",
+        "@gbbs//benchmarks/Connectivity/SimpleUnionAsync:Connectivity",
     ],
 )
