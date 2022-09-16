@@ -49,16 +49,6 @@ inline void set_distribution_stats(std::size_t size, const T& data, Distribution
   distribution_stats->set_maximum(max);
 }
 
-// template <class T>
-// inline std::tuple<uintE, uintE, gbbs::empty> get_edge<gbbd::empty>(const gbbs::uintE u, const gbbs::uintE v, const T wgh){
-//   return std::tuple<uintE, uintE, Wgh>(map[u],map[v]);
-// }
-
-// template <class Wgh>
-// inline std::tuple<uintE, uintE, Wgh> get_edge(const gbbs::uintE u, const gbbs::uintE v, const Wgh wgh){
-//   return std::tuple<uintE, uintE, Wgh>(map[u],map[v],wgh);
-// }
-
 // return a subgraph that has the vertices in V
 // if keep_ids=false, the ids in subgraph do not neccessarily corresponds to the original graph's node id
 // the number of nodes in the new subgraph is V.size()

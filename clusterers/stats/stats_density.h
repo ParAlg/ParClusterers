@@ -27,6 +27,9 @@
 
 namespace research_graph::in_memory {
 
+
+// compute the edge density of each cluster
+// edge density is the number of edges divided by the number of possible edges
 inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
@@ -55,7 +58,8 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   return absl::OkStatus();
 }
 
-
+// compute the triangle density of each cluster
+// triangle density is the number of triangles divided by the number of wedges
 // if no wedge, density is 0
 inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
