@@ -4,6 +4,7 @@ import signal
 import time
 import subprocess
 import re
+import math
 import itertools
 import numpy as np
 import matplotlib
@@ -21,7 +22,7 @@ def readClusterTime(filename):
       if split:
         if split[0].startswith("Cluster Time"):
           return float(split[1])
-  return 0
+  return math.nan
 
 def plotAll(xes, yes, labels, x_label, y_label, graph_name):
   colors = cm.rainbow(np.linspace(0, 1, len(labels)))
@@ -45,7 +46,11 @@ def isNumber(s, modifier_index):
       #s = s.replace("{", "")
       #s = s.replace("}", "")
       #s_list = [x.strip() for x in s.split(',')]
-      return float(s[int(modifier_index)])
+      try:
+        float(s[int(modifier_index)])
+        return float(s[int(modifier_index)])
+      except TypeError:
+        return math.nan
 
 def plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier):
   out_statistics = out_prefix + ".stats"
@@ -83,7 +88,7 @@ def configPlotAll(
       elif legend == "Clusterers":
         index = clusterer_idx
       for i in range(runner_utils.num_rounds):
-        if clusterer == "Tectonic":
+        if clusterer == "Tectonic" or clusterer.startswith("Snap"):
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
           plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier)
         else:

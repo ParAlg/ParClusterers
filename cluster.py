@@ -9,6 +9,24 @@ import cluster_nk
 import runner_utils
 
 # Graph must be in edge format
+def runSnap(clusterer, graph, graph_idx, round):
+  if (runner_utils.gbbs_format == "true"):
+    raise ValueError("SNAP can only be run using edge list format")
+  use_input_graph = runner_utils.input_directory + graph
+  out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(round)
+  out_clustering = out_prefix + ".cluster"
+  out_filename = out_prefix + ".out"
+  runner_utils.shellGetOutput("(cd external/snap/examples/community && make all)")
+  if (clusterer == "SnapGirvanNewman"):
+    alg_number = 1
+  elif (clusterer == "SnapInfomap"):
+    alg_number = 3
+  else: #SnapCNM
+    alg_number = 2
+  out_time = runner_utils.shellGetOutput("external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
+  runner_utils.appendToFile(out_time, out_filename)
+
+# Graph must be in edge format
 def runTectonic(clusterer, graph, graph_idx, round):
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("Tectonic can only be run using edge list format")
@@ -49,6 +67,10 @@ def runAll(config_filename):
       if clusterer == "Tectonic":
         for i in range(runner_utils.num_rounds):
           runTectonic(clusterer, graph, graph_idx, i)
+        continue
+      elif clusterer.startswith("Snap"):
+        for i in range(runner_utils.num_rounds):
+          runSnap(clusterer, graph, graph_idx, i)
         continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
         configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]

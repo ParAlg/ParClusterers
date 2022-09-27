@@ -10,6 +10,10 @@ import runner_utils
 def runStats(out_prefix, graph, graph_idx):
   out_statistics = out_prefix + ".stats"
   in_clustering = out_prefix + ".cluster"
+  if not os.path.exists(in_clustering) or not os.path.getsize(in_clustering) > 0:
+    # Either an error or a timeout happened
+    runner_utils.appendToFile("ERROR", out_statistics)
+    return
   use_input_graph = runner_utils.input_directory + graph
   use_input_communities = "" if not runner_utils.communities else "--input_communities=" + runner_utils.input_directory + runner_utils.communities[graph_idx]
   ss = ("bazel run //clusterers:stats-in-memory_main -- "
@@ -25,7 +29,7 @@ def runAll(config_filename, stats_config_filename):
   runner_utils.readStatsConfig(stats_config_filename)
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
-      if clusterer == "Tectonic":
+      if clusterer == "Tectonic" or clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
           runStats(out_prefix, graph, graph_idx)
