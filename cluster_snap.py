@@ -14,8 +14,14 @@ def runSnap(use_input_graph):#clusterer, graph, thread, config, out_prefix):
   # Undirected graph
   G = snap.LoadEdgeList(snap.TUNGraph, use_input_graph, 0, 1, '\t')
 
+  start_time = time.time()
   modularity, CmtyV = G.CommunityCNM()
+  end_time = time.time()
+  print("CNM time: " + str(end_time - start_time))
+  start_time = time.time()
   modularity, CmtyV = G.CommunityGirvanNewman()
+  end_time = time.time()
+  print("GirvanNewman time: " + str(end_time - start_time))
   # CmtyV: A vector of all the communities that are detected by the CNM method. Each community is represented as a vector of node ids.
   #for Cmty in CmtyV:
   #  print("Community: ")
