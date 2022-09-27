@@ -2,6 +2,7 @@ import snap
 import runner_utils
 import time
 import io
+import sys
 from contextlib import redirect_stdout
 
 def runSnap(use_input_graph):#clusterer, graph, thread, config, out_prefix):
