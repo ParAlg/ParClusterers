@@ -83,7 +83,12 @@ inline gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh> get_subgraph(const Gbb
         auto map_f = [&] (const auto& u, const auto& v, const auto& wgh, const auto& j) {
             if(labels[u]==labels[v]){
                 flags[offset+j] = true;
-                edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v],wgh);
+                if constexpr(std::is_same_v<Wgh, gbbs::empty>) {
+                  edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v]);
+                } else {
+                  edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v],wgh);
+                }
+                
             }
         };
         graph_.Graph()->get_vertex(vert).out_neighbors().map_with_index(map_f);
@@ -97,6 +102,41 @@ inline gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh> get_subgraph(const Gbb
         return gbbs::sym_graph_from_edges(subgraph_edges, n);
     }
 
+}
+
+// return the number of edges in a subgraph that has the vertices in V
+// labels[i] is the cluster id of vertex i
+inline std::size_t get_subgraph_num_edges(const GbbsGraph& graph_, const std::vector<InMemoryClusterer::NodeId>& V, const parlay::sequence<gbbs::uintE>& labels){
+    using uintE = gbbs::uintE;
+    std::size_t n = V.size();
+    auto offsets = parlay::sequence<size_t>::from_function(
+      n, [&](size_t i) { return graph_.Graph()->get_vertex(V[i]).out_degree(); }); //double check, is numbers in V corresponding to the graph nodes?
+    auto new_m = parlay::scan_inclusive_inplace(offsets);
+    auto flags = parlay::sequence<size_t>(new_m, 0); // flag[i] = true if the edge should be in the subgraph
+    // mark true in flags where an edge is in subgraph
+    parlay::parallel_for(0, n, [&] (size_t i) {
+        uintE vert = V[i];
+        std::size_t offset = i==0 ? 0 : offsets[i-1];
+        auto map_f = [&] (const auto& u, const auto& v, const auto& wgh, const auto& j) {
+            if(labels[u]==labels[v]){
+                flags[offset+j] = 1;
+            }
+        };
+        graph_.Graph()->get_vertex(vert).out_neighbors().map_with_index(map_f);
+    });
+
+    return parlay::reduce(flags);
+
+}
+
+template<class Graph>
+inline std::size_t get_num_wedges(Graph* G){
+    auto wedges = parlay::delayed_seq<size_t>(
+      G->n, [&](size_t i) { 
+          std::size_t d = G->get_vertex(i).out_degree(); 
+          return d*(d-1)/2;
+    });
+    return parlay::reduce(wedges);
 }
 
 }  // namespace research_graph::in_memory

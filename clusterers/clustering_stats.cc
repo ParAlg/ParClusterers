@@ -28,6 +28,9 @@ ClusteringStatistics GetStats(const GbbsGraph& graph,
   ComputeCorrelationObjective(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeModularityObjective(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeDiameter(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  ComputeTriangleDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+
 
   return clustering_stats;
 }

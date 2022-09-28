@@ -24,8 +24,41 @@
 #include "parcluster/api/status_macros.h"
 
 #include "external/gbbs/benchmarks/GeneralWeightSSSP/BellmanFord/BellmanFord.h"
+#include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 
 namespace research_graph::in_memory {
+
+// copy from gbbs::simple_union_find::num_cc, removed printing statement
+template <class Seq>
+inline size_t num_cc(Seq& labels) {
+  size_t n = labels.size();
+  auto flags = parlay::sequence<gbbs::uintE>::from_function(n + 1, [&](size_t i) { return 0; });
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    if (!flags[labels[i]]) {
+      flags[labels[i]] = 1;
+    }
+  }, gbbs::kDefaultGranularity);
+  parlay::scan_inplace(flags);
+  return flags[n];
+}
+
+inline void ComputeComponentHelper(const GbbsGraph& graph, 
+  const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
+  const parlay::sequence<gbbs::uintE>& cluster_ids, std::vector<int>& component_vec) {
+
+  if(clustering.size()==1){ // a single cluster, no need to obtain subgraph of each cluster
+    auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(*graph.Graph());
+    std::size_t cc = num_cc(cc_labels);
+    component_vec[0] = cc;
+  }else{
+    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+        auto G = get_subgraph(graph, clustering[i], cluster_ids);
+        auto cc_labels = gbbs::simple_union_find::SimpleUnionAsync(G);
+        std::size_t cc = num_cc(cc_labels);
+        component_vec[i] = cc;
+    });
+  }
+}
 
 // Same as the gbbs BellmanFord algorithm, but no print statement
 template <class Graph>
@@ -61,8 +94,23 @@ auto BellmanFordNoPrint(Graph& G, gbbs::uintE start) {
 inline absl::Status ComputeDiameter(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
-
+  
+  const bool compute_num_component = clustering_stats_config.compute_num_component();
   const bool compute_diameter = clustering_stats_config.compute_diameter();
+
+  if ((!compute_num_component) && (!compute_diameter)) {
+    return absl::OkStatus();
+  }
+
+  std::vector<int> component_vec = std::vector<int>(clustering.size());
+  ComputeComponentHelper(graph, clustering, clustering_stats, cluster_ids, component_vec);
+
+  if (compute_num_component) {
+    auto component_func = [&](std::size_t i) {
+      return component_vec[i];
+    };
+    set_distribution_stats(component_vec.size(), component_func, clustering_stats->mutable_num_component());
+  }
   
   if (!compute_diameter) {
     return absl::OkStatus();
@@ -70,6 +118,7 @@ inline absl::Status ComputeDiameter(const GbbsGraph& graph,
   parlay::sequence<double> diameter_vec = parlay::sequence<double>::uninitialized(clustering.size());
 
   parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+    if(component_vec[i]==1){ // only compute diameter for single connected component cluster
       auto G = get_subgraph(graph, clustering[i], cluster_ids); 
       auto distances = parlay::sequence<float>::uninitialized(clustering[i].size());
       parlay::parallel_for(0, clustering[i].size(), [&] (size_t j) {
@@ -78,12 +127,18 @@ inline absl::Status ComputeDiameter(const GbbsGraph& graph,
       });
       auto diameter = *(parlay::max_element(distances));
       diameter_vec[i] = diameter;
+    }
   });
 
+  auto flags = parlay::delayed_seq<bool>(clustering.size(), [&] (size_t i) {
+    return component_vec[i]==1;
+  });
+  auto diameter_vec_filtered = parlay::pack(diameter_vec, flags);
+
   auto diameter_func = [&](std::size_t i) {
-    return diameter_vec[i];
+    return diameter_vec_filtered[i];
   };
-  set_distribution_stats(diameter_vec.size(), diameter_func, clustering_stats->mutable_diameter());
+  set_distribution_stats(diameter_vec_filtered.size(), diameter_func, clustering_stats->mutable_diameter());
 
   return absl::OkStatus();
 }
