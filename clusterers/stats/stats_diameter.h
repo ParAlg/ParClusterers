@@ -95,21 +95,21 @@ inline absl::Status ComputeDiameter(const GbbsGraph& graph,
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
   
-  const bool compute_component = clustering_stats_config.compute_component();
+  const bool compute_num_component = clustering_stats_config.compute_num_component();
   const bool compute_diameter = clustering_stats_config.compute_diameter();
 
-  if ((!compute_component) && (!compute_diameter)) {
+  if ((!compute_num_component) && (!compute_diameter)) {
     return absl::OkStatus();
   }
 
   std::vector<int> component_vec = std::vector<int>(clustering.size());
   ComputeComponentHelper(graph, clustering, clustering_stats, cluster_ids, component_vec);
 
-  if (compute_component) {
+  if (compute_num_component) {
     auto component_func = [&](std::size_t i) {
       return component_vec[i];
     };
-    set_distribution_stats(component_vec.size(), component_func, clustering_stats->mutable_component());
+    set_distribution_stats(component_vec.size(), component_func, clustering_stats->mutable_num_component());
   }
   
   if (!compute_diameter) {

@@ -42,12 +42,12 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   auto result = std::vector<double>(clustering.size());
 
   if(clustering.size()==1){
-    result[0] = ((double)graph.Graph()->m) / ((double)n*(n-1));
+    result[0] = (static_cast<double>(graph.Graph()->m)) / (static_cast<double>(n)*(n-1));
   }else{
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
         size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
         double m_total = clustering[i].size()*(clustering[i].size()-1);
-        result[i] = ((double)m_subgraph) / ((double)m_total);
+        result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
     });
   }
   auto result_func = [&](std::size_t i) {
@@ -80,7 +80,7 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
           result[i] = 0;
         }else{
           size_t num_tri = gbbs::Triangle_degree_ordering(G, f);
-          result[i] = ((double)num_tri) / ((double)num_wedges);
+          result[i] = (static_cast<double>(num_tri)) / (static_cast<double>(num_wedges));
         }
     });
   // for(double l:result) std::cout << l << std::endl;

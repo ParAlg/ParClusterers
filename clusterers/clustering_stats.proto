@@ -7,7 +7,7 @@ message ClusteringStatsConfig {
   repeated double correlation_edge_weight_offsets = 2;
   repeated double modularity_resolutions = 3;
   optional bool compute_diameter = 4;
-  optional bool compute_component = 5;
+  optional bool compute_num_component = 5;
   optional bool compute_edge_density = 6;
   optional bool compute_triangle_density = 7;
 }
@@ -31,7 +31,7 @@ message ClusteringStatistics {
   repeated double correlation_objective = 22;
   repeated double modularity_objective = 23;
   optional DistributionStats diameter = 24;
-  optional DistributionStats component = 25;
+  optional DistributionStats num_component = 25;
   optional DistributionStats edge_density = 26;
   optional DistributionStats triangle_density = 27;
 
