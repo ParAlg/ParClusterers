@@ -212,7 +212,7 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
   parlay::parallel_for(0, G.n, [&] (size_t i) {
     size_t v_index = 0;
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-      if (static_cast<double>(triangle_degrees[offset[i] + v_index]) / (G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree()) >= threshold) {
+      if (static_cast<double>(triangle_degrees[offset[i] + v_index]) / static_cast<double>(G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree()) >= threshold) {
         gbbs::simple_union_find::unite_impl(u, v, clusters);
       }
       v_index++;
