@@ -39,7 +39,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
     case TectonicClustererConfig::GOODRICH_PSZONA:
     {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
-        return goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
+        return gbbs::goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
@@ -47,7 +47,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
     case TectonicClustererConfig::BARENBOIM_ELKIN:
     {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
-        return barenboimelkin_degen::DegeneracyOrder(graph);
+        return gbbs::barenboimelkin_degen::DegeneracyOrder(graph);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
