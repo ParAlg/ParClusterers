@@ -24,8 +24,8 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
   TectonicClustererConfig tectonic_config;
   config.any_config().UnpackTo(&tectonic_config);
 
-  double threshold = tectonic_config().threshold();
-  const auto ordering_function = tectonic_config().ordering_function();
+  double threshold = tectonic_config.threshold();
+  const auto ordering_function = tectonic_config.ordering_function();
 
   parlay::sequence<gbbs::uintE> clusters;
   switch (ordering_function) {
@@ -49,7 +49,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
     case TectonicClustererConfig::KCORE:
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         auto dyn_arr = gbbs::DegeneracyOrder(graph);
-        auto ret = sequence<gbbs::uintE>::from_function(
+        auto ret = parlay::sequence<gbbs::uintE>::from_function(
           graph.n, [&](size_t i) { return dyn_arr.A[i]; });
         return ret;
       };
