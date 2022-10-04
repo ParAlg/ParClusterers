@@ -4,7 +4,7 @@ package research_graph.in_memory;
 
 
 message TectonicClustererConfig {
-  optional double threshold = 1 [default = 1];
+  optional double threshold = 1 [default = 0.06];
 
   enum OrderingFunction {
     DEFAULT_DEGREE = 0;
