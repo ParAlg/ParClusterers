@@ -2,10 +2,6 @@ licenses(["notice"])
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
-
-package(default_visibility = ["//visibility:public"])
-
 proto_library(
     name = "tectonic_config_proto",
     srcs = [
