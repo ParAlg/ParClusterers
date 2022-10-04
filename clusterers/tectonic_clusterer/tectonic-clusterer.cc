@@ -25,6 +25,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
   config.any_config().UnpackTo(&tectonic_config);
 
   double threshold = tectonic_config.threshold();
+  double eps = tectonic_config.goodrich_pszona_epsilon();
   const auto ordering_function = tectonic_config.ordering_function();
 
   parlay::sequence<gbbs::uintE> clusters;

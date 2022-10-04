@@ -13,4 +13,6 @@ message TectonicClustererConfig {
     KCORE = 3;
   }
   optional OrderingFunction ordering_function = 2;
+
+  optional double goodrich_pszona_epsilon = 3;
 }
