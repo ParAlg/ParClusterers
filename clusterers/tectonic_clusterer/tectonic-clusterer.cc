@@ -30,23 +30,30 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
   parlay::sequence<gbbs::uintE> clusters;
   switch (ordering_function) {
     case TectonicClustererConfig::DEFAULT_DEGREE:
+    {
       clusters = gbbs::Triangle_degree_ordering_edge(*(graph_.Graph()), threshold);
       // Now use the triangle_degrees and DG to do a union find
       // Might be useful to have offset too
       break;
+    }
     case TectonicClustererConfig::GOODRICH_PSZONA:
+    {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
+    }
     case TectonicClustererConfig::BARENBOIM_ELKIN:
+    {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return barenboimelkin_degen::DegeneracyOrder(graph);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
+    }
     case TectonicClustererConfig::KCORE:
+    {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         auto dyn_arr = gbbs::DegeneracyOrder(graph);
         auto ret = parlay::sequence<gbbs::uintE>::from_function(
@@ -55,6 +62,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
+    }
     default:
       std::cout << "Unkown ordering function" << std::endl; exit(0);
   }
