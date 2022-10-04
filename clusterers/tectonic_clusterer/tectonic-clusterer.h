@@ -33,6 +33,30 @@
 #include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 
 namespace gbbs {
+
+template <
+    template <class inner_wgh> class vtx_type, class wgh_type, typename P,
+    typename std::enable_if<
+        std::is_same<vtx_type<wgh_type>, symmetric_vertex<wgh_type>>::value,
+        int>::type = 0>
+static inline symmetric_graph<symmetric_vertex, wgh_type> filterGraph(
+    symmetric_ptr_graph<vtx_type, wgh_type>& G, P& pred) {
+  auto ret = filter_graph<vtx_type, wgh_type>(G, pred);
+  auto newN = std::get<0>(ret);
+  auto newM = std::get<1>(ret);
+  auto newVData = std::get<2>(ret);
+  auto newEdges = std::get<3>(ret);
+
+  assert(newN == G.num_vertices());
+  return symmetric_graph<symmetric_vertex, wgh_type>(
+      newVData, newN, newM,
+      [=]() {
+        gbbs::free_array(newVData, newN);
+        gbbs::free_array(newEdges, newM);
+      },
+      newEdges);
+}
+
 namespace intersection {
 
 template <class SeqA, class SeqB, class F>
