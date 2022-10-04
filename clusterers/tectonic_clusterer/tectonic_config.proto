@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+
+message TectonicClustererConfig {
+  optional double threshold = 1 [default = 1];
+
+  enum OrderingFunction {
+    DEFAULT_DEGREE = 0;
+    GOODRICH_PSZONA = 1;
+    BARENBOIM_ELKIN = 2;
+    KCORE = 3;
+  }
+  optional OrderingFunction ordering_function = 2;
+}
