@@ -35,6 +35,9 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       clusters = gbbs::Triangle_degree_ordering_edge(*(graph_.Graph()), threshold);
       // Now use the triangle_degrees and DG to do a union find
       // Might be useful to have offset too
+      auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num clusters = " << ret.size() << std::endl;
+  return ret;
       break;
     }
     case TectonicClustererConfig::GOODRICH_PSZONA:
@@ -43,6 +46,9 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
         return gbbs::goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num clusters = " << ret.size() << std::endl;
+  return ret;
       break;
     }
     case TectonicClustererConfig::BARENBOIM_ELKIN:
@@ -51,6 +57,9 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
         return gbbs::barenboimelkin_degen::DegeneracyOrder(graph);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num clusters = " << ret.size() << std::endl;
+  return ret;
       break;
     }
     case TectonicClustererConfig::KCORE:
@@ -62,6 +71,9 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
         return ret;
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num clusters = " << ret.size() << std::endl;
+  return ret;
       break;
     }
     default:
