@@ -1,4 +1,4 @@
-#include "clusterers/kcore_clusterer/tectonic-clusterer.h"
+#include "clusterers/tectonic_clusterer/tectonic-clusterer.h"
 
 #include <algorithm>
 #include <iterator>
