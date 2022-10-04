@@ -20,10 +20,14 @@ absl::StatusOr<TectonicClusterer::Clustering>
 TectonicClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
   std::size_t m = graph_.Graph()->m;
-  double threshold = config.tectonic_clusterer_config().threshold();
-  const auto ordering_function = config.tectonic_clusterer_config().ordering_function();
 
-  sequence<uintE> clusters;
+  TectonicClustererConfig tectonic_config;
+  config.any_config().UnpackTo(&tectonic_config);
+
+  double threshold = tectonic_config().threshold();
+  const auto ordering_function = tectonic_config().ordering_function();
+
+  parlay::sequence<gbbs::uintE> clusters;
   switch (ordering_function) {
     case TectonicClustererConfig::DEFAULT_DEGREE:
       clusters = gbbs::Triangle_degree_ordering_edge(*(graph_.Graph()), threshold);
@@ -31,19 +35,19 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       // Might be useful to have offset too
       break;
     case TectonicClustererConfig::GOODRICH_PSZONA:
-      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> sequence<gbbs::uintE> {
+      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
     case TectonicClustererConfig::BARENBOIM_ELKIN:
-      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> sequence<gbbs::uintE> {
+      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return barenboimelkin_degen::DegeneracyOrder(graph);
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
       break;
     case TectonicClustererConfig::KCORE:
-      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> sequence<gbbs::uintE> {
+      auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         auto dyn_arr = gbbs::DegeneracyOrder(graph);
         auto ret = sequence<gbbs::uintE>::from_function(
           graph.n, [&](size_t i) { return dyn_arr.A[i]; });
