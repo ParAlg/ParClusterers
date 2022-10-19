@@ -45,6 +45,7 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   # Timing from here
   start_time = time.time()
   num_vert = runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace")
+  num_vert = num_vert.strip()
   runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
   runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
   runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
