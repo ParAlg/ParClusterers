@@ -183,7 +183,18 @@ inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
         auto their_neighbors = DG.get_vertex(v).out_neighbors();
         auto f_tmp = [&](uintE w, size_t u_idx, size_t v_idx){
           // TODO(jeshi): fix offset
-          f(offset[i] + iv_index, offset[i] + u_idx, offset[v] + v_idx);
+          size_t find_u_idx = 0;
+          size_t find_v_idx = 0;
+          size_t this_u_idx = 0; size_t this_v_idx = 0;
+          auto map_find_u = [&](uintE uu, uintE vv, W wwgh){
+            if (vv == w) this_u_idx = find_u_idx;
+            find_u_idx++;
+          }; our_neighbors.map(map_find_u, false);
+          auto map_find_v = [&](uintE uu, uintE vv, W wwgh){
+            if (vv == w) this_v_idx = find_v_idx;
+            find_v_idx++;
+          }; their_neighbors.map(map_find_v, false);
+          f(offset[i] + iv_index, offset[i] + this_u_idx, offset[v] + this_v_idx);
         };
         total_ct += intersection::intersect_f_par_idx(&our_neighbors, &their_neighbors, f_tmp);
         iv_index++;
@@ -217,6 +228,7 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
   parlay::parallel_for(0, G.n, [&] (size_t i) {
     size_t v_index = 0;
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
+
       auto g_u_nbhrs = G.get_vertex(u).out_neighbors();
       using W = typename Graph::weight_type;
       auto map_map_f = [&](uintE uu, uintE vv, W wghwgh) {
