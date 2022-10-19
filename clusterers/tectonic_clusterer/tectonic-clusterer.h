@@ -218,20 +218,14 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
     size_t v_index = 0;
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
 
-      auto g_u_nbhrs = DG.get_vertex(u).out_neighbors();
-      using W = typename Graph::weight_type;
-      auto map_map_f = [&](uintE uu, uintE vv, W wghwgh) {
-        if (vv == v) {
-          auto fff = [&](uintE u, uintE v, uintE w) {};
-          auto g_v_nbhrs = DG.get_vertex(v).out_neighbors();
-          size_t count_tmp = intersection::intersect_f_par(&g_u_nbhrs, &g_v_nbhrs, fff);
+      auto g_u_nbhrs = G.get_vertex(u).out_neighbors();
+      auto g_v_nbhrs = G.get_vertex(v).out_neighbors();
+      auto fff = [&](uintE a, uintE b, uintE c) {};
+      size_t count_tmp = intersection::intersect_f_par(&g_u_nbhrs, &g_v_nbhrs, fff);
           if (count_tmp != triangle_degrees[offset[i] + v_index]) {
             std::cout << "incorrect count: " << count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << uu << ", " << vv << std::endl;
             fflush(stdout);
           }
-        }
-      };
-      g_u_nbhrs.map(map_map_f, false);
 
       if (triangle_degrees[offset[i] + v_index] >= threshold * (G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree())) {
         gbbs::simple_union_find::unite_impl(u, v, clusters);
