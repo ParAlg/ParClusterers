@@ -217,15 +217,14 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
   parlay::parallel_for(0, G.n, [&] (size_t i) {
     size_t v_index = 0;
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-
+/*
       auto g_u_nbhrs = G.get_vertex(u).out_neighbors();
       auto g_v_nbhrs = G.get_vertex(v).out_neighbors();
       size_t count_tmp = intersection::intersect(&g_u_nbhrs, &g_v_nbhrs, u, v);
           if (count_tmp != triangle_degrees[offset[i] + v_index]) {
             std::cout << "incorrect count: " <<  count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << u << ", " << v << std::endl;
             fflush(stdout);
-          }
-
+          }*/
       if (triangle_degrees[offset[i] + v_index] >= threshold * (G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree())) {
         gbbs::simple_union_find::unite_impl(u, v, clusters);
       }
