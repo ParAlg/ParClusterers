@@ -40,7 +40,7 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter.cpp")
   threshold = "0.06"
   config_split = [x.strip() for x in config.split(':')]
-  if config_split:
+  if len(config_split) > 1:
     threshold = config_split[1]
   # Timing from here
   start_time = time.time()
@@ -82,7 +82,7 @@ def runAll(config_filename):
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             if clusterer.startswith("NetworKit"):
               cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
-            elif clusterer.startswith("Tectonic"):
+            elif clusterer == "Tectonic":
               runTectonic(clusterer, graph, thread, config, out_prefix)
             else:
               out_filename = out_prefix + ".out"
