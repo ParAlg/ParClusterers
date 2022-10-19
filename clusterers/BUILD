@@ -12,6 +12,7 @@ cc_library(
         "//clusterers/kcore_clusterer:kcore-clusterer",
         "//clusterers/example_clusterer:example-clusterer",
         "//clusterers/ldd_clusterer:ldd-clusterer",
+        "//clusterers/tectonic_clusterer:tectonic-clusterer",
     ],
     alwayslink = 1,
 )

@@ -23,28 +23,33 @@ def runSnap(clusterer, graph, graph_idx, round):
     alg_number = 3
   else: #SnapCNM
     alg_number = 2
-  out_time = runner_utils.shellGetOutput("external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
+  out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
   runner_utils.appendToFile(out_time, out_filename)
 
 # Graph must be in edge format
-def runTectonic(clusterer, graph, graph_idx, round):
+def runTectonic(clusterer, graph, thread, config, out_prefix):
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("Tectonic can only be run using edge list format")
   args = sys.argv[1:]
   runner_utils.readSystemConfig(args[1])
   use_input_graph = runner_utils.input_directory + graph
-  out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(round)
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
   runner_utils.shellGetOutput("(cd external/Tectonic/mace && make)")
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters external/Tectonic/tree-clusters.cpp")
+  runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter.cpp")
+  threshold = "0.06"
+  config_split = [x.strip() for x in config.split(':')]
+  if len(config_split) > 1:
+    threshold = config_split[1]
   # Timing from here
   start_time = time.time()
   num_vert = runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace")
+  num_vert = num_vert.strip()
   runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
   runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
   runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
-  cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters " + out_prefix + ".weighted " + num_vert)
+  cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
   end_time = time.time()
   # Output running time to out_filename
   runner_utils.appendToFile(cluster, out_clustering)
@@ -64,11 +69,7 @@ def runAll(config_filename):
   runner_utils.readConfig(config_filename)
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
-      if clusterer == "Tectonic":
-        for i in range(runner_utils.num_rounds):
-          runTectonic(clusterer, graph, graph_idx, i)
-        continue
-      elif clusterer.startswith("Snap"):
+      if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           runSnap(clusterer, graph, graph_idx, i)
         continue
@@ -81,6 +82,8 @@ def runAll(config_filename):
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             if clusterer.startswith("NetworKit"):
               cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
+            elif clusterer == "Tectonic":
+              runTectonic(clusterer, graph, thread, config, out_prefix)
             else:
               out_filename = out_prefix + ".out"
               out_clustering = out_prefix + ".cluster"

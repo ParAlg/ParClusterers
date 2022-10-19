@@ -30,6 +30,7 @@
 #include "clusterers/example_clusterer/example-clusterer.h"
 #include "clusterers/kcore_clusterer/kcore-clusterer.h"
 #include "clusterers/ldd_clusterer/ldd-clusterer.h"
+#include "clusterers/tectonic_clusterer/tectonic-clusterer.h"
 
 #include "clusterers/gbbs_graph_io.h"
 #include "google/protobuf/text_format.h"
@@ -96,7 +97,7 @@ absl::Status WriteClustering(const char* filename,
 }
 
 bool IsAnyProto(const std::string& clusterer_name){
-  return (clusterer_name == "ExampleClusterer");
+  return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer");
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
@@ -143,6 +144,8 @@ absl::Status Main() {
     clusterer.reset(new ConnectivityClusterer);
   }  else if (clusterer_name == "KCoreClusterer") {
     clusterer.reset(new KCoreClusterer);
+  } else if (clusterer_name == "TectonicClusterer") {
+    clusterer.reset(new TectonicClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
