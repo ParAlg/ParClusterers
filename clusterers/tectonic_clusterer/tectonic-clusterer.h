@@ -66,8 +66,8 @@ size_t seq_merge_full_idx(SeqA& A, SeqB& B, F& f, size_t offset_a, size_t offset
   size_t i = 0, j = 0;
   size_t ct = 0;
   while (i < nA && j < nB) {
-    const T& a = A[i];
-    const T& b = B[j];
+    const T& a = std::get<0>(A[i]);
+    const T& b = std::get<0>(B[j]);
     if (a == b) {
       if (!flip) f(a, offset_a + i, offset_b + j);
       else f(a, offset_b + j, offset_a + i);
@@ -89,9 +89,9 @@ size_t seq_merge_idx(const SeqA& A, const SeqB& B, const F& f, size_t offset_a, 
   size_t nA = A.size();
   size_t ct = 0;
   for (size_t i = 0; i < nA; i++) {
-    const T& a = A[i];
+    const T& a = std::get<0>(A[i]);
     size_t mB = parlay::binary_search(B, a, std::less<T>());
-    if (mB < B.size() && a == B[mB]) {
+    if (mB < B.size() && a == std::get<0>(B[mB])) {
       if (!flip) f(a, offset_a + i, offset_b + mB);
       else f(a, offset_b + mB, offset_a + i);
       ct++;
@@ -128,13 +128,14 @@ size_t merge_idx(const SeqA& A, const SeqB& B, const F& f, size_t offset_a, size
 
 template <class Nghs, class F>
 inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
+  using EdgeType = std::tuple<uintE, float>;
   uintT nA = A->degree, nB = B->degree;
-  uintE* nghA = (uintE*)(A->neighbors);
-  uintE* nghB = (uintE*)(B->neighbors);
+  EdgeType* nghA = (EdgeType*)(A->neighbors);
+  EdgeType* nghB = (EdgeType*)(B->neighbors);
 
   // Will not work if W is not gbbs::empty, should assert.
-  auto seqA = gbbs::make_slice<uintE>(nghA, nA);
-  auto seqB = gbbs::make_slice<uintE>(nghB, nB);
+  auto seqA = gbbs::make_slice<EdgeType>(nghA, nA);
+  auto seqB = gbbs::make_slice<EdgeType>(nghB, nB);
 
   uintE a = A->id;
   uintE b = B->id;
