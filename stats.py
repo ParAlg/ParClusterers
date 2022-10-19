@@ -29,7 +29,7 @@ def runAll(config_filename, stats_config_filename):
   runner_utils.readStatsConfig(stats_config_filename)
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
     for graph_idx, graph in enumerate(runner_utils.graphs):
-      if clusterer == "Tectonic" or clusterer.startswith("Snap"):
+      if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
           runStats(out_prefix, graph, graph_idx)

@@ -88,7 +88,7 @@ def configPlotAll(
       elif legend == "Clusterers":
         index = clusterer_idx
       for i in range(runner_utils.num_rounds):
-        if clusterer == "Tectonic" or clusterer.startswith("Snap"):
+        if clusterer.startswith("Snap"):
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
           plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier)
         else:

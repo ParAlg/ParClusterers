@@ -4,6 +4,11 @@ import time
 import io
 from contextlib import redirect_stdout
 
+# pip3 install --upgrade pip
+# pip3 install cmake cython
+# pip3 install networkit
+# pip3 install tabulate
+
 def runNetworKitPLM(G, config):
   use_refine = False
   use_gamma = 1.0
