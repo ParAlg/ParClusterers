@@ -90,7 +90,7 @@ size_t seq_merge_idx(const SeqA& A, const SeqB& B, const F& f, size_t offset_a, 
   size_t ct = 0;
   for (size_t i = 0; i < nA; i++) {
     const uintE& a = std::get<0>(A[i]);
-    std::tuple<uintE, float> search = std::make_tuple<uintE, float>(a, static_cast<float>(0));
+    std::tuple<uintE, float> search = std::make_tuple(a, static_cast<float>(0));
     auto less_tuple = [](T& x, T& y){
       return std::get<0>(x) < std::get<0>(y);
     };
