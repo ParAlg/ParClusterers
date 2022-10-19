@@ -74,7 +74,7 @@ def readConfig(filename):
           gbbs_format = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
-            if split[0].startswith(clusterer_name):
+            if split[0] == clusterer_name:
               clusterer_config_names[index] = in_file.readline().strip()
               current_configs = []
               next_line = in_file.readline().strip()
