@@ -194,6 +194,8 @@ inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
             if (vv == w) this_v_idx = find_v_idx;
             find_v_idx++;
           }; their_neighbors.map(map_find_v, false);
+          if (this_u_idx != u_idx) std::cout << "WHAT" << std::endl;
+          if (this_v_idx != v_idx) std::cout << "HOW" << std::endl;
           f(offset[i] + iv_index, offset[i] + this_u_idx, offset[v] + this_v_idx);
         };
         total_ct += intersection::intersect_f_par_idx(&our_neighbors, &their_neighbors, f_tmp);
