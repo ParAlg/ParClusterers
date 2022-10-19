@@ -276,7 +276,7 @@ inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold)
   parlay::scan_inplace(make_slice(offset));
 
   size_t count = CountDirectedBalancedEdge(DG, counts.begin(), f, offset);
-  //std::cout << "### Num triangles = " << count << "\n";
+  std::cout << "### Num triangles = " << count << "\n";
   ct.stop();
   //ct.next("count time");
   gbbs::free_array(rank, G.n);
@@ -327,7 +327,7 @@ inline sequence<uintE> Triangle_degeneracy_ordering_edge(Graph& G, double thresh
   parlay::scan_inplace(make_slice(offset));
 
   size_t count = CountDirectedBalancedEdge(DG, counts.begin(), f, offset);
-  //std::cout << "### Num triangles = " << count << "\n";
+  std::cout << "### Num triangles = " << count << "\n";
   ct.stop();
   //ct.next("count time");
   return Triangle_union_find(G, DG, triangle_degrees, threshold, offset);
