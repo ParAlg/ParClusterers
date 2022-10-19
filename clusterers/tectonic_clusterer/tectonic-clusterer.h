@@ -90,9 +90,11 @@ size_t seq_merge_idx(const SeqA& A, const SeqB& B, const F& f, size_t offset_a, 
   size_t ct = 0;
   for (size_t i = 0; i < nA; i++) {
     const uintE& a = std::get<0>(A[i]);
-    size_t mB = parlay::binary_search(B, std::make_tuple<uintE, float>(a, 0), [](T& x, T& y){
+    auto search = std::make_tuple<uintE, float>(a, 0);
+    auto less_tuple = [](T& x, T& y){
       return std::get<0>(x) < std::get<0>(y);
-    });
+    };
+    size_t mB = parlay::binary_search(B, search, less_tuple);
     if (mB < B.size() && a == std::get<0>(B[mB])) {
       if (!flip) f(a, offset_a + i, offset_b + mB);
       else f(a, offset_b + mB, offset_a + i);
