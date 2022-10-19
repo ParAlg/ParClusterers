@@ -223,7 +223,7 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
       auto fff = [&](uintE a, uintE b, uintE c) {};
       size_t count_tmp = intersection::intersect_f_par(&g_u_nbhrs, &g_v_nbhrs, fff);
           if (count_tmp != triangle_degrees[offset[i] + v_index]) {
-            std::cout << "incorrect count: " << count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << uu << ", " << vv << std::endl;
+            std::cout << "incorrect count: " << count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << u << ", " << v << std::endl;
             fflush(stdout);
           }
 
