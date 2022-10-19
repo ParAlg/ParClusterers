@@ -220,15 +220,9 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
 
       auto g_u_nbhrs = G.get_vertex(u).out_neighbors();
       auto g_v_nbhrs = G.get_vertex(v).out_neighbors();
-      size_t check_count = 0;
-      auto fff = [&](uintE a, uintE b, uintE c) {
-        gbbs::write_add(&check_count, 1);
-        std::cout << "A: " << a << ", B: " << b << ", C: " << c << std::endl;
-      };
-      size_t count_tmp = intersection::intersect_f_par(&g_u_nbhrs, &g_v_nbhrs, fff);
-      if (count_tmp != check_count) std::cout << "WHAT" << std::endl;
-          if (check_count != triangle_degrees[offset[i] + v_index]) {
-            std::cout << "incorrect count: " << check_count << ", " << triangle_degrees[offset[i] + v_index] << ", " << u << ", " << v << std::endl;
+      size_t count_tmp = intersection::intersect(&g_u_nbhrs, &g_v_nbhrs, u, v);
+          if (count_tmp != triangle_degrees[offset[i] + v_index]) {
+            std::cout << "incorrect count: " <<  count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << u << ", " << v << std::endl;
             fflush(stdout);
           }
 
