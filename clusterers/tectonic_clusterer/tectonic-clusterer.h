@@ -141,8 +141,8 @@ inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
   auto seqA = gbbs::make_slice<EdgeType>(nghA, nA);
   auto seqB = gbbs::make_slice<EdgeType>(nghB, nB);
 
-  uintE a = A->id;
-  uintE b = B->id;
+  //uintE a = A->id;
+  //uintE b = B->id;
   auto merge_f = [&](uintE ngh, size_t a_idx, size_t b_idx) { f(ngh, a_idx, b_idx); };
   return intersection::merge_idx(seqA, seqB, merge_f, 0, 0, false);
 }
@@ -217,7 +217,7 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
   parlay::parallel_for(0, G.n, [&] (size_t i) {
     size_t v_index = 0;
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-      if (static_cast<double>(triangle_degrees[offset[i] + v_index]) / static_cast<double>(G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree()) >= threshold) {
+      if (triangle_degrees[offset[i] + v_index] >= threshold * (G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree())) {
         gbbs::simple_union_find::unite_impl(u, v, clusters);
       }
       v_index++;
