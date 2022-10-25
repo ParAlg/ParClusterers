@@ -15,4 +15,6 @@ message TectonicClustererConfig {
   optional OrderingFunction ordering_function = 2;
 
   optional double goodrich_pszona_epsilon = 3;
+
+  optional bool match_real_tectonic = 4 [default = false];
 }

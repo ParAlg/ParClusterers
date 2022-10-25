@@ -33,6 +33,7 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   args = sys.argv[1:]
   runner_utils.readSystemConfig(args[1])
   use_input_graph = runner_utils.input_directory + graph
+  out_clustering_tmp = out_prefix + ".tmpcluster"
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
   runner_utils.shellGetOutput("(cd external/Tectonic/mace && make)")
@@ -52,7 +53,8 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
   end_time = time.time()
   # Output running time to out_filename
-  runner_utils.appendToFile(cluster, out_clustering)
+  runner_utils.appendToFile(cluster, out_clustering_tmp)
+  runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering)
   runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time), out_filename)
 
 #cd external/Tectonic/

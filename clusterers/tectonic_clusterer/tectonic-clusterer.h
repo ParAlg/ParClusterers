@@ -183,7 +183,7 @@ inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
         auto their_neighbors = DG.get_vertex(v).out_neighbors();
         auto f_tmp = [&](uintE w, size_t u_idx, size_t v_idx){
           // TODO(jeshi): fix offset
-          f(offset[i] + iv_index, offset[i] + u_idx, offset[v] + v_idx);
+          f(offset[i] + iv_index, offset[i] + u_idx, offset[v] + v_idx, i, v, w);
         };
         total_ct += intersection::intersect_f_par_idx(&our_neighbors, &their_neighbors, f_tmp);
         iv_index++;
@@ -241,8 +241,41 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
 
 }
 
+template <class Graph, class DirectedGraph>
+inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG, 
+  sequence<uintE>& triangle_degrees, double threshold, sequence<uintE>& offset,
+  sequence<uintE>& vertex_triangle_degrees){
+
+  auto clusters = parlay::sequence<gbbs::uintE>::from_function(G.n, [&] (size_t i) { return i; });
+  parlay::parallel_for(0, G.n, [&] (size_t i) {
+    size_t v_index = 0;
+    auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
+/*
+      auto g_u_nbhrs = G.get_vertex(u).out_neighbors();
+      auto g_v_nbhrs = G.get_vertex(v).out_neighbors();
+      size_t count_tmp = intersection::intersect(&g_u_nbhrs, &g_v_nbhrs, u, v);
+          if (count_tmp != triangle_degrees[offset[i] + v_index]) {
+            std::cout << "incorrect count: " <<  count_tmp << ", " << triangle_degrees[offset[i] + v_index] << ", " << u << ", " << v << std::endl;
+            fflush(stdout);
+          }*/
+      if (triangle_degrees[offset[i] + v_index] >= threshold * std::max(vertex_triangle_degrees[u], vertex_triangle_degrees[v])) {
+        gbbs::simple_union_find::unite_impl(u, v, clusters);
+      }
+      v_index++;
+    };
+    DG.get_vertex(i).out_neighbors().map(map_f, false);
+  });
+
+  parlay::parallel_for(0, G.n, [&] (size_t i) {
+    gbbs::simple_union_find::find_compress(i, clusters);
+  });
+
+  return clusters;
+
+}
+
 template <class Graph>
-inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold) {
+inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold, bool match_real_tectonic) {
   using W = typename Graph::weight_type;
   timer gt;
   gt.start();
@@ -274,13 +307,22 @@ inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold)
 
   parlay::sequence<gbbs::uintE> triangle_degrees = parlay::sequence<gbbs::uintE>::from_function(
     DG.m, [](std::size_t i){return 0;});
-  auto f = [&](size_t uv, size_t uw, size_t vw){
+  parlay::sequence<gbbs::uintE> vertex_triangle_degrees;
+  if (match_real_tectonic) vertex_triangle_degrees = parlay::sequence<gbbs::uintE>::from_function(
+      G.n, [](std::size_t i){return 0;});
+  auto f = [&](size_t uv, size_t uw, size_t vw, gbbs::uintE u, gbbs::uintE v, gbbs::uintE w){
     // Add to triangle_degrees() --> but remember it is on the directed graph
     // TODO(jeshi): Is there something better we can do than write_add?
     gbbs::write_add(&triangle_degrees[uv], 1);
     gbbs::write_add(&triangle_degrees[uw], 1);
     gbbs::write_add(&triangle_degrees[vw], 1);
+    if (match_real_tectonic) {
+      gbbs::write_add(&vertex_triangle_degrees[u], 1);
+      gbbs::write_add(&vertex_triangle_degrees[v], 1);
+      gbbs::write_add(&vertex_triangle_degrees[w], 1);
+    }
   };
+
 
   sequence<uintE> offset = sequence<uintE>::from_function(n, [&](size_t i){
     return DG.get_vertex(i).out_degree();
@@ -292,12 +334,13 @@ inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold)
   ct.stop();
   //ct.next("count time");
   gbbs::free_array(rank, G.n);
+  if (match_real_tectonic) return Triangle_union_find(G, DG, triangle_degrees, threshold, offset, vertex_triangle_degrees);
   return Triangle_union_find(G, DG, triangle_degrees, threshold, offset);
 }
 
 template <class Graph, class O>
 inline sequence<uintE> Triangle_degeneracy_ordering_edge(Graph& G, double threshold,
-                                           O ordering_fn) {
+                                           O ordering_fn, bool match_real_tectonic) {
   using W = typename Graph::weight_type;
   timer gt;
   gt.start();
@@ -325,12 +368,20 @@ inline sequence<uintE> Triangle_degeneracy_ordering_edge(Graph& G, double thresh
 
   parlay::sequence<gbbs::uintE> triangle_degrees = parlay::sequence<gbbs::uintE>::from_function(
     DG.m, [](std::size_t i){return 0;});
-  auto f = [&](size_t uv, size_t uw, size_t vw){
+  parlay::sequence<gbbs::uintE> vertex_triangle_degrees;
+  if (match_real_tectonic) vertex_triangle_degrees = parlay::sequence<gbbs::uintE>::from_function(
+      G.n, [](std::size_t i){return 0;});
+  auto f = [&](size_t uv, size_t uw, size_t vw, gbbs::uintE u, gbbs::uintE v, gbbs::uintE w){
     // Add to triangle_degrees() --> but remember it is on the directed graph
     // TODO(jeshi): Is there something better we can do than write_add?
     gbbs::write_add(&triangle_degrees[uv], 1);
     gbbs::write_add(&triangle_degrees[uw], 1);
     gbbs::write_add(&triangle_degrees[vw], 1);
+    if (match_real_tectonic) {
+      gbbs::write_add(&vertex_triangle_degrees[u], 1);
+      gbbs::write_add(&vertex_triangle_degrees[v], 1);
+      gbbs::write_add(&vertex_triangle_degrees[w], 1);
+    }
   };
 
   sequence<uintE> offset = sequence<uintE>::from_function(n, [&](size_t i){
@@ -342,6 +393,7 @@ inline sequence<uintE> Triangle_degeneracy_ordering_edge(Graph& G, double thresh
   std::cout << "### Num triangles = " << count << "\n";
   ct.stop();
   //ct.next("count time");
+  if (match_real_tectonic) return Triangle_union_find(G, DG, triangle_degrees, threshold, offset, vertex_triangle_degrees);
   return Triangle_union_find(G, DG, triangle_degrees, threshold, offset);
 }
 

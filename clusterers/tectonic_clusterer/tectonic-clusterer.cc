@@ -27,12 +27,13 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
   double threshold = tectonic_config.threshold();
   double eps = tectonic_config.goodrich_pszona_epsilon();
   const auto ordering_function = tectonic_config.ordering_function();
+  bool match_real_tectonic = tectonic_config.match_real_tectonic();
 
   parlay::sequence<gbbs::uintE> clusters;
   switch (ordering_function) {
     case TectonicClustererConfig::DEFAULT_DEGREE:
     {
-      clusters = gbbs::Triangle_degree_ordering_edge(*(graph_.Graph()), threshold);
+      clusters = gbbs::Triangle_degree_ordering_edge(*(graph_.Graph()), threshold, match_real_tectonic);
       // Now use the triangle_degrees and DG to do a union find
       // Might be useful to have offset too
       break;
@@ -42,7 +43,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return gbbs::goodrichpszona_degen::DegeneracyOrder_intsort(graph, eps);
       };
-      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn, match_real_tectonic);
       break;
     }
     case TectonicClustererConfig::BARENBOIM_ELKIN:
@@ -50,7 +51,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         return gbbs::barenboimelkin_degen::DegeneracyOrder(graph);
       };
-      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn, match_real_tectonic);
       break;
     }
     case TectonicClustererConfig::KCORE:
@@ -61,7 +62,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
           graph.n, [&](size_t i) { return dyn_arr.A[i]; });
         return ret;
       };
-      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn);
+      clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn, match_real_tectonic);
       break;
     }
     default:
