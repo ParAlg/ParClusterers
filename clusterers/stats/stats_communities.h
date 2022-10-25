@@ -90,12 +90,12 @@ inline absl::Status CompareCommunities(const char* filename, const InMemoryClust
   };
   set_distribution_stats(recall_vec.size(), recall_func, clustering_stats->mutable_community_recall());
 
-  /*double avg_precision = parlay::reduce(precision_vec);
+  double avg_precision = parlay::reduce(precision_vec);
   double avg_recall = parlay::reduce(recall_vec);
   avg_precision /= communities.size();
   avg_recall /= communities.size();
   std::cout << "Avg precision: " << std::setprecision(17) << avg_precision << std::endl;
-  std::cout << "Avg recall: " << std::setprecision(17) << avg_recall << std::endl;*/
+  std::cout << "Avg recall: " << std::setprecision(17) << avg_recall << std::endl;
 
   return absl::OkStatus();
 }
