@@ -317,9 +317,9 @@ inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold,
     gbbs::write_add(&triangle_degrees[uw], 1);
     gbbs::write_add(&triangle_degrees[vw], 1);
     if (match_real_tectonic) {
-      gbbs::write_add(&vertex_triangle_degrees[u], 1);
-      gbbs::write_add(&vertex_triangle_degrees[v], 1);
-      gbbs::write_add(&vertex_triangle_degrees[w], 1);
+      gbbs::write_add(&vertex_triangle_degrees[u], 2);
+      gbbs::write_add(&vertex_triangle_degrees[v], 2);
+      gbbs::write_add(&vertex_triangle_degrees[w], 2);
     }
   };
 
