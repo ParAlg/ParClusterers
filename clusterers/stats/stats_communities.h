@@ -41,6 +41,10 @@ inline absl::Status ReadCommunities(const char* filename,
   return absl::OkStatus();
 }
 
+// For each community, find the cluster with the greatest intersection
+// precision is hits / cluster size
+// recall is hits / community size
+
 inline absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats) {
   std::vector<std::vector<gbbs::uintE>> communities;
   ReadCommunities(filename, communities);
@@ -56,6 +60,7 @@ inline absl::Status CompareCommunities(const char* filename, const InMemoryClust
   });
   parlay::parallel_for(0, communities.size(), [&](std::size_t j) {
     auto community = communities[j];
+    std::sort(community.begin(), community.end());
     std::vector<gbbs::uintE> intersect(community.size());
     std::size_t max_intersect = 0;
     std::size_t max_idx = 0;
