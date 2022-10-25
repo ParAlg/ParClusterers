@@ -84,7 +84,7 @@ inline gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh> get_subgraph(const Gbb
             if(labels[u]==labels[v]){
                 flags[offset+j] = true;
                 if constexpr(std::is_same_v<Wgh, gbbs::empty>) {
-                  edges[offset+j] = std::tuple<uintE, uintE>(map[u],map[v]);
+                  edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v], wgh);
                 } else {
                   edges[offset+j] = std::tuple<uintE, uintE, Wgh>(map[u],map[v],wgh);
                 }
