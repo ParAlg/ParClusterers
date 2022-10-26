@@ -39,18 +39,29 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   runner_utils.shellGetOutput("(cd external/Tectonic/mace && make)")
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters external/Tectonic/tree-clusters.cpp")
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter.cpp")
+  runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter-no-mixed.cpp")
   threshold = "0.06"
-  config_split = [x.strip() for x in config.split(':')]
-  if len(config_split) > 1:
-    threshold = config_split[1]
+  no_pruning = False
+  split = [x.strip() for x in config.split(',')]
+  for config_item in split:
+    config_split = [x.strip() for x in config_item.split(':')]
+    if config_split:
+      if config_split[0].startswith("threshold"):
+        threshold = config_split[1]
+      elif config_split[0].startswith("no_pruning"):
+        no_pruning = True if config_split[1].startswith("True") else False
   # Timing from here
   start_time = time.time()
   num_vert = runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace")
   num_vert = num_vert.strip()
   runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
   runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
-  runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
-  cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
+  if (no_pruning):
+    runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/weighted-edges-no-mixed.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
+    cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter-no-mixed " + out_prefix + ".weighted " + num_vert + " " + threshold)
+  else:
+    runner_utils.shellGetOutput(runner_utils.python2_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
+    cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
   end_time = time.time()
   # Output running time to out_filename
   runner_utils.appendToFile(cluster, out_clustering_tmp)
