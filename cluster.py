@@ -39,7 +39,7 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   runner_utils.shellGetOutput("(cd external/Tectonic/mace && make)")
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters external/Tectonic/tree-clusters.cpp")
   runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter.cpp")
-  runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter external/Tectonic/tree-clusters-parameter-no-mixed.cpp")
+  runner_utils.shellGetOutput(runner_utils.gplusplus_ver + " -std=c++11 -o external/Tectonic/tree-clusters-parameter-no-mixed external/Tectonic/tree-clusters-parameter-no-mixed.cpp")
   threshold = "0.06"
   no_pruning = False
   split = [x.strip() for x in config.split(',')]
