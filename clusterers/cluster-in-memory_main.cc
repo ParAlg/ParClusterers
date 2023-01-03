@@ -97,7 +97,7 @@ absl::Status WriteClustering(const char* filename,
 }
 
 bool IsAnyProto(const std::string& clusterer_name){
-  return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer");
+  return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer") || (clusterer_name == "KCoreClusterer");
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){

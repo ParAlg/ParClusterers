@@ -36,6 +36,9 @@ class KCoreClusterer : public InMemoryClusterer {
 
   absl::StatusOr<Clustering> Cluster(
       const ClustererConfig& config) const override;
+  
+  absl::StatusOr<Dendrogram> HierarchicalCluster(
+      const ClustererConfig& config) const override;
 
  private:
   GbbsGraph graph_;
