@@ -66,6 +66,10 @@ ABSL_FLAG(bool, float_weighted, false,
           "this flag is not set, then the graph is assumed to be unweighted, "
           "and edge weights are automatically set to 1.");
 
+ABSL_FLAG(bool, is_hierarchical, false,
+          "Use this flag if a hierarchical clustering is desired. Not all "
+          "clusterers suppoort a hierarchical clustering.");
+
 namespace research_graph {
 namespace in_memory {
 namespace {
@@ -92,6 +96,18 @@ absl::Status WriteClustering(const char* filename,
       file << node_id << "\t";
     }
     file << std::endl;
+  }
+  return absl::OkStatus();
+}
+
+absl::Status WriteClustering(const char* filename,
+                             InMemoryClusterer::Dendrogram clustering) {
+  std::ofstream file{filename};
+  if (!file.is_open()) {
+    return absl::NotFoundError("Unable to open file.");
+  }
+  for (gbbs::uintE i = 0; i < clustering.size(); i++) {
+    file << clustering[i] << std::endl;
   }
   return absl::OkStatus();
 }
@@ -133,7 +149,7 @@ absl::Status Main() {
   std::string clusterer_config = absl::GetFlag(FLAGS_clusterer_config);
 
   std::unique_ptr<InMemoryClusterer> clusterer;
-  bool is_hierarchical = false;
+  bool is_hierarchical = absl::GetFlag(FLAGS_is_hierarchical);
   if (clusterer_name == "ParallelAffinityClusterer") {
     clusterer.reset(new ParallelAffinityClusterer);
   } else if (clusterer_name == "ExampleClusterer") {
@@ -185,10 +201,18 @@ absl::Status Main() {
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
 
+  std::string output_file = absl::GetFlag(FLAGS_output_clustering);
+
   auto begin_cluster = std::chrono::steady_clock::now();
   std::cout << "Calling clustering." << std::endl;
   if (is_hierarchical) {
-    // TODO(jeshi): Not implemented
+    // TODO(jeshi): Not fully implemented
+    InMemoryClusterer::Dendrogram dendrogram;
+    ASSIGN_OR_RETURN(dendrogram, clusterer->HierarchicalCluster(config));
+    // TODO(jeshi): Writing pre-emptively for testing.
+    auto end_cluster = std::chrono::steady_clock::now();
+    PrintTime(begin_cluster, end_cluster, "Cluster");
+    return WriteClustering(output_file.c_str(), dendrogram);
   } else {
     InMemoryClusterer::Clustering clustering;
     ASSIGN_OR_RETURN(clustering, clusterer->Cluster(config));
@@ -197,7 +221,6 @@ absl::Status Main() {
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
 
-  std::string output_file = absl::GetFlag(FLAGS_output_clustering);
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
   return WriteClustering(output_file.c_str(), clusterings[0]);
