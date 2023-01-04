@@ -19,35 +19,6 @@
 #include "gbbs/gbbs.h"
 #include "gbbs/julienne.h"
 
-namespace research_graph {
-namespace in_memory {
-
-absl::StatusOr<KCoreClusterer::Clustering>
-KCoreClusterer::Cluster(const ClustererConfig& config) const {
-  KCoreClustererConfig kcore_config;
-  config.any_config().UnpackTo(&kcore_config);
-
-  std::size_t n = graph_.Graph()->n;
-  int threshold = kcore_config().threshold();
-  auto cores = gbbs::KCore(*(graph_.Graph()));
-
-  auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-  parlay::parallel_for(0, n, [&] (size_t i) {
-    auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-      if (cores[u] >= threshold && cores[v] >= threshold)
-        gbbs::simple_union_find::unite_impl(u, v, clusters);
-    };
-    graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
-  });
-
-  parlay::parallel_for(0, n, [&] (size_t i) {
-    gbbs::simple_union_find::find_compress(i, clusters);
-  });
-
-  auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
-  std::cout << "Num clusters = " << ret.size() << std::endl;
-  return ret;
-}
 
 // TODO(jeshi): This is a temporary location for the hierarchical k-core code,
 // which should be integrated more robustly into GBBS instead of left here.
@@ -343,7 +314,7 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, parlay::sequence<uintE>&
 template <class Graph, class CWP>
 parlay::sequence<uintE> KCore(Graph& G, CWP& connect_while_peeling, size_t num_buckets, bool inline_hierarchy) {
   using W = typename Graph::weight_type;
-  timer t2; t2.start();
+  parlay::internal::timer t2; t2.start();
   const size_t n = G.n;
   auto D = parlay::sequence<uintE>::from_function(
       n, [&](size_t i) { return G.get_vertex(i).out_degree(); });
@@ -352,7 +323,7 @@ parlay::sequence<uintE> KCore(Graph& G, CWP& connect_while_peeling, size_t num_b
                                      (size_t)G.m / 50);
   auto b = make_vertex_buckets(n, D, increasing, num_buckets);
   uintE prev_bkt = 0;
-  timer bt;
+  parlay::internal::timer bt;
 
   size_t finished = 0, rho = 0, k_max = 0;
   while (finished != n) {
@@ -432,13 +403,13 @@ std::vector<uintE> KCore_connect(Graph& GA, size_t num_buckets, bool inline_hier
   std::vector<uintE> connect;
   if (!inline_hierarchy) {
     std::cout << "Running Connectivity" << std::endl;
-    timer t3; t3.start();
+    parlay::internal::timer t3; t3.start();
     connect = construct_nd_connectivity(GA, D);
     double tt3 = t3.stop();
     std::cout << "### Connectivity Running Time: " << tt3 << std::endl;
   } else {
     std::cout << "Constructing tree" << std::endl;
-    timer t3; t3.start();
+    parlay::internal::timer t3; t3.start();
     if (!efficient_inline_hierarchy) connect = construct_nd_connectivity_from_connect(GA.n, connect_with_peeling);
     else connect = construct_nd_connectivity_from_connect(GA.n, ecwp);
     double tt3 = t3.stop();
@@ -449,6 +420,36 @@ std::vector<uintE> KCore_connect(Graph& GA, size_t num_buckets, bool inline_hier
 
 }  // namespace kcore_hierarchical
 }  // namespace gbbs
+
+namespace research_graph {
+namespace in_memory {
+
+absl::StatusOr<KCoreClusterer::Clustering>
+KCoreClusterer::Cluster(const ClustererConfig& config) const {
+  KCoreClustererConfig kcore_config;
+  config.any_config().UnpackTo(&kcore_config);
+
+  std::size_t n = graph_.Graph()->n;
+  int threshold = kcore_config().threshold();
+  auto cores = gbbs::KCore(*(graph_.Graph()));
+
+  auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
+      if (cores[u] >= threshold && cores[v] >= threshold)
+        gbbs::simple_union_find::unite_impl(u, v, clusters);
+    };
+    graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
+  });
+
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    gbbs::simple_union_find::find_compress(i, clusters);
+  });
+
+  auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num clusters = " << ret.size() << std::endl;
+  return ret;
+}
 
 absl::StatusOr<KCoreClusterer::Dendrogram>
 KCoreClusterer::HierarchicalCluster(const ClustererConfig& config) const {
