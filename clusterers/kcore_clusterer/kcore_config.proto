@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+
+message KCoreClustererConfig {
+  optional int32 kcore_cutoff = 1;
+  optional bool fix_preclusters = 2;
+  optional bool connect_only = 3;
+  optional double percent_cutoff = 4;
+  optional int32 num_buckets = 5;
+
+  enum ConnectivityMethod {
+    DEFAULT_AFTER_KCORE = 0;
+    INLINE = 1;
+    EFFICIENT_INLINE = 2;
+  }
+  optional ConnectivityMethod connectivity_method = 6
+      [default = DEFAULT_AFTER_KCORE];
+}
