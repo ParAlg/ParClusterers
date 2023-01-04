@@ -2,9 +2,8 @@ syntax = "proto2";
 
 package research_graph.in_memory;
 
-
 message KCoreClustererConfig {
-  optional int32 kcore_cutoff = 1;
+  optional int32 threshold = 1;
   optional int32 num_buckets = 2;
 
   enum ConnectivityMethod {

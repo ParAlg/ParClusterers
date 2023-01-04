@@ -20,6 +20,8 @@ cc_library(
     hdrs = ["kcore-clusterer.h"],
     deps = [
         ":kcore_config_cc_proto",
+        "@gbbs//gbbs",
+        "@gbbs//gbbs:julienne",
         "@parcluster//parcluster/api:config_cc_proto",
         "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:in-memory-clusterer-base",

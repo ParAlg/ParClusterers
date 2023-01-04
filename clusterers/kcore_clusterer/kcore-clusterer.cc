@@ -14,6 +14,10 @@
 #include "parcluster/api/parallel/parallel-graph-utils.h"
 #include "parcluster/api/status_macros.h"
 
+// TODO(jeshi): Temporarily necessary for k-core hierarchy code.
+#include "gbbs/gbbs.h"
+#include "gbbs/julienne.h"
+
 namespace research_graph {
 namespace in_memory {
 
