@@ -179,7 +179,7 @@ std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, EfficientConn
     size_t start_index = vert_buckets[i];
     size_t end_index = vert_buckets[i + 1];
 
-    auto first_x = sorted_vert[start_index];
+    //auto first_x = sorted_vert[start_index];
     parallel_for(0, end_index - start_index, [&](size_t a){
       connectivity_tree[sorted_vert[start_index + a]] = prev_max_parent + i;
     });
@@ -430,7 +430,7 @@ KCoreClusterer::Cluster(const ClustererConfig& config) const {
   config.any_config().UnpackTo(&kcore_config);
 
   std::size_t n = graph_.Graph()->n;
-  int threshold = kcore_config().threshold();
+  int threshold = kcore_config.threshold();
   auto cores = gbbs::KCore(*(graph_.Graph()));
 
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
