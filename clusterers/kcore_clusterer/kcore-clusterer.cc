@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "clusterers/kcore_clusterer/kcore_config.pb.h"
 #include "absl/status/statusor.h"
 #include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 #include "external/gbbs/benchmarks/KCore/JulienneDBS17/KCore.h"
@@ -53,11 +54,11 @@ KCoreClusterer::Cluster(const ClustererConfig& config) const {
 namespace gbbs {
 namespace kcore_hierarchical {
 
-sequence<uintE> GetBoundaryIndices(
+parlay::sequence<uintE> GetBoundaryIndices(
     std::size_t num_keys,
     const std::function<bool(std::size_t, std::size_t)>& key_eq_func) {
       uintE null_key = UINT_E_MAX;
-  sequence<uintE> mark_keys(num_keys + 1);
+  parlay::sequence<uintE> mark_keys(num_keys + 1);
   parlay::parallel_for(0, num_keys, [&](std::size_t i) {
     if (i != 0 && key_eq_func(i, i - 1))
       mark_keys[i] = null_key;
@@ -76,7 +77,7 @@ class EfficientConnectWhilePeeling {
     EfficientConnectWhilePeeling(size_t _n) {
       n = _n;
       uf = gbbs::simple_union_find::SimpleUnionAsyncStruct(n);
-      links = sequence<uintE>::from_function(n, [&](size_t s) { return UINT_E_MAX; });
+      links = parlay::sequence<uintE>::from_function(n, [&](size_t s) { return UINT_E_MAX; });
     }
     
     void initialize(size_t _n);
@@ -91,14 +92,14 @@ class EfficientConnectWhilePeeling {
     void init(bucket_t cur_bkt);
 
     gbbs::simple_union_find::SimpleUnionAsyncStruct uf =  gbbs::simple_union_find::SimpleUnionAsyncStruct(0);
-    sequence<uintE> links;
+    parlay::sequence<uintE> links;
     size_t n; // table size
 };
 
 void EfficientConnectWhilePeeling::initialize(size_t _n)  {
   this->n = _n;
   this->uf = gbbs::simple_union_find::SimpleUnionAsyncStruct(this->n);
-  this->links = sequence<uintE>::from_function(this->n, [&](size_t s) { return UINT_E_MAX; });
+  this->links = parlay::sequence<uintE>::from_function(this->n, [&](size_t s) { return UINT_E_MAX; });
 }
 
 template<class X, class Y, class F>
@@ -193,7 +194,7 @@ std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, EfficientConn
   auto sort_by_parent = [&](uintE p, uintE q) {
       return parents[p] < parents[q];
   };
-  auto sorted_vert = sequence<uintE>::from_function(n, [&](size_t i) { return i; });
+  auto sorted_vert = parlay::sequence<uintE>::from_function(n, [&](size_t i) { return i; });
   parlay::sample_sort_inplace(make_slice(sorted_vert), sort_by_parent);
 
   auto parent_eq_func = [&](size_t i, size_t j) {return parents[sorted_vert[i]] == parents[sorted_vert[j]];};
@@ -228,7 +229,7 @@ std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, EfficientConn
 
 std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, ConnectWhilePeeling& connect_with_peeling){
   std::vector<uintE> connectivity_tree(n);
-  sequence<uintE> prev_parent = sequence<uintE>::from_function(n, [&](size_t i){ return i; });
+  parlay::sequence<uintE> prev_parent = parlay::sequence<uintE>::from_function(n, [&](size_t i){ return i; });
   uintE prev_max_parent = n;
   parallel_for(0, n, [&](std::size_t i){connectivity_tree[i] = UINT_E_MAX;});
   for (long idx = connect_with_peeling.set_uf.size() - 1; idx >= 0; idx--) {
@@ -253,7 +254,7 @@ std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, ConnectWhileP
 // in the current bucket
 // k and r here should be the same as that used in cliqueUpdate
 template <class Graph>
-std::vector<uintE> construct_nd_connectivity(Graph& GA, sequence<uintE>& cores){
+std::vector<uintE> construct_nd_connectivity(Graph& GA, parlay::sequence<uintE>& cores){
   using W = typename Graph::weight_type;
   auto n = GA.n;
 
@@ -261,10 +262,10 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, sequence<uintE>& cores){
   auto get_core = [&](uintE p, uintE q){
     return cores[p] > cores[q];
   };
-  auto sorted_vert = sequence<uintE>::from_function(n, [&](size_t i) { return i; });
+  auto sorted_vert = parlay::sequence<uintE>::from_function(n, [&](size_t i) { return i; });
   parlay::sample_sort_inplace(make_slice(sorted_vert), get_core);
 
-  sequence<uintE> mark_keys(n + 1);
+  parlay::sequence<uintE> mark_keys(n + 1);
   parallel_for(0, n, [&](std::size_t i) {
     if (i != 0 && cores[sorted_vert[i]] == cores[sorted_vert[i-1]])
       mark_keys[i] = UINT_E_MAX;
@@ -278,7 +279,7 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, sequence<uintE>& cores){
   auto uf = gbbs::simple_union_find::SimpleUnionAsyncStruct(n);
   // TODO(jeshi): This isn't parallel, but I'd just like easy resizing atm
   std::vector<uintE> connectivity_tree(n);
-  sequence<uintE> prev_parent = sequence<uintE>::from_function(n, [&](size_t i){ return i; });
+  parlay::sequence<uintE> prev_parent = parlay::sequence<uintE>::from_function(n, [&](size_t i){ return i; });
   uintE prev_max_parent = n;
   //uintE prev_offset = 0;
   parallel_for(0, n, [&](std::size_t i){connectivity_tree[i] = UINT_E_MAX;});
@@ -319,7 +320,7 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, sequence<uintE>& cores){
 
     parallel_for(0, n, [&](size_t l) { gbbs::simple_union_find::find_compress(l, uf.parents); });
 
-    sequence<uintE> map_parents = sequence<uintE>::from_function(n, [&](std::size_t l){return 0;});
+    parlay::sequence<uintE> map_parents = parlay::sequence<uintE>::from_function(n, [&](std::size_t l){return 0;});
     parallel_for(0, n, [&](size_t l){
       if (cores[l] != UINT_E_MAX && cores[l] >= first_current_core) map_parents[uf.parents[l]] = 1;
     });
@@ -340,11 +341,11 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, sequence<uintE>& cores){
 }
 
 template <class Graph, class CWP>
-sequence<uintE> KCore(Graph& G, CWP& connect_while_peeling, size_t num_buckets, bool inline_hierarchy) {
+parlay::sequence<uintE> KCore(Graph& G, CWP& connect_while_peeling, size_t num_buckets, bool inline_hierarchy) {
   using W = typename Graph::weight_type;
   timer t2; t2.start();
   const size_t n = G.n;
-  auto D = sequence<uintE>::from_function(
+  auto D = parlay::sequence<uintE>::from_function(
       n, [&](size_t i) { return G.get_vertex(i).out_degree(); });
 
   auto em = hist_table<uintE, uintE>(std::make_tuple(UINT_E_MAX, 0),
@@ -415,7 +416,7 @@ template <class Graph>
 std::vector<uintE> KCore_connect(Graph& GA, size_t num_buckets, bool inline_hierarchy, bool efficient_inline_hierarchy) {
   if (efficient_inline_hierarchy) inline_hierarchy = true;
 
-  sequence<uintE> D;
+  parlay::sequence<uintE> D;
   
   EfficientConnectWhilePeeling ecwp;
   ConnectWhilePeeling connect_with_peeling;
