@@ -1,0 +1,1 @@
+{"filename":"/home/ubuntu/ParClusterers/external/gbbs/inputs/star.txt","numberNodes":"10","numberClusters":2,"clusterSizes":{"minimum":1,"maximum":9,"mean":5,"total":10,"count":"2"},"ari":2.305843009213694e+18}

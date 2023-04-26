@@ -36,7 +36,8 @@ inline std::size_t nChoose2(std::size_t x) {
 // we only need the n choose 2 values of all contingency matrix values
 // do not need store all of them
 // only works for non-overlapping clustering
-inline absl::Status ComputeARI(const GbbsGraph& graph, 
+inline absl::Status ComputeARI(
+  const size_t n,
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const InMemoryClusterer::Clustering& ground_truth,
   const ClusteringStatsConfig& clustering_stats_config){
@@ -44,47 +45,34 @@ inline absl::Status ComputeARI(const GbbsGraph& graph,
   if (!compute_ari) {
     return absl::OkStatus();
   }
-  size_t n = graph.Graph()->n;
 
-  parlay::sequence<std::atomic<std::size_t> > row_sums; //  sums for clustering
-  parlay::sequence<std::atomic<std::size_t> > column_sums; //  sums for cluster_ids
 
-  // auto unique_cluster_ids = ground_truth.size();
-
-  // auto cluster_id_indexed = parlay::delayed_seq<std::pair<gbbs::uintE, gbbs::uintE>>(n,
-  // [&](size_t i){
-  //   return std::make_pair(cluster_ids[i],i);
-  // }
-  // );
-
-  // auto grouped_ids = parlay::group_by_key_ordered(cluster_id_indexed);
 
   size_t num_cluster_1 = clustering.size();
   size_t num_cluster_2 = ground_truth.size();
+
+  parlay::sequence<std::atomic<std::size_t> > row_sums(num_cluster_1); //  sums for clustering
+  parlay::sequence<std::atomic<std::size_t> > column_sums(num_cluster_2); //  sums for ground_truth
+
 
   using tableT = parlay::hashtable<parlay::hash_numeric<gbbs::uintE> >;
 
   std::vector<tableT*> tables1(num_cluster_1);
   std::vector<tableT*> tables2(num_cluster_2);
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
+    row_sums[i].store(0);
     tables1[i] = new tableT(clustering[i].size(), parlay::hash_numeric<gbbs::uintE>{});
     parlay::parallel_for(0, clustering[i].size(), [&](size_t j){
     tables1[i]->insert(clustering[i][j]);
     });
   });
   parlay::parallel_for(0, num_cluster_2, [&](size_t i){
+    column_sums[i].store(0);
     tables2[i] = new tableT(ground_truth[i].size(), parlay::hash_numeric<gbbs::uintE>{});
     parlay::parallel_for(0, ground_truth[i].size(), [&](size_t j){
     tables2[i]->insert(ground_truth[i][j]);
     });
   });
-
-  // parlay::parallel_for(0, num_cluster_2, [&](size_t i){
-  //   tables2[i] = new tableT(grouped_ids[i].second.size(), parlay::hash_numeric<gbbs::uintE>{});
-  //   parlay::parallel_for(0, grouped_ids[i].second.size(), [&](size_t j){
-  //   tables2[i]->insert(grouped_ids[i].second[j]);
-  //   });
-  // });
 
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
   parlay::parallel_for(0, num_cluster_2, [&](size_t j){

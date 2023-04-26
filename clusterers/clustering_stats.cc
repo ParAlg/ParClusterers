@@ -45,7 +45,8 @@ absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph,
   ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeTriangleDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
 
-  ComputeARI(graph, clustering, &clustering_stats, communities, clustering_stats_config);
+  size_t n = graph.Graph()->n;
+  ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
 
 
   return clustering_stats;
