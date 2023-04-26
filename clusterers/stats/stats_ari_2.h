@@ -8,21 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-
-// #include "google/protobuf/text_format.h"
-// #include "google/protobuf/repeated_field.h"
-#include "clusterers/clustering_stats.pb.h"
-// #include "clusterers/stats/stats_utils.h"
-#include "parcluster/api/gbbs-graph.h"
-#include "parcluster/api/in-memory-clusterer-base.h"
-#include "parcluster/api/status_macros.h"
-
 #include "parlay/hash_table.h"
 
 namespace research_graph::in_memory {
@@ -57,18 +42,14 @@ struct hash_numeric_unsigned {
 
 }
 
+
 // we only need the n choose 2 values of all contingency matrix values
 // do not need store all of them
 // only works for non-overlapping clustering
-inline absl::Status ComputeARI(
+inline double ComputeARI(
   const size_t n,
-  const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
-  const InMemoryClusterer::Clustering& ground_truth,
-  const ClusteringStatsConfig& clustering_stats_config){
-    const bool compute_ari = clustering_stats_config.compute_ari();
-  if (!compute_ari) {
-    return absl::OkStatus();
-  }
+  const std::vector<std::vector<unsigned int>>& clustering,
+  const std::vector<std::vector<unsigned int>>& ground_truth){
 
 
 
@@ -79,22 +60,22 @@ inline absl::Status ComputeARI(
   parlay::sequence<std::atomic<std::size_t> > column_sums(num_cluster_2); //  sums for ground_truth
 
 
-  using tableT = parlay::hashtable<hash_numeric_unsigned <gbbs::uintE> >;
+  using tableT = parlay::hashtable<hash_numeric_unsigned <unsigned int> >;
 
-  auto empty_val = hash_numeric_unsigned <gbbs::uintE>().empty();
+  auto empty_val = hash_numeric_unsigned <unsigned int>().empty();
 
   std::vector<tableT*> tables1(num_cluster_1);
   std::vector<tableT*> tables2(num_cluster_2);
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
     row_sums[i].store(0);
-    tables1[i] = new tableT(clustering[i].size(), hash_numeric_unsigned<gbbs::uintE>{});
+    tables1[i] = new tableT(clustering[i].size(), hash_numeric_unsigned<unsigned int>{});
     parlay::parallel_for(0, clustering[i].size(), [&](size_t j){
     tables1[i]->insert(clustering[i][j]);
     });
   });
   parlay::parallel_for(0, num_cluster_2, [&](size_t i){
     column_sums[i].store(0);
-    tables2[i] = new tableT(ground_truth[i].size(), hash_numeric_unsigned<gbbs::uintE>{});
+    tables2[i] = new tableT(ground_truth[i].size(), hash_numeric_unsigned<unsigned int>{});
     parlay::parallel_for(0, ground_truth[i].size(), [&](size_t j){
     tables2[i]->insert(ground_truth[i][j]);
     });
@@ -145,7 +126,6 @@ inline absl::Status ComputeARI(
                        - (nChoose2RowSum * nChoose2ColumnSum) / ((double) nChoose2(n));
   double ariValue = numerator / denominator;
   
-  clustering_stats->set_ari(ariValue);
 
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
     delete tables1[i];
@@ -156,7 +136,7 @@ inline absl::Status ComputeARI(
   });
 
   std::cout << "ARI: " << ariValue << std::endl;
-  return absl::OkStatus();
+  return ariValue;
 }
 
 }  // namespace research_graph::in_memory

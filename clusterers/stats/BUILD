@@ -125,3 +125,12 @@ cc_library(
         "@parlaylib//parlay:hash_table",
     ],
 )
+
+cc_library(
+    name = "stats_ari2",
+    hdrs = ["stats_ari_2.h"],
+    deps = [
+        "@parlaylib//parlay:hash_table",
+        "@gbbs//gbbs:bridge"
+    ],
+)

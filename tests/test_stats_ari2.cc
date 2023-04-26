@@ -7,7 +7,6 @@
 using research_graph::in_memory::ComputeARI;
 using uintE = unsigned int;
 TEST(TestARI, TestAllSame) {
-  std::cout << "start test" << std::endl;
   size_t n = 9;
   std::vector<std::vector<uintE>> clustering = {
     { 1, 2, 3 }, // first cluster
@@ -20,7 +19,6 @@ TEST(TestARI, TestAllSame) {
     { 9, 8, 7 }  // third cluster
 };
   
-  std::cout << "start computing" << std::endl;
   auto ari = ComputeARI(n, clustering, communities);
   EXPECT_EQ(1, ari);
 }
