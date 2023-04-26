@@ -30,6 +30,7 @@ ClusteringStatistics GetStats(const GbbsGraph& graph,
   ComputeDiameter(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeTriangleDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  ComputeARI(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
 
 
   return clustering_stats;

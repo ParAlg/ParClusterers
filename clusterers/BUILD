@@ -66,6 +66,7 @@ cc_library(
         "//clusterers/stats:stats_correlation",
         "//clusterers/stats:stats_diameter",
         "//clusterers/stats:stats_density",
+        "//clusterers/stats:stats_ari",
         "@parcluster//parcluster/api:gbbs-graph",
         "@parcluster//parcluster/api:status_macros",
         "//external:gflags",
