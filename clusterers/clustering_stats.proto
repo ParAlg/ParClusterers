@@ -11,6 +11,7 @@ message ClusteringStatsConfig {
   optional bool compute_edge_density = 6;
   optional bool compute_triangle_density = 7;
   optional bool compute_ari = 8;
+  optional bool compute_precision_recall = 9;
 }
 
 message DistributionStats {

@@ -23,7 +23,7 @@
 
 namespace research_graph::in_memory {
 
-ClusteringStatistics GetStats(const GbbsGraph& graph, const InMemoryClusterer::Clustering& clustering,
+absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph, const InMemoryClusterer::Clustering& clustering,
   const std::string& input_graph, const std::string& input_communities,
   const ClusteringStatsConfig& clustering_stats_config);
 

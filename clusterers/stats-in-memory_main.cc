@@ -61,8 +61,8 @@ ABSL_FLAG(bool, float_weighted, false,
           "and edge weights are automatically set to 1.");
 
 ABSL_FLAG(std::string, input_communities, "",
-          "Input file pattern of a list of communities; tab separated nodes, "
-          "lines separating communities.");
+          "Input file pattern of a list of ground-truth communities; "
+          "tab separated nodes, lines separating communities.");
 
 ABSL_FLAG(std::string, statistics_config, "",
           "Text-format research_graph.in_memory.ClusteringStatsConfig proto.");
@@ -158,8 +158,10 @@ absl::Status Main() {
   auto clustering_stats = GetStats(graph, clustering,
     absl::GetFlag(FLAGS_input_graph), absl::GetFlag(FLAGS_input_communities), stats_config);
 
+  if(!clustering_stats.ok()) return clustering_stats.status();
+
   std::string output_file = absl::GetFlag(FLAGS_output_statistics);
-  return WriteStatistics(output_file.c_str(), clustering_stats);
+  return WriteStatistics(output_file.c_str(), clustering_stats.value());
 }
 
 }  // namespace
