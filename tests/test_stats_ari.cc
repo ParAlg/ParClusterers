@@ -2,14 +2,14 @@
 
 #include <vector>
 
-#include "clusterers/stats/stats_ari.h"
-#include "google/protobuf/text_format.h"
-#include "google/protobuf/repeated_field.h"
-#include "clusterers/clustering_stats.pb.h"
+// #include "clusterers/stats/stats_ari.h"
+// #include "google/protobuf/text_format.h"
+// #include "google/protobuf/repeated_field.h"
+// #include "clusterers/clustering_stats.pb.h"
 
-using research_graph::in_memory::ComputeARI;
-using research_graph::in_memory::ClusteringStatistics;
-using research_graph::in_memory::ClusteringStatsConfig;
+// using research_graph::in_memory::ComputeARI;
+// using research_graph::in_memory::ClusteringStatistics;
+// using research_graph::in_memory::ClusteringStatsConfig;
 
 TEST(TestARI, Teste) {
 

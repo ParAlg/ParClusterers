@@ -123,11 +123,6 @@ inline absl::Status ComputeARI(
     parlay::write_add(&(column_sums[j]), val);
   });
   });
-
-  // auto row_sums_delay = parlay::delayed_seq<size_t>(row_sums.size(), [&](size_t i){
-  //   return row_sums[i].load();
-  // });
-  //  = parlay::reduce(row_sums_delay);
   
   auto row_n_choose_2_values = parlay::delayed_seq<std::size_t>(row_sums.size(), [&](std::size_t i){
     return nChoose2(row_sums[i].load());
@@ -160,7 +155,7 @@ inline absl::Status ComputeARI(
     delete tables2[i];
   });
 
-  std::cout << ariValue << std::endl;
+  std::cout << "ARI: " << ariValue << std::endl;
   return absl::OkStatus();
 }
 
