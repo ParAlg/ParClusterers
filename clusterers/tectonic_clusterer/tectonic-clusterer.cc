@@ -59,7 +59,7 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
       auto ordering_fn = [&](gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float>& graph) -> parlay::sequence<gbbs::uintE> {
         auto dyn_arr = gbbs::DegeneracyOrder(graph);
         auto ret = parlay::sequence<gbbs::uintE>::from_function(
-          graph.n, [&](size_t i) { return dyn_arr.A[i]; });
+          graph.n, [&](size_t i) { return dyn_arr[i]; });
         return ret;
       };
       clusters = gbbs::Triangle_degeneracy_ordering_edge(*(graph_.Graph()), threshold, ordering_fn, match_real_tectonic);
