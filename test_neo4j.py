@@ -110,6 +110,8 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
 
   # Use Neo4j URI and credentials according to your setup
   gds = GraphDataScience("bolt://localhost:7687", auth=None)
+  print("GDS version: ", gds.version())
+
   _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
   #_ = gds.run_cypher("CALL apoc.schema.assert({},{},true) YIELD label, key RETURN *")
 
@@ -219,7 +221,7 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
       res = gds.louvain.mutate(G, mutateProperty="louvaincommunity") #relationshipWeightProperty="weight", 
     elif (algorithm_name.startswith("leiden")):
       community_flag = True
-      res = gds.alpha.leiden.mutate(G, mutateProperty="leidencommunity")
+      res = gds.beta.leiden.mutate(G, mutateProperty="leidencommunity")
     elif algorithm_name.startswith("triangle"):
       #use_cypher = "CALL gds.triangleCount.mutate(\'" + graph_name + "undir\', {mutateProperty: \'triangle\'}) YIELD preProcessingMillis, computeMillis, postProcessingMillis, nodeCount, globalTriangleCount"
       #res = gds.run_cypher(use_cypher)
@@ -265,12 +267,12 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
 def main():
   args = sys.argv[1:]
   directory = "/home/ubuntu/"
-  graphs = ["com-dblp.ungraph.txt", "com-youtube.ungraph.txt"] #"com-amazon.ungraph.txt" , "com-lj.ungraph.txt", "com-orkut.ungraph.txt"] #
+  graphs = ["triangle.txt"] #"com-dblp.ungraph.txt", "com-youtube.ungraph.txt" "com-amazon.ungraph.txt" , "com-lj.ungraph.txt", "com-orkut.ungraph.txt"] #
   graph_pres = ["dblp", "youtube"] #, ,"amazon" "lj", "orkut"] #"youtube", 
   for graph_idx, graph in enumerate(graphs):
     graph_pre = graph_pres[graph_idx]
     graph_name = directory + "snap/" + graph
-    algs = ["leiden"] #["triangle", "louvain", "modularity", "pagerank"]
+    algs = ["leiden"] #[, "leiden", "triangle", "louvain", "modularity", "pagerank"]
     out_dir = directory + "neo4j_out/" + graph_pre + "_"
     run_algs(graph_name, algs, out_dir, graph_pre)
   #for graph_idx, graph in enumerate(graphs):
