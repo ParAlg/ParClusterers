@@ -15,10 +15,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 
-// #include "google/protobuf/text_format.h"
-// #include "google/protobuf/repeated_field.h"
 #include "clusterers/clustering_stats.pb.h"
-// #include "clusterers/stats/stats_utils.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
@@ -155,7 +152,6 @@ inline absl::Status ComputeARI(
     delete tables2[i];
   });
 
-  std::cout << "ARI: " << ariValue << std::endl;
   return absl::OkStatus();
 }
 
