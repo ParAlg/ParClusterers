@@ -16,13 +16,14 @@
 #include "clusterers/stats/stats_correlation.h"
 #include "clusterers/stats/stats_diameter.h"
 #include "clusterers/stats/stats_density.h"
+#include "clusterers/stats/stats_ari.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
 namespace research_graph::in_memory {
 
-ClusteringStatistics GetStats(const GbbsGraph& graph, const InMemoryClusterer::Clustering& clustering,
+absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph, const InMemoryClusterer::Clustering& clustering,
   const std::string& input_graph, const std::string& input_communities,
   const ClusteringStatsConfig& clustering_stats_config);
 

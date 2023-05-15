@@ -41,9 +41,12 @@ inline absl::Status ReadCommunities(const char* filename,
   return absl::OkStatus();
 }
 
-inline absl::Status CompareCommunities(const char* filename, const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats) {
-  std::vector<std::vector<gbbs::uintE>> communities;
-  ReadCommunities(filename, communities);
+inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& communities, const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats, const ClusteringStatsConfig& clustering_stats_config) {
+  const bool compute_precision_recall = clustering_stats_config.compute_precision_recall();
+  if (!compute_precision_recall) {
+    return absl::OkStatus();
+  }
+
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
   // recall = num correct results (matches b/w clustering and comm) / num relevant results (in comm)
   parlay::sequence<double> precision_vec = parlay::sequence<double>::from_function(

@@ -2,7 +2,7 @@
 
 namespace research_graph::in_memory {
 
-ClusteringStatistics GetStats(const GbbsGraph& graph, 
+absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering,
   const std::string& input_graph, const std::string& input_communities,
   const ClusteringStatsConfig& clustering_stats_config) {
@@ -15,7 +15,21 @@ ClusteringStatistics GetStats(const GbbsGraph& graph,
     return clustering[i].size();
   }, clustering_stats.mutable_cluster_sizes());
 
-  if (!input_communities.empty()) CompareCommunities(input_communities.c_str(), clustering, &clustering_stats);
+  std::vector<std::vector<gbbs::uintE>> communities;
+
+  const bool compute_ari = clustering_stats_config.compute_ari();
+  const bool compute_precision_recall = clustering_stats_config.compute_precision_recall();
+
+  if (compute_ari || compute_precision_recall){
+    if (input_communities.empty()){
+      return absl::InvalidArgumentError(
+        absl::StrFormat("input_communities is not provided."));
+    }
+    ReadCommunities(input_communities.c_str(), communities);
+  }
+  
+
+  CompareCommunities(communities, clustering, &clustering_stats, clustering_stats_config);
 
   parlay::sequence<gbbs::uintE> cluster_ids = parlay::sequence<gbbs::uintE>(graph.Graph()->n);
   parlay::parallel_for(0, clustering.size(), [&](size_t i){
@@ -30,6 +44,9 @@ ClusteringStatistics GetStats(const GbbsGraph& graph,
   ComputeDiameter(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   ComputeTriangleDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+
+  size_t n = graph.Graph()->n;
+  ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
 
 
   return clustering_stats;
