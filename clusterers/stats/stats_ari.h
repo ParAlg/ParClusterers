@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -136,11 +137,29 @@ inline absl::Status ComputeARI(
   std::cout << "nChoose2ContingencySum " << nChoose2ContingencySum  << std::endl;
 
 
-  double numerator = ((double)nChoose2ContingencySum)
-                     - (nChoose2RowSum * nChoose2ColumnSum) / ((double) nChoose2(n));
-  double denominator = 0.5 * (nChoose2RowSum + nChoose2ColumnSum)
-                       - (nChoose2RowSum * nChoose2ColumnSum) / ((double) nChoose2(n));
-  double ariValue = numerator / denominator;
+
+  double n_choose_2 = (double) nChoose2(n);
+  double largest_sqrt = std::sqrt(std::numeric_limits<double>::max());
+  double ariValue = 0;
+
+  if (n_choose_2 >= largest_sqrt || nChoose2ContingencySum >= largest_sqrt ||
+      nChoose2RowSum >= largest_sqrt/2 || nChoose2ColumnSum >= largest_sqrt/2){
+    // avoid overflow
+    double numerator = ((double)nChoose2ContingencySum)
+                      - (nChoose2RowSum * nChoose2ColumnSum) / n_choose_2;
+    double denominator = 0.5 * (nChoose2RowSum + nChoose2ColumnSum)
+                        - (nChoose2RowSum * nChoose2ColumnSum) / n_choose_2;
+    ariValue = numerator / denominator;
+  }else {
+    // better numerical accuracy
+    double numerator = ((double)nChoose2ContingencySum) *  n_choose_2
+                      - (nChoose2RowSum * nChoose2ColumnSum) ;
+    double denominator = 0.5 * (nChoose2RowSum + nChoose2ColumnSum) * n_choose_2
+                        - (nChoose2RowSum * nChoose2ColumnSum);
+    ariValue = numerator / denominator;
+  }
+
+
   
   clustering_stats->set_ari(ariValue);
 

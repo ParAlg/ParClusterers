@@ -13,7 +13,6 @@ using research_graph::in_memory::ClusteringStatsConfig;
 
 
 TEST(TestARI, TestAllSame) {
-  std::cout << "start test" << std::endl;
   size_t n = 9;
   std::vector<std::vector<gbbs::uintE>> clustering = {
     { 1, 2, 3 }, // first cluster
@@ -36,7 +35,6 @@ TEST(TestARI, TestAllSame) {
 }
 
 TEST(TestARI, TestAllSameDifferentOrder) {
-  std::cout << "start test" << std::endl;
   size_t n = 9;
   std::vector<std::vector<gbbs::uintE>> clustering = {
     { 4, 5, 6 }, // second cluster
@@ -59,7 +57,6 @@ TEST(TestARI, TestAllSameDifferentOrder) {
 }
 
 TEST(TestARI, TestOneDifferent) {
-  std::cout << "start test" << std::endl;
   size_t n = 3;
   std::vector<std::vector<gbbs::uintE>> clustering = {
     { 1, 2 }, // first cluster
@@ -76,4 +73,48 @@ TEST(TestARI, TestOneDifferent) {
   auto status = ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
   ASSERT_TRUE(status.ok());
   EXPECT_DOUBLE_EQ(-0.5, clustering_stats.ari());
+}
+
+
+TEST(TestARI, TestEmpty) {
+  size_t n = 3;
+  std::vector<std::vector<gbbs::uintE>> clustering = {
+    { 1, 2, 3 }, // first cluster
+    {  }  // second cluster
+};
+  std::vector<std::vector<gbbs::uintE>> communities  = {
+    { 3, 2}, // first cluster
+    { 1}, // second cluster
+};  
+  ClusteringStatistics clustering_stats;
+  ClusteringStatsConfig clustering_stats_config;
+  clustering_stats_config.set_compute_ari(true);
+  std::cout << "start computing" << std::endl;
+  auto status = ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
+  ASSERT_TRUE(status.ok());
+  EXPECT_DOUBLE_EQ(0, clustering_stats.ari());
+}
+
+
+
+TEST(TestARI, TestDifferentGridNum) {
+  // The contingency grid is
+  //  1 2
+  //  4 3
+  size_t n = 10;
+  std::vector<std::vector<gbbs::uintE>> clustering = {
+    { 1, 2, 3 }, // first cluster
+    { 4, 5, 6, 7, 8, 9, 10 }  // second cluster
+};
+  std::vector<std::vector<gbbs::uintE>> communities  = {
+    { 1, 7, 8, 9, 10}, // first cluster
+    { 2, 3, 4, 5, 6}, // second cluster
+};  
+  ClusteringStatistics clustering_stats;
+  ClusteringStatsConfig clustering_stats_config;
+  clustering_stats_config.set_compute_ari(true);
+  std::cout << "start computing" << std::endl;
+  auto status = ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
+  ASSERT_TRUE(status.ok());
+  EXPECT_DOUBLE_EQ(-1.0/17, clustering_stats.ari());
 }
