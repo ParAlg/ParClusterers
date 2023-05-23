@@ -86,6 +86,12 @@ def runAll(config_filename):
         for i in range(runner_utils.num_rounds):
           runSnap(clusterer, graph, graph_idx, i)
         continue
+      elif clusterer.startswith("Neo4j"):
+        configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
+        print(configs)
+        for i in range(runner_utils.num_rounds):
+          print(clusterer, graph, graph_idx, i)
+        continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
         configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
         config_prefix = runner_utils.clusterer_config_names[clusterer_idx] + "{" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
