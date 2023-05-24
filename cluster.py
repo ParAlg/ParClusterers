@@ -17,14 +17,24 @@ def runSnap(clusterer, graph, graph_idx, round):
   out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(round)
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
-  runner_utils.shellGetOutput("(cd external/snap/examples/community && make all)")
+  snap_binary = "community"
+  print("Compiling snap binaries. This might take a while if it's the first time.")
   if (clusterer == "SnapGirvanNewman"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 1
   elif (clusterer == "SnapInfomap"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 3
-  else: #SnapCNM
+  elif (clusterer == "SnapCNM"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 2
-  out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
+  elif (clusterer == "SnapConnectivity"):
+    snap_binary = "concomp"
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
+  else:
+    raise("Clusterer is not implemented.")
+
+  out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
   runner_utils.appendToFile(out_time, out_filename)
 
 def runNeo4j(clusterer, graph, thread, config, out_prefix):
