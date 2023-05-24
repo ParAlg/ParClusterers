@@ -7,6 +7,7 @@ import re
 import itertools
 import cluster_nk
 import runner_utils
+import cluster_neo4j
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -25,6 +26,17 @@ def runSnap(clusterer, graph, graph_idx, round):
     alg_number = 2
   out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
   runner_utils.appendToFile(out_time, out_filename)
+
+def runNeo4j(clusterer, graph, thread, config, out_prefix):
+  if (runner_utils.gbbs_format == "true"):
+    raise ValueError("Neo4j can only be run using edge list format")
+  use_input_graph = runner_utils.input_directory + graph
+  out_clustering = out_prefix + ".cluster"
+  out_filename = out_prefix + ".out"
+  alg_name = clusterer[5:]
+  out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, out_clustering)
+  runner_utils.appendToFile(out_time, out_filename)
+
 
 # Graph must be in edge format
 def runTectonic(clusterer, graph, thread, config, out_prefix):
@@ -86,12 +98,6 @@ def runAll(config_filename):
         for i in range(runner_utils.num_rounds):
           runSnap(clusterer, graph, graph_idx, i)
         continue
-      elif clusterer.startswith("Neo4j"):
-        configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
-        print(configs)
-        for i in range(runner_utils.num_rounds):
-          print(clusterer, graph, graph_idx, i)
-        continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
         configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
         config_prefix = runner_utils.clusterer_config_names[clusterer_idx] + "{" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
@@ -103,6 +109,8 @@ def runAll(config_filename):
               cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
             elif clusterer == "Tectonic":
               runTectonic(clusterer, graph, thread, config, out_prefix)
+            elif clusterer.startswith("Neo4j"):
+              runNeo4j(clusterer, graph, thread, config, out_prefix)
             else:
               out_filename = out_prefix + ".out"
               out_clustering = out_prefix + ".cluster"

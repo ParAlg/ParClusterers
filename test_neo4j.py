@@ -259,7 +259,7 @@ def run_algs(graph_path, algs, out_dir, graph_pre, config):
   #gds.graph.drop(G)
   #G_dir.drop()
   G.drop()
-  _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
+  # _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
   #G_undir = gds.graph.get(graph_name + "undir")
   #G_undir.drop()
 
