@@ -34,11 +34,18 @@ def runSnap(clusterer, graph, graph_idx, round):
     args = " -a:" + str(alg_number)
   elif (clusterer == "SnapConnectivity"):
     snap_binary = "concomp"
+    args = " -wcconly:T"
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
+  elif (clusterer == "SnapKCore"):
+    snap_binary = "kcores"
+    args = " -s:F"
     runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
   else:
     raise("Clusterer is not implemented.")
-
-  out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args)
+  print("Compilation done.")
+  cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args
+  # print(cmds)
+  out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
 
 def runNeo4j(clusterer, graph, thread, config, out_prefix):
