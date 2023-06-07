@@ -20,6 +20,7 @@
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
+#include "clusterers/stats/stats_ari.h"
 
 #include "parlay/hash_table.h"
 
