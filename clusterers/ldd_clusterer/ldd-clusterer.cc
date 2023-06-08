@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include "clusterers/ldd_clusterer/ldd_config.pb.h"
+
 #include "absl/status/statusor.h"
 #include "external/gbbs/benchmarks/LowDiameterDecomposition/MPX13/LowDiameterDecomposition.h"
 #include "parcluster/api/config.pb.h"
@@ -20,8 +22,14 @@ absl::StatusOr<LDDClusterer::Clustering>
 LDDClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
 
-  // Initially each vertex is its own cluster.
-  auto clusters = gbbs::LDD(*(graph_.Graph()), /* beta = */0.25);
+  LDDClustererConfig ldd_config;
+  config.any_config().UnpackTo(&ldd_config);
+  double beta = ldd_config.beta();
+
+  // Partitions vertices of an n-vertex, m-edge graph into subsets where each
+  // subset has O((log n) / beta) diameter and at most O(beta * m) edges exiting
+  // the subset.
+  auto clusters = gbbs::LDD(*(graph_.Graph()), beta = beta);
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
   std::cout << "Num clusters = " << ret.size() << std::endl;
