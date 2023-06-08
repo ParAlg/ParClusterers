@@ -134,9 +134,10 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
   out_filename = out_prefix + ".out"
   out_clustering = out_prefix + ".cluster"
   use_input_graph = runner_utils.input_directory + graph
-  if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
-    raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
-  G = nk.readGraph(use_input_graph, nk.Format.SNAP)
+  # if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
+  #   raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
+  G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
+  # print([edge for edge in G.iterEdgesWeights()])
   if (thread != "" and thread != "ALL"):
     nk.setNumberOfThreads(int(thread))
   # This is k-core with a thresholding argument (double-check)

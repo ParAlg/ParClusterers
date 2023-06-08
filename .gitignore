@@ -4,3 +4,4 @@
 .*.swo
 __pycache__/
 out/
+cluster_test.config
