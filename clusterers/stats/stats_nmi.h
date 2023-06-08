@@ -43,20 +43,30 @@ inline absl::Status ComputeNMI(
   size_t num_cluster_2 = ground_truth.size();
 
   // Ground truth entropy
-  std::vector<double> community_entropys(num_cluster_2);
+  std::vector<long double> community_entropys(num_cluster_2);
   parlay::parallel_for(0, num_cluster_2, [&](size_t i){
-    double proportion = ((double)ground_truth[i].size()) / n;
-    community_entropys[i] = -proportion * log2(proportion); 
+    long double proportion = ((long double)ground_truth[i].size()) / n;
+    if (proportion > 0){
+      community_entropys[i] = -proportion * (log2l(ground_truth[i].size()) - log2l(n)); 
+    }
+    else{
+      community_entropys[i] = 0; 
+    }
   });
-  double community_entropy = parlay::reduce(community_entropys);
+  long double community_entropy = parlay::reduce(community_entropys);// + log2l(n);
 
   // Cluster entropy
-  std::vector<double> cluster_entropys(num_cluster_1);
+  std::vector<long double> cluster_entropys(num_cluster_1);
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
-    double proportion = ((double)clustering[i].size()) / n;
-    cluster_entropys[i] = -proportion * log2(proportion); 
+    long double proportion = ((long double)clustering[i].size()) / n;
+    if (proportion > 0){
+      cluster_entropys[i] = -proportion * (log2l(clustering[i].size()) - log2l(n)); 
+    }
+    else{
+      cluster_entropys[i] = 0; 
+    }
   });
-  double cluster_entropy = parlay::reduce(cluster_entropys);
+  long double cluster_entropy = parlay::reduce(cluster_entropys);// + log2l(n);
 
 
   // Calculate conditional entropy
@@ -78,9 +88,9 @@ inline absl::Status ComputeNMI(
     });
   });
 
-  std::vector<double> conditional_entropys(num_cluster_1);
+  std::vector<long double> conditional_entropys(num_cluster_1);
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
-    std::vector<double> match(num_cluster_2);
+    std::vector<long double> match(num_cluster_2);
     size_t cluster_size = clustering[i].size();
     parlay::parallel_for(0, num_cluster_2, [&](size_t j){
         size_t val = 0;
@@ -97,9 +107,9 @@ inline absl::Status ComputeNMI(
         val = parlay::reduce(flags);
         }
 
-        double proportion = ((double)val) / cluster_size;
+        long double proportion = ((long double)val) / cluster_size;
         if (proportion > 0){
-            match[j] = proportion * log2(proportion);
+            match[j] = proportion * (log2l(val) - log2l(cluster_size));
         }
         else{
             match[j] = 0;
@@ -107,12 +117,12 @@ inline absl::Status ComputeNMI(
         
         
     });
-    double entropy = parlay::reduce(match);
-    double proportion = ((double) cluster_size) / n;
+    long double entropy = parlay::reduce(match);
+    long double proportion = ((long double) cluster_size) / n;
     conditional_entropys[i] = - proportion * entropy;
   });
 
-  double conditional_entropy = parlay::reduce(conditional_entropys);
+  long double conditional_entropy = parlay::reduce(conditional_entropys);
 
   // NMI calculation from calculated entropys
   double nmi_value = 2 * (community_entropy - conditional_entropy) / (community_entropy + cluster_entropy);
