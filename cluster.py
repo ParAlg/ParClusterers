@@ -7,6 +7,7 @@ import re
 import itertools
 import cluster_nk
 import runner_utils
+import cluster_neo4j
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -16,15 +17,47 @@ def runSnap(clusterer, graph, graph_idx, round):
   out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(round)
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
-  runner_utils.shellGetOutput("(cd external/snap/examples/community && make all)")
+  snap_binary = "community"
+  args = ""
+  print("Compiling snap binaries. This might take a while if it's the first time.")
   if (clusterer == "SnapGirvanNewman"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 1
+    args = " -a:" + str(alg_number)
   elif (clusterer == "SnapInfomap"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 3
-  else: #SnapCNM
+    args = " -a:" + str(alg_number)
+  elif (clusterer == "SnapCNM"):
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
     alg_number = 2
-  out_time = runner_utils.shellGetOutput(runner_utils.timeout + " external/snap/examples/community/community -i:" + use_input_graph + " -o:" + out_clustering + " -a:" + str(alg_number))
+    args = " -a:" + str(alg_number)
+  elif (clusterer == "SnapConnectivity"):
+    snap_binary = "concomp"
+    args = " -wcconly:T"
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
+  elif (clusterer == "SnapKCore"):
+    snap_binary = "kcores"
+    args = " -s:F"
+    runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
+  else:
+    raise("Clusterer is not implemented.")
+  print("Compilation done.")
+  cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args
+  # print(cmds)
+  out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
+
+def runNeo4j(clusterer, graph, thread, config, out_prefix):
+  if (runner_utils.gbbs_format == "true"):
+    raise ValueError("Neo4j can only be run using edge list format")
+  use_input_graph = runner_utils.input_directory + graph
+  out_clustering = out_prefix + ".cluster"
+  out_filename = out_prefix + ".out"
+  alg_name = clusterer[5:]
+  out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, out_clustering)
+  runner_utils.appendToFile(out_time, out_filename)
+
 
 # Graph must be in edge format
 def runTectonic(clusterer, graph, thread, config, out_prefix):
@@ -80,8 +113,10 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
 
 def runAll(config_filename):
   runner_utils.readConfig(config_filename)
-  for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
-    for graph_idx, graph in enumerate(runner_utils.graphs):
+  
+  for graph_idx, graph in enumerate(runner_utils.graphs):
+    neo4j_graph_loaded = False
+    for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
       if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           runSnap(clusterer, graph, graph_idx, i)
@@ -97,6 +132,12 @@ def runAll(config_filename):
               cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
             elif clusterer == "Tectonic":
               runTectonic(clusterer, graph, thread, config, out_prefix)
+            elif clusterer.startswith("Neo4j"):
+              if not neo4j_graph_loaded:
+                use_input_graph = runner_utils.input_directory + graph
+                cluster_neo4j.projectGraph(use_input_graph, graph)
+                neo4j_graph_loaded = True
+              runNeo4j(clusterer, graph, thread, config, out_prefix)
             else:
               out_filename = out_prefix + ".out"
               out_clustering = out_prefix + ".cluster"
@@ -109,6 +150,8 @@ def runAll(config_filename):
               out = runner_utils.shellGetOutput(ss)
               runner_utils.appendToFile(ss + "\n", out_filename)
               runner_utils.appendToFile(out, out_filename)
+    if neo4j_graph_loaded:
+      cluster_neo4j.clearDB(graph)
 
 def main():
   args = sys.argv[1:]

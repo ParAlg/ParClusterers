@@ -9,4 +9,4 @@
 	url = https://github.com/jeshi96/Tectonic.git
 [submodule "external/snap"]
 	path = external/snap
-	url = https://github.com/jeshi96/snap.git
+	url = https://github.com/yushangdi/snap.git

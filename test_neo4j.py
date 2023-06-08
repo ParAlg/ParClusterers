@@ -4,6 +4,9 @@ import pandas
 import sys
 from collections import defaultdict
 from graphdatascience import GraphDataScience
+import math
+import runner_utils
+
 
 def appendToFile(out, filename):
   with open(filename, "a+") as out_file:
@@ -32,55 +35,7 @@ def readGraph(filename, gds):
         edges_to.append(int(a))
   return nodes, edges_from, edges_to
 
-
-
-#  nodes_set = set()
-#  edges_from = []
-#  edges_to = []
-#  with open(graph_path, "r") as in_file:
-#    for line in in_file:
-#      line = line.strip()
-#      if not line:
-#        continue
-#      if line[0] == '#':
-#        continue
-#      split = [x.strip() for x in line.split('\t')]
-#      if split:
-#        a = split[0]
-#        b = split[1]
-#        gds.run_cypher("CREATE (A" + str(a) + ": A)")
-#        gds.run_cypher("CREATE (A" + str(b) + ": A)")
-#        gds.run_cypher("CREATE (A" + str(a) + ": A)-[:KNOWS]->(A" + str(b) + ":A)")
-
-# first argument is input graph
-# second argument is louvain, modularity, or leiden; triangle
-# third argument is output clustering
-# default weight is unweighted
-
-def run_algs(graph_path, algs, out_dir, graph_pre):
-
-  graph_name = "my-graph"
-
-  #nodes_set, edges_from, edges_to = readGraph(graph_path, gds)
-  #nodes_dict = {}
-  #nodes_dict["nodeId"] = list(nodes_set)
-  #relationships_dict = {}
-  #relationships_dict["sourceNodeId"] = edges_from
-  #relationships_dict["targetNodeId"] = edges_to
-  #rel_type_list = ["KNOWS"] * len(edges_from)
-  #rel_weight_list = [1.0] * len(edges_from)
-  #relationships_dict["relationshipType"] = rel_type_list
-  #relationships_dict["weight"] = rel_weight_list
-  #nodes = pandas.DataFrame(nodes_dict)
-  #relationships = pandas.DataFrame(relationships_dict)
-  #G = gds.alpha.graph.construct( #G_dir
-  #  graph_name,      # Graph name
-  #  nodes,           # One or more dataframes containing node data
-  #  relationships    # One or more dataframes containing relationship data
-  #)
-
-  c_commands = defaultdict(list)
-  c_nodes = []
+def getLoadGraphCommand(graph_path):
   nodes_set = set()
   cypher_commands_list = []
   with open(graph_path, "r") as in_file:
@@ -94,120 +49,155 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
       if split:
         a = split[0]
         b = split[1]
+        w = 0
+        if len(split) == 3:
+          w = split[2]
         nodes_set.add(int(a))
         nodes_set.add(int(b))
-  #      cypher_commands_list.append("(A" + a + ": A)")
-  #      cypher_commands_list.append("(A" + b + ": A)")
-        cypher_commands_list.append("(A" + str(a) + ")-[:KNOWS]->(A" + str(b) + ")")
-        #c_commands[int(a)].append({"start" : a, "end" : b})
+        cypher_commands_list.append("(A" + str(a) + ")-[:EDGE { weight:" + str(w) + " }]->(A" + str(b) + ")")
   cypher_node_commands_list = []
   for node in nodes_set:
-    cypher_node_commands_list.append("(A" + str(node) + ": A )") #{id: "+ str(node)+"}
-    #c_nodes.append(node)
+    cypher_node_commands_list.append("(A" + str(node) + ": A {id: "+ str(node)+" })") #
+  return cypher_commands_list, cypher_node_commands_list
 
-  print("Finished loading in memory")
-  sys.stdout.flush()
+# first argument is input graph
+# second argument is louvain, modularity, or leiden; triangle
+# third argument is output clustering
+# default weight is unweighted
+
+def run_algs(graph_path, algs, out_dir, graph_pre, config):
+
+  
+  
+  ## load configs
+  threshold = math.inf
+  no_pruning = False
+  split = [x.strip() for x in config.split(',')]
+  for config_item in split:
+    config_split = [x.strip() for x in config_item.split(':')]
+    if config_split:
+      if config_split[0].startswith("threshold"):
+        threshold = float(config_split[1])
+      elif config_split[0].startswith("no_pruning"):
+        no_pruning = True if config_split[1].startswith("True") else False
 
   # Use Neo4j URI and credentials according to your setup
   gds = GraphDataScience("bolt://localhost:7687", auth=None)
   print("GDS version: ", gds.version())
 
-  _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
-  #_ = gds.run_cypher("CALL apoc.schema.assert({},{},true) YIELD label, key RETURN *")
+  graph_name = graph_pre + "undir"
+  graph_exists = gds.graph.exists(graph_name=graph_name)
+  if graph_exists[1]: 
+    gds.graph.drop(gds.graph.get(graph_name))
+  graph_exists = gds.graph.exists(graph_name=graph_name)
+  if not graph_exists[1]:
+    cypher_commands_list, cypher_node_commands_list = getLoadGraphCommand(graph_path)
 
-  print("Cleared db")
-  sys.stdout.flush()
+    print("Finished loading in memory")
+    sys.stdout.flush()
 
-  #batch_size = 10000
-  #current_index = 0
-  #start_time = time.time()
-  #while current_index < len(c_nodes):
-  #  print("Index: " + str(current_index))
-  #  sys.stdout.flush()
-  #  end_index = current_index + batch_size
-  #  if len(c_nodes) < end_index:
-  #    end_index = len(c_nodes)
-  #  c_commands_act = ["{start:" + str(a) +"}" for a in c_nodes[current_index : end_index]]
-  #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'CREATE (head:A{id:row.start})\',{batchSize:10000, retries: 3, iterateList:true, parallel:true})"
-  #  gds.run_cypher(cypher_command)
-  #  current_index = current_index + batch_size
-  #current_index = 0
-  #end_time = time.time()
-  #print("Node Reading Time: " + str(end_time - start_time))
+    # print("Num. of threads: ", gds.nthreads())
 
-  #cypher_command = "CREATE CONSTRAINT node_id ON (n:A) ASSERT n.id IS UNIQUE"
-  #gds.run_cypher(cypher_command)
-  #print("Constraint")
-  #sys.stdout.flush()
+    _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
+    #_ = gds.run_cypher("CALL apoc.schema.assert({},{},true) YIELD label, key RETURN *")xw
+    print("Cleared db")
+    sys.stdout.flush()
 
-  cypher_command = "CREATE " + ', '.join(cypher_node_commands_list)
-  start_time = time.time()
-  gds.run_cypher(cypher_command)
-  end_time = time.time()
-  print("Node Reading Time: " + str(end_time - start_time))
-  sys.stdout.flush()
+    #batch_size = 10000
+    #current_index = 0
+    #start_time = time.time()
+    #while current_index < len(c_nodes):
+    #  print("Index: " + str(current_index))
+    #  sys.stdout.flush()
+    #  end_index = current_index + batch_size
+    #  if len(c_nodes) < end_index:
+    #    end_index = len(c_nodes)
+    #  c_commands_act = ["{start:" + str(a) +"}" for a in c_nodes[current_index : end_index]]
+    #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'CREATE (head:A{id:row.start})\',{batchSize:10000, retries: 3, iterateList:true, parallel:true})"
+    #  gds.run_cypher(cypher_command)
+    #  current_index = current_index + batch_size
+    #current_index = 0
+    #end_time = time.time()
+    #print("Node Reading Time: " + str(end_time - start_time))
 
+    #cypher_command = "CREATE CONSTRAINT node_id ON (n:A) ASSERT n.id IS UNIQUE"
+    #gds.run_cypher(cypher_command)
+    #print("Constraint")
+    #sys.stdout.flush()
+
+    cypher_command = "CREATE " + ', '.join(cypher_node_commands_list) +", "+ ', '.join(cypher_commands_list)
+    # print(cypher_command)
+
+    start_time = time.time()
+    gds.run_cypher(cypher_command)
+    end_time = time.time()
+    print("Node and Edge Reading Time: " + str(end_time - start_time))
+    sys.stdout.flush()
   
-  
-  print("Finished loading nodes")
-  sys.stdout.flush()
+    # print("Finished loading nodes and edges")
+    # sys.stdout.flush()
 
-  #start_time = time.time()
-  #for c in c_commands:
-  #  c_commands_tmp = c_commands[c]
-  #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands_tmp]
-  #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'MATCH (head:A{id:row.start}) USING INDEX head:A(id) MATCH (tail:A{id:row.end}) USING INDEX tail:A(id) CREATE (head)-[:KNOWS]->(tail)\', {batchSize:10000, retries: 3, iterateList:true, parallel:true})"
-  #  gds.run_cypher(cypher_command)
-  #end_time = time.time()
-  #print("Edge Reading Time: " + str(end_time - start_time))
+    #start_time = time.time()
+    #for c in c_commands:
+    #  c_commands_tmp = c_commands[c]
+    #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands_tmp]
+    #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'MATCH (head:A{id:row.start}) USING INDEX head:A(id) MATCH (tail:A{id:row.end}) USING INDEX tail:A(id) CREATE (head)-[:EDGE]->(tail)\', {batchSize:10000, retries: 3, iterateList:true, parallel:true})"
+    #  gds.run_cypher(cypher_command)
+    #end_time = time.time()
+    #print("Edge Reading Time: " + str(end_time - start_time))
 
-  #while current_index < len(c_commands):
-  #  print("C Index: " + str(current_index))
-  #  sys.stdout.flush()
-  #  end_index = current_index + batch_size
-  #  if len(c_commands) < end_index:
-  #    end_index = len(c_commands)
-  #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands[current_index : end_index]]
-  #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'MATCH (head:A{id:row.start}) MATCH (tail:A{id:row.end}) CREATE (head)-[:KNOWS]->(tail)\', {batchSize:10000, retries: 3, iterateList:true, parallel:true})"
-  #  gds.run_cypher(cypher_command)
-  #  current_index = current_index + batch_size
+    #while current_index < len(c_commands):
+    #  print("C Index: " + str(current_index))
+    #  sys.stdout.flush()
+    #  end_index = current_index + batch_size
+    #  if len(c_commands) < end_index:
+    #    end_index = len(c_commands)
+    #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands[current_index : end_index]]
+    #  cypher_command = "CALL apoc.periodic.iterate(\'UNWIND ["  + ", ".join(c_commands_act) + "] AS row RETURN row\', \'MATCH (head:A{id:row.start}) MATCH (tail:A{id:row.end}) CREATE (head)-[:EDGE]->(tail)\', {batchSize:10000, retries: 3, iterateList:true, parallel:true})"
+    #  gds.run_cypher(cypher_command)
+    #  current_index = current_index + batch_size
 
-  # Working unwind merge method
-  #batch_size = 10000
-  #current_index = 0
-  #while current_index < len(cypher_commands_list):
-  #  print("Index: " + str(current_index))
-  #  sys.stdout.flush()
-  #  end_index = current_index + batch_size
-  #  if len(cypher_commands_list) < end_index:
-  #    end_index = len(cypher_commands_list)
-  #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands[current_index : end_index]]
-  #  cypher_command = "UNWIND ["  + ", ".join(c_commands_act) + "] AS row MERGE (head:A{id:row.start}) MERGE (tail:A{id:row.end}) CREATE (head)-[:KNOWS]->(tail)"
-  #  gds.run_cypher(cypher_command)
-  #  current_index = current_index + batch_size
+    # Working unwind merge method
+    #batch_size = 10000
+    #current_index = 0
+    #while current_index < len(cypher_commands_list):
+    #  print("Index: " + str(current_index))
+    #  sys.stdout.flush()
+    #  end_index = current_index + batch_size
+    #  if len(cypher_commands_list) < end_index:
+    #    end_index = len(cypher_commands_list)
+    #  c_commands_act = ["{start:" + a["start"] + ", end:" + a["end"] + "}" for a in c_commands[current_index : end_index]]
+    #  cypher_command = "UNWIND ["  + ", ".join(c_commands_act) + "] AS row MERGE (head:A{id:row.start}) MERGE (tail:A{id:row.end}) CREATE (head)-[:EDGE]->(tail)"
+    #  gds.run_cypher(cypher_command)
+    #  current_index = current_index + batch_size
 
-  cypher_command = "CREATE " + ', '.join(cypher_commands_list)
-  start_time = time.time()
-  gds.run_cypher(cypher_command)
-  end_time = time.time()
-  print("Edge Reading Time: " + str(end_time - start_time))
+    # cypher_command = "CREATE " + ', '.join(cypher_commands_list)
+    # print(cypher_command)
+    # start_time = time.time()
+    # # gds.run_cypher(cypher_command)
+    # end_time = time.time()
+    # print("Edge Reading Time: " + str(end_time - start_time))
 
-  print("Finished cypher")
-  sys.stdout.flush()
+    print("Finished cypher")
+    sys.stdout.flush()
 
   #gds.run_cypher("MATCH (n) SET n:A")
 
-  gds.run_cypher("CALL gds.graph.project(\'" + graph_name + "undir\', \'*\', {KNOWS: {orientation: \'UNDIRECTED\'}})")
-  G = gds.graph.get(graph_name + "undir")
+    gds.run_cypher("CALL gds.graph.project(\'" + graph_name + "\', \'*\', {EDGE: {orientation: \'UNDIRECTED\', properties: ['weight']}})")
 
-  #G, result = gds.graph.project(graph_name + "undir", '*', {"KNOWS" : {"orientation": "UNDIRECTED"}})
+  G = gds.graph.get(graph_name)
+  print("database: ", G.database())
+  # print(G.node_count())
+
+  #G, result = gds.graph.project(graph_name + "undir", '*', {"EDGE" : {"orientation": "UNDIRECTED"}})
 
   print("Finished loading graph")
   print("Relationship count: " + str(G.relationship_count()))
 
   for algorithm_name in algs:
     community_flag = False
-    print(graph_pre + " " + algorithm_name)
+    component_flag = False
+    print("Graph: ", graph_pre,  ", Alg.: ", algorithm_name)
     sys.stdout.flush()
     start_time = time.time()
     #pandas_res = gds.louvain.stream(G) #relationshipWeightProperty="weight", 
@@ -228,6 +218,11 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
       res = gds.triangleCount.mutate(G, mutateProperty="triangle")
     elif algorithm_name.startswith("pagerank"):
       res = gds.pageRank.mutate(G, mutateProperty="pagerank")
+    elif algorithm_name.startswith("connectivity"):
+      component_flag = True
+      res = gds.wcc.mutate(G, mutateProperty="connectivitycommunity", threshold = threshold, relationshipWeightProperty="weight", concurrency = 4)
+    else:
+      print("The algorithm ", algorithm_name, " is not available")
     end_time = time.time()
     print("Time: " + str(end_time - start_time))
     print("Preprocessing millis: " + str(res["preProcessingMillis"]))
@@ -243,6 +238,14 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
       print("Community count: " + str(res["communityCount"]))
       print("Modularity: " + str(res["modularity"]))
       sys.stdout.flush()
+    if (component_flag):
+      print("Community count: " + str(res["componentCount"]))
+      # print(G.node_properties())
+      # result = gds.graph.nodeProperty.stream(G, node_properties="connectivitycommunity")
+      # print(result)
+
+
+      sys.stdout.flush()
 #      cluster_dict = defaultdict(list)
 #      for node in nodes_set:
 #        community_id = gds.util.nodeProperty(G, node, algorithm_name + "community")
@@ -256,7 +259,7 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
   #gds.graph.drop(G)
   #G_dir.drop()
   G.drop()
-  _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
+  # _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
   #G_undir = gds.graph.get(graph_name + "undir")
   #G_undir.drop()
 
@@ -265,16 +268,18 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
   #assert res["nodePropertiesWritten"] == G.node_count()
 
 def main():
-  args = sys.argv[1:]
+  # args = sys.argv[1:]
+  config = 'threshold: 0'
+
   directory = "/home/ubuntu/"
-  graphs = ["triangle.txt"] #"com-dblp.ungraph.txt", "com-youtube.ungraph.txt" "com-amazon.ungraph.txt" , "com-lj.ungraph.txt", "com-orkut.ungraph.txt"] #
-  graph_pres = ["dblp", "youtube"] #, ,"amazon" "lj", "orkut"] #"youtube", 
+  graphs = ["edge.txt"] #"com-dblp.ungraph.txt", "com-youtube.ungraph.txt" "com-amazon.ungraph.txt" , "com-lj.ungraph.txt", "com-orkut.ungraph.txt"] #
+  graph_pres = ["edge", "triangle", "dblp", "youtube"] #, ,"amazon" "lj", "orkut"] #"youtube", 
   for graph_idx, graph in enumerate(graphs):
     graph_pre = graph_pres[graph_idx]
     graph_name = directory + "snap/" + graph
-    algs = ["leiden"] #[, "leiden", "triangle", "louvain", "modularity", "pagerank"]
+    algs = ["connectivity"] #["connectivity", "leiden", "triangle", "louvain", "modularity", "pagerank"]
     out_dir = directory + "neo4j_out/" + graph_pre + "_"
-    run_algs(graph_name, algs, out_dir, graph_pre)
+    run_algs(graph_name, algs, out_dir, graph_pre, config)
   #for graph_idx, graph in enumerate(graphs):
   #  graph_pre = graph_pres[graph_idx]
   #  graph_name = directory + "snap/" + graph

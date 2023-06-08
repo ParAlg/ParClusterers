@@ -38,6 +38,7 @@ def runNetworKitPLM(G, config):
     #Communities detected in 0.76547 [s]
     communities = nk.community.detectCommunities(G, algo=nk.community.PLM(G, refine=use_refine, gamma=use_gamma, par=use_par, maxIter=use_maxIter, turbo=use_turbo, recurse=use_recurse))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   # str(end_time - start_time)
   return out, communities
@@ -58,6 +59,7 @@ def runNetworKitPLP(G, config):
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
 
@@ -80,8 +82,43 @@ def runNetworKitParallelLeiden(G, config):
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.ParallelLeiden(G, randomize=use_randomize, iterations=use_iterations, gamma=use_gamma))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
+
+def runNetworKitConnectivity(G, config):
+  f = io.StringIO()
+  if (G.isDirected()):
+    raise ValueError("NetworkIt Connected Components can only run for undirected graphs.")
+  with redirect_stdout(f):
+    start_time = time.time()
+    # returns type List[List[int]], each nested list is a cluster, i.e. conencted component
+    cc = nk.components.ConnectedComponents(G)
+    cc.run()
+    clusters = cc.getComponents()
+    end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
+  out = f.getvalue()
+  return out, clusters
+
+
+def runNetworKitKCore(G, config):
+  # The graph may not contain self-loops.
+  f = io.StringIO()
+  with redirect_stdout(f):
+    start_time = time.time()
+    coreDec = nk.centrality.CoreDecomposition(G)
+    coreDec.run()
+    max_core_number = coreDec.maxCoreNumber()
+    # cores = coreDec.
+    cores = []
+    for i in range(max_core_number+1):
+      cores.append(list(coreDec.getCover().getMembers(i)))
+    end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
+  out = f.getvalue()
+  return out, cores
+
 
 def extractNetworKitTime(out):
   split = [x.strip() for x in out.split('\n')]
@@ -97,25 +134,38 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
   out_filename = out_prefix + ".out"
   out_clustering = out_prefix + ".cluster"
   use_input_graph = runner_utils.input_directory + graph
+  if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
+    raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
   G = nk.readGraph(use_input_graph, nk.Format.SNAP)
   if (thread != "" and thread != "ALL"):
     nk.setNumberOfThreads(int(thread))
   # This is k-core with a thresholding argument (double-check)
   #nk.community.kCoreCommunityDetection(G, k, algo=None, inspect=False)
+  cluster_flag = False
   if (clusterer == "NetworKitPLM"):
     print_time, communities = runNetworKitPLM(G, config)
   elif (clusterer == "NetworKitPLP"):
     print_time, communities = runNetworKitPLP(G, config)
   elif (clusterer == "NetworKitParallelLeiden"):
     print_time, communities = runNetworKitParallelLeiden(G, config)
+  elif (clusterer == "NetworKitConnectivity"):
+    cluster_flag = True
+    print_time, clusters = runNetworKitConnectivity(G, config)
+  elif (clusterer == "NetworKitKCore"):
+    cluster_flag = True
+    print_time, clusters = runNetworKitKCore(G, config)
   else:
     raise ValueError("NetworKit clusterer not supported")
   runner_utils.appendToFile(print_time, out_filename)
-  runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time), out_filename)
-  communities.compact()
-  cluster_index = 0
-  cluster_list = communities.getMembers(cluster_index)
-  while (cluster_list):
-    runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-    cluster_index += 1
+  runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
+  if not cluster_flag:
+    communities.compact()
+    cluster_index = 0
     cluster_list = communities.getMembers(cluster_index)
+    while (cluster_list):
+      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+      cluster_index += 1
+      cluster_list = communities.getMembers(cluster_index)
+  else:
+    for cluster_list in clusters:
+      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)

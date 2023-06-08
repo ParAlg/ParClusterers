@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+message ConnectivityClustererConfig {
+  optional double threshold = 1 [default = inf];
+  optional bool upper_bound = 2 [default = true];
+}

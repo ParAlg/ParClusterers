@@ -182,12 +182,12 @@ def run_algs(graph_path, algs, out_dir, graph_pre):
 def main():
   args = sys.argv[1:]
   directory = "/home/ubuntu/"
-  graphs = ["com-lj.ungraph.txt"] #"com-dblp.ungraph.txt","com-youtube.ungraph.txt", "com-amazon.ungraph.txt",
-  graph_pres = ["lj"] # "dblp","youtube", "amazon",
+  graphs = ["com-dblp.ungraph.txt"] #"com-lj.ungraph.txt","com-youtube.ungraph.txt", "com-amazon.ungraph.txt",
+  graph_pres = ["dblp"] # "dblp","youtube", "amazon",
   for graph_idx, graph in enumerate(graphs):
     graph_pre = graph_pres[graph_idx]
     graph_name = directory + "snap/" + graph
-    algs = ["leiden", "pagerank"] #"triangle", 
+    algs = [] #"triangle", "leiden", "pagerank"]
     out_dir = directory + "neo4j_out/" + graph_pre + "_"
     run_algs(graph_name, algs, out_dir, graph_pre)
   #for graph_idx, graph in enumerate(graphs):

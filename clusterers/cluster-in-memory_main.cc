@@ -113,7 +113,7 @@ absl::Status WriteClustering(const char* filename,
 }
 
 bool IsAnyProto(const std::string& clusterer_name){
-  return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer") || (clusterer_name == "KCoreClusterer");
+  return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer") || (clusterer_name == "KCoreClusterer") || (clusterer_name == "ConnectivityClusterer");
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
@@ -221,6 +221,7 @@ absl::Status Main() {
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
 
+  if(output_file == "") return absl::OkStatus();
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
   return WriteClustering(output_file.c_str(), clusterings[0]);
