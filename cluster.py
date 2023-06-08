@@ -9,6 +9,7 @@ import cluster_nk
 import runner_utils
 import cluster_neo4j
 import traceback
+import postprocess_clustering
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -20,6 +21,7 @@ def runSnap(clusterer, graph, graph_idx, round):
   out_filename = out_prefix + ".out"
   snap_binary = "community"
   args = ""
+  output_postfix = ""
   print("Compiling snap binaries. This might take a while if it's the first time.")
   if (clusterer == "SnapGirvanNewman"):
     runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
@@ -36,6 +38,7 @@ def runSnap(clusterer, graph, graph_idx, round):
   elif (clusterer == "SnapConnectivity"):
     snap_binary = "concomp"
     args = " -wcconly:T"
+    output_postfix = ".wcc.txt"
     runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
   elif (clusterer == "SnapKCore"):
     snap_binary = "kcores"
@@ -48,6 +51,11 @@ def runSnap(clusterer, graph, graph_idx, round):
   # print(cmds)
   out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
+  os.rename(out_clustering + output_postfix, out_clustering)
+
+  # postprocess to match our clustering format
+  if (clusterer == "SnapConnectivity"):
+    postprocess_clustering.snap_connectivity(out_clustering)
 
 def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix):
   if (runner_utils.gbbs_format == "true"):
