@@ -78,10 +78,9 @@ def getLoadGraphCommand(graph_path):
 # third argument is output clustering
 # default weight is unweighted
 
-def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_clustering):
+def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, out_clustering):
   ## load configs
   threshold = None
-  weighted = False
   maxLevels = 10
   maxIterations = 10
   gamma = 1.0
@@ -93,13 +92,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_cluster
       if config_split[0].startswith("threshold"):
         if config_split[1] != "None":
           threshold = float(config_split[1])
-      if config_split[0].startswith("weighted"):
-        if config_split[1] == "True":
-          weighted = True
-        elif config_split[1] == "False":
-          weighted = False
-        else:
-          raise("Invaid value for `weighted`")
       if config_split[0].startswith("maxLevels"):
         maxLevels = int(config_split[1])
       if config_split[0].startswith("maxIterations"):
@@ -144,7 +136,8 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_cluster
       "relationshipWeightProperty": relationshipWeightProperty
     }
     start_time = time.time()
-    if (algorithm_name.startswith("louvain")):
+    res = None
+    if (algorithm_name.startswith("Louvain")):
       community_flag = True
       stream_kwargs["maxLevels"]=maxLevels
       stream_kwargs["maxIterations"]=maxIterations
@@ -156,7 +149,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_cluster
         mutateProperty = "louvaincommunity"
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.louvain.mutate(G, **mutate_kwargs)
-    elif (algorithm_name.startswith("leiden")):
+    elif (algorithm_name.startswith("Leiden")):
       community_flag = True
       stream_kwargs["maxLevels"]=maxLevels
       stream_kwargs["gamma"]=gamma
@@ -169,10 +162,11 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_cluster
         mutateProperty = "leidencommunity"
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.beta.leiden.mutate(G, **mutate_kwargs)
-    elif algorithm_name.startswith("connectivity"):
-      component_flag = True #
+    elif algorithm_name.startswith("Connectivity"):
+      component_flag = True
+      mutate_kwargs = stream_kwargs.copy()
       if stream_flag:
-        res = gds.wcc.mutate(G, threshold = threshold, **stream_kwargs)
+        res = gds.wcc.stream(G, threshold = threshold, **stream_kwargs)
       else:
         mutateProperty = "connectivitycommunity"
         mutate_kwargs["mutateProperty"] = mutateProperty
@@ -225,6 +219,7 @@ def clearDB(graph_name):
   if graph_exists[1]: 
     gds.graph.drop(gds.graph.get(graph_name))
   gds.close()
+  print("Neo4j graph removed", graph_name)
 
 def projectGraph(graph_name, graph_path):
     # Use Neo4j URI and credentials according to your setup

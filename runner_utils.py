@@ -47,7 +47,8 @@ def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads
   global clusterer_configs, num_rounds, timeout, clusterer_config_names
   global gbbs_format
-  num_threads = num_rounds = timeout = gbbs_format = None
+  global weighted
+  num_threads = num_rounds = timeout = gbbs_format = weighted = None
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
@@ -72,6 +73,8 @@ def readConfig(filename):
           timeout = split[1]
         elif split[0].startswith("GBBS format") and len(split) > 1:
           gbbs_format = split[1]
+        elif split[0].startswith("Wighted") and len(split) > 1:
+          weighted = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0] == clusterer_name:
@@ -93,6 +96,8 @@ def readConfig(filename):
   timeout = "" if (timeout is None or timeout == "" or timeout == "NONE") else "timeout " + timeout
   num_rounds = 1 if (num_rounds is None) else num_rounds
   gbbs_format = "false" if (gbbs_format is None or gbbs_format == "") else gbbs_format
+  weighted = "false" if (weighted is None or weighted == "") else weighted
+
 
 def readStatsConfig(filename):
   global communities, stats_config

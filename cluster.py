@@ -8,6 +8,7 @@ import itertools
 import cluster_nk
 import runner_utils
 import cluster_neo4j
+import traceback
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -48,14 +49,15 @@ def runSnap(clusterer, graph, graph_idx, round):
   out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
 
-def runNeo4j(clusterer, graph, thread, config, out_prefix):
+def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix):
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("Neo4j can only be run using edge list format")
   use_input_graph = runner_utils.input_directory + graph
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
   alg_name = clusterer[5:]
-  out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, out_clustering)
+  thread = int(thread)
+  out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, weighted, out_clustering)
   runner_utils.appendToFile(out_time, out_filename)
 
 
@@ -117,39 +119,44 @@ def runAll(config_filename):
   for graph_idx, graph in enumerate(runner_utils.graphs):
     neo4j_graph_loaded = False
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
-      if clusterer.startswith("Snap"):
-        for i in range(runner_utils.num_rounds):
-          runSnap(clusterer, graph, graph_idx, i)
-        continue
-      for thread_idx, thread in enumerate(runner_utils.num_threads):
-        configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
-        config_prefix = runner_utils.clusterer_config_names[clusterer_idx] + "{" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
-        config_postfix = "}" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
-        for config_idx, config in enumerate(configs):
+      try:
+        if clusterer.startswith("Snap"):
           for i in range(runner_utils.num_rounds):
-            out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
-            if clusterer.startswith("NetworKit"):
-              cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
-            elif clusterer == "Tectonic":
-              runTectonic(clusterer, graph, thread, config, out_prefix)
-            elif clusterer.startswith("Neo4j"):
-              if not neo4j_graph_loaded:
+            runSnap(clusterer, graph, graph_idx, i)
+          continue
+        for thread_idx, thread in enumerate(runner_utils.num_threads):
+          configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
+          config_prefix = runner_utils.clusterer_config_names[clusterer_idx] + "{" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
+          config_postfix = "}" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
+          for config_idx, config in enumerate(configs):
+            for i in range(runner_utils.num_rounds):
+              out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
+              if clusterer.startswith("NetworKit"):
+                cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
+              elif clusterer == "Tectonic":
+                runTectonic(clusterer, graph, thread, config, out_prefix)
+              elif clusterer.startswith("Neo4j"):
+                if not neo4j_graph_loaded:
+                  use_input_graph = runner_utils.input_directory + graph
+                  cluster_neo4j.projectGraph(graph, use_input_graph)
+                  neo4j_graph_loaded = True
+                weighted = runner_utils.weighted == "true"
+                runNeo4j(clusterer, graph, thread, config, weighted, out_prefix)
+              else:
+                out_filename = out_prefix + ".out"
+                out_clustering = out_prefix + ".cluster"
+                use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
                 use_input_graph = runner_utils.input_directory + graph
-                cluster_neo4j.projectGraph(use_input_graph, graph)
-                neo4j_graph_loaded = True
-              runNeo4j(clusterer, graph, thread, config, out_prefix)
-            else:
-              out_filename = out_prefix + ".out"
-              out_clustering = out_prefix + ".cluster"
-              use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
-              use_input_graph = runner_utils.input_directory + graph
-              ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
-              "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --clusterer_name=" + clusterer + " "
-              "--clusterer_config='" + config_prefix + config + config_postfix + "' "
-              "--output_clustering=" + out_clustering)
-              out = runner_utils.shellGetOutput(ss)
-              runner_utils.appendToFile(ss + "\n", out_filename)
-              runner_utils.appendToFile(out, out_filename)
+                ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
+                "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --float_weighted=" + runner_utils.weighted + " --clusterer_name=" + clusterer + " "
+                "--clusterer_config='" + config_prefix + config + config_postfix + "' "
+                "--output_clustering=" + out_clustering)
+                out = runner_utils.shellGetOutput(ss)
+                runner_utils.appendToFile(ss + "\n", out_filename)
+                runner_utils.appendToFile(out, out_filename)
+      except Exception as e:
+          # Print the stack trace
+          traceback.print_exc()
     if neo4j_graph_loaded:
       cluster_neo4j.clearDB(graph)
 
