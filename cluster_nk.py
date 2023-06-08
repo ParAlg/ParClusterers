@@ -112,8 +112,8 @@ def runNetworKitKCore(G, config):
     max_core_number = coreDec.maxCoreNumber()
     # cores = coreDec.
     cores = []
-    for i in range(max_core_number+1):
-      cores.append(list(coreDec.getCover().getMembers(i)))
+    # for i in range(max_core_number+1):
+    #   cores.append(list(coreDec.getCover().getMembers(i)))
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
@@ -159,6 +159,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
     raise ValueError("NetworKit clusterer not supported")
   runner_utils.appendToFile(print_time, out_filename)
   runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
+  if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
+    return
   if not cluster_flag:
     communities.compact()
     cluster_index = 0

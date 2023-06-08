@@ -42,7 +42,7 @@ def runSnap(clusterer, graph, graph_idx, round):
     runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
   elif (clusterer == "SnapKCore"):
     snap_binary = "kcores"
-    args = " -s:F"
+    args = " -s:F"  # Save the k-core network (for every k) (default:'T')
     runner_utils.shellGetOutput("(cd external/snap/examples/%s && make all)" % snap_binary)
   else:
     raise("Clusterer is not implemented.")
@@ -51,10 +51,10 @@ def runSnap(clusterer, graph, graph_idx, round):
   # print(cmds)
   out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
-  os.rename(out_clustering + output_postfix, out_clustering)
 
   # postprocess to match our clustering format
   if (clusterer == "SnapConnectivity"):
+    os.rename(out_clustering + output_postfix, out_clustering)
     postprocess_clustering.snap_connectivity(out_clustering)
 
 def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix):
@@ -139,6 +139,8 @@ def runAll(config_filename):
           for config_idx, config in enumerate(configs):
             for i in range(runner_utils.num_rounds):
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
+              if not os.path.exists(runner_utils.output_directory):
+                os.makedirs(runner_utils.output_directory)
               if clusterer.startswith("NetworKit"):
                 cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
               elif clusterer == "Tectonic":
