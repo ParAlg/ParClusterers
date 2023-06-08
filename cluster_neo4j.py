@@ -2,10 +2,9 @@ import time
 import io
 import pandas
 import sys
-from collections import defaultdict
 from graphdatascience import GraphDataScience
-import math
 from neo4j import GraphDatabase
+from contextlib import redirect_stdout
 
 def readGraph(filename):
   print_index = 1000000
@@ -64,9 +63,11 @@ def getLoadGraphCommand(graph_path):
         w = 0
         if len(split) == 3:
           w = split[2]
+          cypher_commands_list.append("(A" + str(a) + ")-[:EDGE { weight:" + str(w) + " }]->(A" + str(b) + ")")
+        else:
+          cypher_commands_list.append("(A" + str(a) + ")-[:EDGE]->(A" + str(b) + ")")
         nodes_set.add(int(a))
         nodes_set.add(int(b))
-        cypher_commands_list.append("(A" + str(a) + ")-[:EDGE { weight:" + str(w) + " }]->(A" + str(b) + ")")
   cypher_node_commands_list = []
   for node in nodes_set:
     cypher_node_commands_list.append("(A" + str(node) + ": A {id: "+ str(node)+" })") #
@@ -80,6 +81,11 @@ def getLoadGraphCommand(graph_path):
 def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_clustering):
   ## load configs
   threshold = None
+  weighted = False
+  maxLevels = 10
+  maxIterations = 10
+  gamma = 1.0
+  theta = 0.01
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
@@ -87,96 +93,130 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, out_cluster
       if config_split[0].startswith("threshold"):
         if config_split[1] != "None":
           threshold = float(config_split[1])
+      if config_split[0].startswith("weighted"):
+        if config_split[1] == "True":
+          weighted = True
+        elif config_split[1] == "False":
+          weighted = False
+        else:
+          raise("Invaid value for `weighted`")
+      if config_split[0].startswith("maxLevels"):
+        maxLevels = int(config_split[1])
+      if config_split[0].startswith("maxIterations"):
+        maxIterations = int(config_split[1])
+      if config_split[0].startswith("gamma"):
+        gamma = float(config_split[1])
+      if config_split[0].startswith("theta"):
+        theta = float(config_split[1])
 
-  # Use Neo4j URI and credentials according to your setup
-  gds = GraphDataScience("bolt://localhost:7687", auth=None)
-  print("GDS version: ", gds.version())
 
-  # graph_name = graph_pre #+ "undir"
-  # graph_exists = gds.graph.exists(graph_name=graph_name)
-  # if graph_exists[1]: 
-  #   gds.graph.drop(gds.graph.get(graph_name))
-  graph_exists = gds.graph.exists(graph_name=graph_name)
-  if not graph_exists[1]:
-    print("error, graph does not exist")
-    return "error, graph does not exist"
+  f = io.StringIO()
+  with redirect_stdout(f):
+    # Use Neo4j URI and credentials according to your setup
+    gds = GraphDataScience("bolt://localhost:7687", auth=None)
+    print("GDS version: ", gds.version())
 
-  G = gds.graph.get(graph_name)
-  print("database: ", G.database())
-  # print(G.node_count())
+    # graph_name = graph_pre #+ "undir"
+    # graph_exists = gds.graph.exists(graph_name=graph_name)
+    # if graph_exists[1]: 
+    #   gds.graph.drop(gds.graph.get(graph_name))
+    graph_exists = gds.graph.exists(graph_name=graph_name)
+    if not graph_exists[1]:
+      print("error, graph does not exist")
+      return "error, graph does not exist"
 
-  print("Finished loading graph")
-  print("Relationship count: " + str(G.relationship_count()))
+    G = gds.graph.get(graph_name)
+    print("database: ", G.database())
+    # print(G.node_count())
 
-  community_flag = False
-  component_flag = False
-  mutateProperty = ""
-  print("Graph: ", graph_name,  ", Alg.: ", algorithm_name)
-  sys.stdout.flush()
-  start_time = time.time()
-  if (algorithm_name.startswith("louvain")):
-    community_flag = True
-    res = gds.louvain.mutate(G, mutateProperty="louvaincommunity") #relationshipWeightProperty="weight", 
-  elif (algorithm_name.startswith("leiden")):
-    community_flag = True
-    res = gds.beta.leiden.mutate(G, mutateProperty="leidencommunity")
-  elif algorithm_name.startswith("connectivity"):
-    component_flag = True #
-    mutateProperty = "connectivitycommunity"
-    res = gds.wcc.mutate(G, mutateProperty=mutateProperty, threshold = threshold, relationshipWeightProperty="weight", concurrency = thread)
-  else:
-    print("The algorithm ", algorithm_name, " is not available")
-  end_time = time.time()
-  # print(res)
-  # node1 = gds.find_node_id(["A"], {"id": 0})
-  # node2 = gds.find_node_id(["A"], {"id": 1})
-  # print(node1, node2)
-  print("Time: " + str(end_time - start_time))
-  print("Preprocessing millis: " + str(res["preProcessingMillis"]))
-  print("Compute millis: " + str(res["computeMillis"]))
-  print("Postprocessing millis: " + str(res["postProcessingMillis"]))
-  sys.stdout.flush()
+    print("Finished loading graph")
+    print("Relationship count: " + str(G.relationship_count()))
 
-  if algorithm_name.startswith("triangle"):
-    print("Triangle count: " + str(res["globalTriangleCount"]))
-    print("Node count: " + str(res["nodeCount"]))
+    stream_flag = True
+    community_flag = False
+    component_flag = False
+    mutateProperty = ""
+    print("Graph: ", graph_name,  ", Alg.: ", algorithm_name)
     sys.stdout.flush()
-  if (community_flag):
-    print("Community count: " + str(res["communityCount"]))
-    print("Modularity: " + str(res["modularity"]))
-    sys.stdout.flush()
-  if (component_flag):
-    # pass
-    print("Community count: " + str(res["componentCount"]))
-    # print(G.node_properties())
+    relationshipWeightProperty = "weight" if weighted else None
+    stream_kwargs = {
+      "concurrency": thread, 
+      "relationshipWeightProperty": relationshipWeightProperty
+    }
     start_time = time.time()
-    result = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
-    result.to_csv("tmp.csv")
+    if (algorithm_name.startswith("louvain")):
+      community_flag = True
+      stream_kwargs["maxLevels"]=maxLevels
+      stream_kwargs["maxIterations"]=maxIterations
+      mutate_kwargs = stream_kwargs.copy()
+
+      if stream_flag:
+        res = gds.louvain.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "louvaincommunity"
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.louvain.mutate(G, **mutate_kwargs)
+    elif (algorithm_name.startswith("leiden")):
+      community_flag = True
+      stream_kwargs["maxLevels"]=maxLevels
+      stream_kwargs["gamma"]=gamma
+      stream_kwargs["theta"]=theta
+      mutate_kwargs = stream_kwargs.copy()
+
+      if stream_flag:
+        res = gds.beta.leiden.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "leidencommunity"
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.beta.leiden.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("connectivity"):
+      component_flag = True #
+      if stream_flag:
+        res = gds.wcc.mutate(G, threshold = threshold, **stream_kwargs)
+      else:
+        mutateProperty = "connectivitycommunity"
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.wcc.mutate(G, threshold = threshold, **mutate_kwargs)
+    else:
+      print("The algorithm ", algorithm_name, " is not available")
     end_time = time.time()
-    print("Gather result Time: " + str(end_time - start_time))
-    # print(result)
+    # print(res)
+    # node1 = gds.find_node_id(["A"], {"id": 0})
+    # node2 = gds.find_node_id(["A"], {"id": 1})
+    # print(node1, node2)
+    print("Time: " + str(end_time - start_time))
+    if not stream_flag:
+      print("Preprocessing millis: " + str(res["preProcessingMillis"]))
+      print("Compute millis: " + str(res["computeMillis"]))
+      print("Postprocessing millis: " + str(res["postProcessingMillis"]))
+    sys.stdout.flush()
+
+    if not stream_flag:
+      if algorithm_name.startswith("triangle"):
+        print("Triangle count: " + str(res["globalTriangleCount"]))
+        print("Node count: " + str(res["nodeCount"]))
+        sys.stdout.flush()
+      if (community_flag):
+        print("Community count: " + str(res["communityCount"]))
+        print("Modularity: " + str(res["modularity"]))
+        sys.stdout.flush()
+      if (component_flag):
+        # pass
+        print("Community count: " + str(res["componentCount"]))
+        # print(G.node_properties())
+      start_time = time.time()
+      result = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
+      end_time = time.time()
+      print("Gather result Time: " + str(end_time - start_time))
+      result.to_csv(out_clustering)
+    else:
+      res.to_csv(out_clustering)
 
 
-  sys.stdout.flush()
-  # cluster_dict = defaultdict(list)
-  # for node in nodes_set:
-  #   community_id = gds.util.nodeProperty(G, node, algorithm_name + "community")
-  #   cluster_dict[community_id].append(node)
-  # for index, row in pandas_res.iterrows():
-  #   cluster_dict[row["communityId"]].append(row["nodeId"])
-  # with open(out_clustering, "a+") as out_file:
-  #   for key, value in cluster_dict.items():
-  #     out_file.write('\t'.join(map(str, value)) + '\n')
-
-  #gds.graph.drop(G)
-  #G_dir.drop()
-  # G.drop()
-  # _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
-  #G_undir = gds.graph.get(graph_name + "undir")
-  #G_undir.drop()
-  # gds.run_cypher("MATCH (n) REMOVE n." + "connectivitycommunity")
-  gds.close()
-
+    sys.stdout.flush()
+    gds.close()
+  out = f.getvalue()
+  return out
 
 def clearDB(graph_name):
   gds = GraphDataScience("bolt://localhost:7687", auth=None)
@@ -255,16 +295,16 @@ def projectGraph(graph_name, graph_path):
 def main():
   args = sys.argv[1:]
   directory = "/home/ubuntu/"
-  graphs = ["com-dblp.ungraph.txt"]#, "edge.txt" #"com-dblp.ungraph.txt","com-youtube.ungraph.txt", "com-amazon.ungraph.txt",
+  graphs = ["com-dblp.ungraph.txt"]#"edge.txt",  #"com-dblp.ungraph.txt","com-youtube.ungraph.txt", "com-amazon.ungraph.txt",
   # graph_pres = ["edge"] # "dblp","youtube", "amazon",
-  config = "threashold: None"
+  config = "threashold: None, weighted: False"
   for graph_idx, graph in enumerate(graphs):
     # graph_pre = graph_pres[graph_idx]
     graph_name = directory + "snap/" + graph
-    alg = "connectivity" 
+    alg = "louvain" 
     # out_dir = directory + "neo4j_out/" + graph_pre + "_"
     if args[0] == "run":
-      runNeo4j(graph_name, graph, alg, 4, config, "")
+      runNeo4j(graph_name, graph, alg, 4, config, "tmp.csv")
     elif args[0] == "load":
       projectGraph(graph, graph_name)
     elif args[0] == "delete":

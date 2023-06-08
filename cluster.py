@@ -113,8 +113,10 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
 
 def runAll(config_filename):
   runner_utils.readConfig(config_filename)
-  for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
-    for graph_idx, graph in enumerate(runner_utils.graphs):
+  
+  for graph_idx, graph in enumerate(runner_utils.graphs):
+    neo4j_graph_loaded = False
+    for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
       if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           runSnap(clusterer, graph, graph_idx, i)
@@ -131,6 +133,10 @@ def runAll(config_filename):
             elif clusterer == "Tectonic":
               runTectonic(clusterer, graph, thread, config, out_prefix)
             elif clusterer.startswith("Neo4j"):
+              if not neo4j_graph_loaded:
+                use_input_graph = runner_utils.input_directory + graph
+                cluster_neo4j.projectGraph(use_input_graph, graph)
+                neo4j_graph_loaded = True
               runNeo4j(clusterer, graph, thread, config, out_prefix)
             else:
               out_filename = out_prefix + ".out"
@@ -144,6 +150,8 @@ def runAll(config_filename):
               out = runner_utils.shellGetOutput(ss)
               runner_utils.appendToFile(ss + "\n", out_filename)
               runner_utils.appendToFile(out, out_filename)
+    if neo4j_graph_loaded:
+      cluster_neo4j.clearDB(graph)
 
 def main():
   args = sys.argv[1:]

@@ -38,6 +38,7 @@ def runNetworKitPLM(G, config):
     #Communities detected in 0.76547 [s]
     communities = nk.community.detectCommunities(G, algo=nk.community.PLM(G, refine=use_refine, gamma=use_gamma, par=use_par, maxIter=use_maxIter, turbo=use_turbo, recurse=use_recurse))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   # str(end_time - start_time)
   return out, communities
@@ -58,6 +59,7 @@ def runNetworKitPLP(G, config):
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
 
@@ -80,6 +82,7 @@ def runNetworKitParallelLeiden(G, config):
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.ParallelLeiden(G, randomize=use_randomize, iterations=use_iterations, gamma=use_gamma))
     end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
 
