@@ -2,6 +2,18 @@ licenses(["notice"])
 
 package(default_visibility = ["//visibility:public"])
 
+proto_library(
+    name = "connectivity_config_proto",
+    srcs = [
+        "connectivity_config.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "connectivity_config_cc_proto",
+    deps = [":connectivity_config_proto"],
+)
+
 cc_library(
     name = "connectivity-clusterer",
     srcs = ["connectivity-clusterer.cc"],
@@ -15,6 +27,7 @@ cc_library(
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/status:statusor",
         "@gbbs//benchmarks/Connectivity/SimpleUnionAsync:Connectivity",
+        "connectivity_config_cc_proto",
     ],
     alwayslink = 1,
 )

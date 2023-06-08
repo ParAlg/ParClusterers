@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
+#include "clusterers/connectivity_clusterer/connectivity_config.pb.h"
 #include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/gbbs-graph.h"
@@ -19,12 +20,18 @@ namespace in_memory {
 absl::StatusOr<ConnectivityClusterer::Clustering>
 ConnectivityClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
+  ConnectivityClustererConfig connectivity_config;
+  config.any_config().UnpackTo(&connectivity_config);
+  double threshold = connectivity_config.threshold();
+  bool upper_bound = connectivity_config.upper_bound();
 
   // TODO: add weight threshold as part of the config
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   parlay::parallel_for(0, n, [&] (size_t i) {
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-      gbbs::simple_union_find::unite_impl(u, v, clusters);
+      if ((upper_bound && wgh <= threshold) || ((!upper_bound) && wgh >= threshold)){
+        gbbs::simple_union_find::unite_impl(u, v, clusters);
+      }
     };
     graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
   });
