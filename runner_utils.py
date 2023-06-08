@@ -32,7 +32,7 @@ def makeConfigCombos(current_configs):
   return config_combos_formatted
 
 def readSystemConfig(filename):
-  global gplusplus_ver, python2_ver
+  global gplusplus_ver, python_ver
   with open(filename, "r") as in_file:
     for line in in_file:
       line = line.strip()
@@ -40,8 +40,8 @@ def readSystemConfig(filename):
       if split:
         if split[0].startswith("g++"):
           gplusplus_ver = split[1]
-        elif split[0].startswith("Python v2"):
-          python2_ver = split[1]
+        elif split[0].startswith("Python"):
+          python_ver = split[1]
 
 def readConfig(filename):
   global input_directory, output_directory, clusterers, graphs, num_threads
