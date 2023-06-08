@@ -5,6 +5,7 @@ import sys
 from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase
 from contextlib import redirect_stdout
+import runner_utils
 
 def readGraph(filename):
   print_index = 1000000
@@ -164,13 +165,15 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         res = gds.beta.leiden.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("Connectivity"):
       component_flag = True
+      stream_kwargs["threshold"] = threshold
       mutate_kwargs = stream_kwargs.copy()
+      print(stream_kwargs)
       if stream_flag:
-        res = gds.wcc.stream(G, threshold = threshold, **stream_kwargs)
+        res = gds.wcc.stream(G, **stream_kwargs)
       else:
         mutateProperty = "connectivitycommunity"
         mutate_kwargs["mutateProperty"] = mutateProperty
-        res = gds.wcc.mutate(G, threshold = threshold, **mutate_kwargs)
+        res = gds.wcc.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
     end_time = time.time()
@@ -184,7 +187,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       print("Compute millis: " + str(res["computeMillis"]))
       print("Postprocessing millis: " + str(res["postProcessingMillis"]))
     sys.stdout.flush()
-
+    result = None
     if not stream_flag:
       if algorithm_name.startswith("triangle"):
         print("Triangle count: " + str(res["globalTriangleCount"]))
@@ -202,9 +205,14 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       result = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
       end_time = time.time()
       print("Gather result Time: " + str(end_time - start_time))
-      result.to_csv(out_clustering)
+      # result.to_csv(out_clustering, index=False)
     else:
-      res.to_csv(out_clustering)
+      # res.to_csv(out_clustering, index=False)
+      # Group the nodeId values by componentId and convert to a list
+      result = res.groupby('componentId')['nodeId'].apply(list).tolist()
+
+    for cluster_list in result:
+      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
 
 
     sys.stdout.flush()
