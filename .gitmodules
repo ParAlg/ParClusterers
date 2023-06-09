@@ -7,6 +7,8 @@
 [submodule "external/Tectonic"]
 	path = external/Tectonic
 	url = https://github.com/jeshi96/Tectonic.git
+	branch = master
 [submodule "external/snap"]
 	path = external/snap
 	url = https://github.com/yushangdi/snap.git
+	branch = master

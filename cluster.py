@@ -138,8 +138,8 @@ def runAll(config_filename):
           for config_idx, config in enumerate(configs):
             for i in range(runner_utils.num_rounds):
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
-              if not os.path.exists(runner_utils.output_directory):
-                os.makedirs(runner_utils.output_directory)
+              # if not os.path.exists(runner_utils.output_directory):
+              #   os.makedirs(runner_utils.output_directory)
               if clusterer.startswith("NetworKit"):
                 cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
               elif clusterer == "Tectonic":
