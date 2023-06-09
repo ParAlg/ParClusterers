@@ -53,7 +53,7 @@ inline absl::Status ComputeNMI(
       community_entropys[i] = 0; 
     }
   });
-  long double community_entropy = parlay::reduce(community_entropys);// + log2l(n);
+  long double community_entropy = parlay::reduce(community_entropys);
 
   // Cluster entropy
   std::vector<long double> cluster_entropys(num_cluster_1);
@@ -66,7 +66,7 @@ inline absl::Status ComputeNMI(
       cluster_entropys[i] = 0; 
     }
   });
-  long double cluster_entropy = parlay::reduce(cluster_entropys);// + log2l(n);
+  long double cluster_entropy = parlay::reduce(cluster_entropys);
 
 
   // Calculate conditional entropy
@@ -97,7 +97,7 @@ inline absl::Status ComputeNMI(
 
         if(clustering[i].size() < ground_truth[j].size()){
         auto flags = parlay::delayed_seq<std::size_t>(clustering[i].size(), [&](size_t k){
-            return tables2[j]->find(clustering[i][k]) == empty_val? 0 : 1 ; // find clustering's id in table2
+            return tables2[j]->find(clustering[i][k]) == empty_val? 0 : 1 ; 
         });
         val = parlay::reduce(flags);
         }else{
