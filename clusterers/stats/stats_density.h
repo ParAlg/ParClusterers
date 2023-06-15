@@ -45,9 +45,17 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
     result[0] = (static_cast<double>(graph.Graph()->m)) / (static_cast<double>(n)*(n-1));
   }else{
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-        size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
-        double m_total = clustering[i].size()*(clustering[i].size()-1);
-        result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
+        if (clustering[i].size() == 1){
+          result[i] = 0;
+        }
+        else{
+          size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
+          double m_total = clustering[i].size()*(clustering[i].size()-1);
+          result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
+        }
+        // size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
+        // double m_total = clustering[i].size()*(clustering[i].size()-1);
+        // result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
     });
   }
   auto result_func = [&](std::size_t i) {
