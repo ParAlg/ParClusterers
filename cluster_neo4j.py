@@ -86,7 +86,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
   maxIterations = 10
   gamma = 1.0
   theta = 0.01
-  stream_flag = True
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
@@ -102,8 +101,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         gamma = float(config_split[1])
       if config_split[0].startswith("theta"):
         theta = float(config_split[1])
-      if config_split[0].startswith("streamFlag"):
-        stream_flag = config_split[1] == 'true'
 
   f = io.StringIO()
   with redirect_stdout(f):
@@ -127,6 +124,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     print("Finished loading graph")
     print("Relationship count: " + str(G.relationship_count()))
 
+    stream_flag = False
     community_flag = False
     component_flag = False
     mutateProperty = ""
