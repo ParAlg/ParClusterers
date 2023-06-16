@@ -124,7 +124,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     print("Finished loading graph")
     print("Relationship count: " + str(G.relationship_count()))
 
-    stream_flag = False
+    stream_flag = True
     community_flag = False
     component_flag = False
     mutateProperty = ""
