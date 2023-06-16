@@ -125,7 +125,6 @@ def runAll(config_filename):
   
   for graph_idx, graph in enumerate(runner_utils.graphs):
     neo4j_graph_loaded = False
-    mutate = False
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
       try:
         if clusterer.startswith("Snap"):
@@ -146,19 +145,12 @@ def runAll(config_filename):
               elif clusterer == "Tectonic":
                 runTectonic(clusterer, graph, thread, config, out_prefix)
               elif clusterer.startswith("Neo4j"):
-                if not neo4j_graph_loaded or mutate:
+                if not neo4j_graph_loaded:
                   use_input_graph = runner_utils.input_directory + graph
                   cluster_neo4j.projectGraph(graph, use_input_graph)
                   neo4j_graph_loaded = True
                 weighted = runner_utils.weighted == "true"
-                runNeo4j(clusterer, graph, thread, config, weighted, out_prefix)
-                mutate = False
-                split = [x.strip() for x in config.split(',')]
-                for config_item in split:
-                  config_split = [x.strip() for x in config_item.split(':')]
-                  if config_split:
-                    if config_split[0].startswith("streamFlag") and config_split[1] == "false":
-                      mutate = True
+                runNeo4j(clusterer, graph, thread, config + ', num_rounds: ' + str(i), weighted, out_prefix)
               else:
                 out_filename = out_prefix + ".out"
                 out_clustering = out_prefix + ".cluster"
