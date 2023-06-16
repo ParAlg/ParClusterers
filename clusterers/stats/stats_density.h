@@ -53,9 +53,6 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
           double m_total = clustering[i].size()*(clustering[i].size()-1);
           result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
         }
-        // size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
-        // double m_total = clustering[i].size()*(clustering[i].size()-1);
-        // result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
     });
   }
   auto result_func = [&](std::size_t i) {

@@ -207,7 +207,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       end_time = time.time()
       print("Gather result Time: " + str(end_time - start_time))
       # result.to_csv(out_clustering, index=False)
-      # clearDB(graph_name)
     else:
       # res.to_csv(out_clustering, index=False)
       # Group the nodeId values by componentId and convert to a list
