@@ -47,11 +47,16 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     return absl::OkStatus();
   }
 
+  const double f_score = clustering_stats_config.f_score_param() != 0 ? clustering_stats_config.f_score_param() : 1;
+  clustering_stats->set_f_score_param(f_score);
+
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
   // recall = num correct results (matches b/w clustering and comm) / num relevant results (in comm)
   parlay::sequence<double> precision_vec = parlay::sequence<double>::from_function(
     communities.size(), [](std::size_t i){return 0;});
   parlay::sequence<double> recall_vec = parlay::sequence<double>::from_function(
+    communities.size(), [](std::size_t i){return 0;});
+  parlay::sequence<double> f_score_vec = parlay::sequence<double>::from_function(
     communities.size(), [](std::size_t i){return 0;});
   /*parlay::parallel_for(0, clustering.size(), [&](std::size_t i) {
     auto cluster = clustering[i];
@@ -78,6 +83,7 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     precision_vec[j] = (double) max_intersect / (double) clustering[max_idx].size();
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
+    f_score_vec[j] = (1 + f_score * f_score) * precision_vec[j] * recall_vec[j] / ((f_score * f_score * precision_vec[j]) + recall_vec[j]);
   });
 
   auto precision_func = [&](std::size_t i) {
@@ -89,6 +95,11 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     return recall_vec[i];
   };
   set_distribution_stats(recall_vec.size(), recall_func, clustering_stats->mutable_community_recall());
+
+  auto f_score_func = [&](std::size_t i) {
+    return f_score_vec[i];
+  };
+  set_distribution_stats(f_score_vec.size(), f_score_func, clustering_stats->mutable_f_score());
 
   /*double avg_precision = parlay::reduce(precision_vec);
   double avg_recall = parlay::reduce(recall_vec);
