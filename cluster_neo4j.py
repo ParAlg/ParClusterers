@@ -172,6 +172,14 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         mutateProperty = "connectivitycommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.wcc.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("KCore"):
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.kcore.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "kcorecommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.kcore.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
       raise Exception("The algorithm " + algorithm_name + " is not available")
@@ -202,9 +210,10 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         print("Community count: " + str(res["componentCount"]))
         # print(G.node_properties())
       start_time = time.time()
-      result = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
+      result_df = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
       end_time = time.time()
       print("Gather result Time: " + str(end_time - start_time))
+      result = result_df.groupby("propertyValue")['nodeId'].apply(list).tolist()
       # result.to_csv(out_clustering, index=False)
     else:
       # res.to_csv(out_clustering, index=False)
@@ -213,10 +222,10 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         result = res.groupby('componentId')['nodeId'].apply(list).tolist()
       if (community_flag):
         result = res.groupby('communityId')['nodeId'].apply(list).tolist()
-
-    for cluster_list in result:
-      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-
+    
+    if not (result is None):
+      for cluster_list in result:
+        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
 
     sys.stdout.flush()
     gds.close()
