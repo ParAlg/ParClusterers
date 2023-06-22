@@ -150,7 +150,7 @@ def runAll(config_filename):
                   cluster_neo4j.projectGraph(graph, use_input_graph)
                   neo4j_graph_loaded = True
                 weighted = runner_utils.weighted == "true"
-                runNeo4j(clusterer, graph, thread, config, weighted, out_prefix)
+                runNeo4j(clusterer, graph, thread, config + ', num_rounds: ' + str(i), weighted, out_prefix)
               else:
                 out_filename = out_prefix + ".out"
                 out_clustering = out_prefix + ".cluster"

@@ -102,7 +102,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       if config_split[0].startswith("theta"):
         theta = float(config_split[1])
 
-
   f = io.StringIO()
   with redirect_stdout(f):
     # Use Neo4j URI and credentials according to your setup
@@ -147,7 +146,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       if stream_flag:
         res = gds.louvain.stream(G, **stream_kwargs)
       else:
-        mutateProperty = "louvaincommunity"
+        mutateProperty = "louvaincommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.louvain.mutate(G, **mutate_kwargs)
     elif (algorithm_name.startswith("Leiden")):
@@ -160,7 +159,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       if stream_flag:
         res = gds.beta.leiden.stream(G, **stream_kwargs)
       else:
-        mutateProperty = "leidencommunity"
+        mutateProperty = "leidencommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.beta.leiden.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("Connectivity"):
@@ -171,7 +170,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       if stream_flag:
         res = gds.wcc.stream(G, **stream_kwargs)
       else:
-        mutateProperty = "connectivitycommunity"
+        mutateProperty = "connectivitycommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.wcc.mutate(G, **mutate_kwargs)
     else:

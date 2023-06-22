@@ -93,7 +93,7 @@ def runNetworKitConnectivity(G, config):
   with redirect_stdout(f):
     start_time = time.time()
     # returns type List[List[int]], each nested list is a cluster, i.e. conencted component
-    cc = nk.components.ConnectedComponents(G)
+    cc = nk.components.ParallelConnectedComponents(G, False)
     cc.run()
     clusters = cc.getComponents()
     end_time = time.time()
