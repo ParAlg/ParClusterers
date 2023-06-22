@@ -166,7 +166,6 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       component_flag = True
       stream_kwargs["threshold"] = threshold
       mutate_kwargs = stream_kwargs.copy()
-      print(stream_kwargs)
       if stream_flag:
         res = gds.wcc.stream(G, **stream_kwargs)
       else:
@@ -175,7 +174,9 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         res = gds.wcc.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
+      raise Exception("The algorithm " + algorithm_name + " is not available")
     end_time = time.time()
+    print(stream_kwargs)
     # print(res)
     # node1 = gds.find_node_id(["A"], {"id": 0})
     # node2 = gds.find_node_id(["A"], {"id": 1})
@@ -208,7 +209,10 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     else:
       # res.to_csv(out_clustering, index=False)
       # Group the nodeId values by componentId and convert to a list
-      result = res.groupby('componentId')['nodeId'].apply(list).tolist()
+      if (component_flag):
+        result = res.groupby('componentId')['nodeId'].apply(list).tolist()
+      if (community_flag):
+        result = res.groupby('communityId')['nodeId'].apply(list).tolist()
 
     for cluster_list in result:
       runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
@@ -228,6 +232,7 @@ def clearDB(graph_name):
   gds.close()
   print("Neo4j graph removed", graph_name)
 
+# the graph projected is undirected.
 def projectGraph(graph_name, graph_path):
     # Use Neo4j URI and credentials according to your setup
   neo4j_url = "bolt://localhost:7687"
@@ -280,7 +285,8 @@ def projectGraph(graph_name, graph_path):
     G = gds.alpha.graph.construct( #G_dir
       graph_name,      # Graph name
       nodes,           # One or more dataframes containing node data
-      relationships    # One or more dataframes containing relationship data
+      relationships,    # One or more dataframes containing relationship data
+      undirected_relationship_types = ["EDGE"]
     )
     end_time = time.time()
     print("Reading Time: " + str(end_time - start_time))
