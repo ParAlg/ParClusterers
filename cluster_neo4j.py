@@ -166,16 +166,25 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       component_flag = True
       stream_kwargs["threshold"] = threshold
       mutate_kwargs = stream_kwargs.copy()
-      print(stream_kwargs)
       if stream_flag:
         res = gds.wcc.stream(G, **stream_kwargs)
       else:
         mutateProperty = "connectivitycommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.wcc.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("KCore"):
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.kcore.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "kcorecommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.kcore.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
+      raise Exception("The algorithm " + algorithm_name + " is not available")
     end_time = time.time()
+    print(stream_kwargs)
     # print(res)
     # node1 = gds.find_node_id(["A"], {"id": 0})
     # node2 = gds.find_node_id(["A"], {"id": 1})
@@ -201,18 +210,22 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         print("Community count: " + str(res["componentCount"]))
         # print(G.node_properties())
       start_time = time.time()
-      result = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
+      result_df = gds.graph.nodeProperty.stream(G, node_properties=mutateProperty)
       end_time = time.time()
       print("Gather result Time: " + str(end_time - start_time))
+      result = result_df.groupby("propertyValue")['nodeId'].apply(list).tolist()
       # result.to_csv(out_clustering, index=False)
     else:
       # res.to_csv(out_clustering, index=False)
       # Group the nodeId values by componentId and convert to a list
-      result = res.groupby('componentId')['nodeId'].apply(list).tolist()
-
-    for cluster_list in result:
-      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-
+      if (component_flag):
+        result = res.groupby('componentId')['nodeId'].apply(list).tolist()
+      if (community_flag):
+        result = res.groupby('communityId')['nodeId'].apply(list).tolist()
+    
+    if not (result is None):
+      for cluster_list in result:
+        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
 
     sys.stdout.flush()
     gds.close()
@@ -228,6 +241,7 @@ def clearDB(graph_name):
   gds.close()
   print("Neo4j graph removed", graph_name)
 
+# the graph projected is undirected.
 def projectGraph(graph_name, graph_path):
     # Use Neo4j URI and credentials according to your setup
   neo4j_url = "bolt://localhost:7687"
@@ -280,7 +294,8 @@ def projectGraph(graph_name, graph_path):
     G = gds.alpha.graph.construct( #G_dir
       graph_name,      # Graph name
       nodes,           # One or more dataframes containing node data
-      relationships    # One or more dataframes containing relationship data
+      relationships,    # One or more dataframes containing relationship data
+      undirected_relationship_types = ["EDGE"]
     )
     end_time = time.time()
     print("Reading Time: " + str(end_time - start_time))

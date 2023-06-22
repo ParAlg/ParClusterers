@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 # pip3 install networkit
 # pip3 install tabulate
 
+# Parallel Louvain
 def runNetworKitPLM(G, config):
   use_refine = False
   use_gamma = 1.0
@@ -34,6 +35,7 @@ def runNetworKitPLM(G, config):
         use_recurse = True if config_split[1].startswith("True") else False
   f = io.StringIO()
   with redirect_stdout(f):
+    print(config)
     start_time = time.time()
     #Communities detected in 0.76547 [s]
     communities = nk.community.detectCommunities(G, algo=nk.community.PLM(G, refine=use_refine, gamma=use_gamma, par=use_par, maxIter=use_maxIter, turbo=use_turbo, recurse=use_recurse))
@@ -56,6 +58,7 @@ def runNetworKitPLP(G, config):
         use_maxIterations = int(config_split[1])
   f = io.StringIO()
   with redirect_stdout(f):
+    print(config)
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
     end_time = time.time()
@@ -79,6 +82,7 @@ def runNetworKitParallelLeiden(G, config):
         use_gamma = float(config_split[1])
   f = io.StringIO()
   with redirect_stdout(f):
+    print(config)
     start_time = time.time()
     communities = nk.community.detectCommunities(G, algo=nk.community.ParallelLeiden(G, randomize=use_randomize, iterations=use_iterations, gamma=use_gamma))
     end_time = time.time()
@@ -91,6 +95,7 @@ def runNetworKitConnectivity(G, config):
   if (G.isDirected()):
     raise ValueError("NetworkIt Connected Components can only run for undirected graphs.")
   with redirect_stdout(f):
+    print(config)
     start_time = time.time()
     # returns type List[List[int]], each nested list is a cluster, i.e. conencted component
     cc = nk.components.ParallelConnectedComponents(G, False)
@@ -136,7 +141,9 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
   use_input_graph = runner_utils.input_directory + graph
   # if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
   #   raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
-  G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
+  # G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
+  reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
+  G = reader.read(use_input_graph)
   # print([edge for edge in G.iterEdgesWeights()])
   if (thread != "" and thread != "ALL"):
     nk.setNumberOfThreads(int(thread))

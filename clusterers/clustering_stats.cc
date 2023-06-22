@@ -19,8 +19,9 @@ absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph,
 
   const bool compute_ari = clustering_stats_config.compute_ari();
   const bool compute_precision_recall = clustering_stats_config.compute_precision_recall();
+  const bool compute_nmi = clustering_stats_config.compute_nmi();
 
-  if (compute_ari || compute_precision_recall){
+  if (compute_ari || compute_precision_recall || compute_nmi){
     if (input_communities.empty()){
       return absl::InvalidArgumentError(
         absl::StrFormat("input_communities is not provided."));
@@ -47,6 +48,7 @@ absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph,
 
   size_t n = graph.Graph()->n;
   ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
+  ComputeNMI(n, clustering, &clustering_stats, communities, clustering_stats_config);
 
 
   return clustering_stats;
