@@ -83,7 +83,8 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     precision_vec[j] = (double) max_intersect / (double) clustering[max_idx].size();
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
-    f_score_vec[j] = (1 + f_score * f_score) * precision_vec[j] * recall_vec[j] / ((f_score * f_score * precision_vec[j]) + recall_vec[j]);
+    f_score_vec[j] = (precision_vec[j] == 0 & recall_vec[j] == 0) ? 0:
+      (1 + f_score * f_score) * precision_vec[j] * recall_vec[j] / ((f_score * f_score * precision_vec[j]) + recall_vec[j]);
   });
 
   auto precision_func = [&](std::size_t i) {
