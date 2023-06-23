@@ -89,12 +89,14 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
     config_split = [x.strip() for x in config_item.split(':')]
     if config_split:
       if config_split[0].startswith("threshold"):
-        threshold = config_split[1]
+        if config_split[1]!="":
+          threshold = config_split[1]
       elif config_split[0].startswith("no_pruning"):
         no_pruning = True if config_split[1].startswith("True") else False
   # Timing from here
   start_time = time.time()
-  num_vert = runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace")
+  # relabel the graph so the node vertices are consecutive. The result format: each line i is the neighbors of i, and each edge only appear once in the smaller id's line.
+  num_vert = runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace" + " " + out_prefix + ".pickle")
   num_vert = num_vert.strip()
   runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
   runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
@@ -107,8 +109,9 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   end_time = time.time()
   # Output running time to out_filename
   runner_utils.appendToFile(cluster, out_clustering_tmp)
-  runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering)
-  runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time), out_filename)
+  runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering + " " + out_prefix + ".pickle")
+  runner_utils.appendToFile(config + "\n", out_filename)
+  runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time) + "\n", out_filename)
 
 #cd external/Tectonic/
 #cd mace; make
