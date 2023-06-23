@@ -110,19 +110,39 @@ def runNetworKitConnectivity(G, config):
 def runNetworKitKCore(G, config):
   # The graph may not contain self-loops.
   f = io.StringIO()
+  k = 0
+  split = [x.strip() for x in config.split(',')]
+  for config_item in split:
+    config_split = [x.strip() for x in config_item.split(':')]
+    if config_split:
+      if config_split[0] == "threshold":
+        k = int(config_split[1])
+  if k == 0:
+    raise RuntimeError("k must be set.")
+  run_connectivity = True
+  clusters = []
   with redirect_stdout(f):
     start_time = time.time()
     coreDec = nk.centrality.CoreDecomposition(G)
     coreDec.run()
-    max_core_number = coreDec.maxCoreNumber()
-    # cores = coreDec.
-    cores = []
+    # max_core_number = coreDec.maxCoreNumber()
     # for i in range(max_core_number+1):
     #   cores.append(list(coreDec.getCover().getMembers(i)))
+    if run_connectivity:
+      cores = coreDec.scores()
+      try:
+          kCore = [index for index, score in enumerate(cores) if score >= k]
+      except IndexError:
+          raise RuntimeError("There is no core for the specified k")
+
+      C = nk.graphtools.subgraphFromNodes(G, kCore)
+      cc = nk.components.ParallelConnectedComponents(C, False)
+      cc.run()
+      clusters = cc.getComponents()
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
-  return out, cores
+  return out, clusters
 
 
 def extractNetworKitTime(out):
@@ -166,8 +186,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
     raise ValueError("NetworKit clusterer not supported")
   runner_utils.appendToFile(print_time, out_filename)
   runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
-  if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
-    return
+  # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
+  #   return
   if not cluster_flag:
     communities.compact()
     cluster_index = 0
