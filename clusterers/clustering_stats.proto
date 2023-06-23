@@ -13,6 +13,7 @@ message ClusteringStatsConfig {
   optional bool compute_ari = 8;
   optional bool compute_precision_recall = 9;
   optional bool compute_nmi = 10;
+  optional double f_score_param = 11;
 }
 
 message DistributionStats {
@@ -39,5 +40,7 @@ message ClusteringStatistics {
   optional DistributionStats triangle_density = 27;
   optional double ari = 28;
   optional double nmi = 29;
+  optional DistributionStats f_score = 30;
+  optional double f_score_param = 31;
 
 }
