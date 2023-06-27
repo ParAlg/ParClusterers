@@ -25,7 +25,6 @@ ConnectivityClusterer::Cluster(const ClustererConfig& config) const {
   double threshold = connectivity_config.threshold();
   bool upper_bound = connectivity_config.upper_bound();
 
-  // TODO: add weight threshold as part of the config
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   parlay::parallel_for(0, n, [&] (size_t i) {
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {

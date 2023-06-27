@@ -11,3 +11,5 @@ To invoke the implementation, see the `Index` class in `scan.h`.
 ## Additional notes
 
 Define the `SCAN_DETAILED_TIMES` macro in order to output more detailed timings.
+
+## This implementation is modified from GBBS.
