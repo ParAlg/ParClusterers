@@ -25,10 +25,10 @@ class Index {
   //   similarity_measure: similarity measure from `similarity_measure.h`
   //     Determines how to compute the similarity between two adjacency
   //     vertices. The traditional choice for SCAN is `scan::CosineSimilarity`.
-  template <template <typename> class VertexTemplate, typename Weight,
+  template <class Graph,
             class SimilarityMeasure = scan::CosineSimilarity>
   explicit Index(
-      symmetric_graph<VertexTemplate, Weight>* graph,
+      Graph* graph,
       const SimilarityMeasure& similarity_measure = scan::CosineSimilarity{})
       : num_vertices_{graph->n},
         neighbor_order_{graph, similarity_measure},

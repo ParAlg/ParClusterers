@@ -26,9 +26,9 @@ class NeighborOrder {
   //
   // The neighbor lists for each vertex in the graph must be sorted by ascending
   // neighbor ID.
-  template <template <typename> class VertexTemplate, typename Weight,
+  template <class Graph,
             class SimilarityMeasure>
-  NeighborOrder(symmetric_graph<VertexTemplate, Weight>* graph,
+  NeighborOrder(Graph* graph,
                 const SimilarityMeasure& similarity_measure);
 
   NeighborOrder();
@@ -76,9 +76,9 @@ class CoreOrder {
 // SCAN_DETAILED_TIMES is defined, otherwise does nothing.
 void ReportTime(const timer&);
 
-template <template <typename> class VertexTemplate, typename Weight,
+template <class Graph,
           class SimilarityMeasure>
-NeighborOrder::NeighborOrder(symmetric_graph<VertexTemplate, Weight>* graph,
+NeighborOrder::NeighborOrder(Graph* graph,
                              const SimilarityMeasure& similarity_measure) {
   timer function_timer{"Construct neighbor order"};
   similarities_ = similarity_measure.AllEdges(graph);

@@ -67,9 +67,9 @@ class CosineSimilarity {
  public:
   CosineSimilarity() = default;
 
-  template <template <typename> class VertexTemplate, typename Weight>
+  template <class Graph>
   sequence<EdgeSimilarity> AllEdges(
-      symmetric_graph<VertexTemplate, Weight>* graph) const;
+      Graph* graph) const;
 };
 
 // The Jaccard similarity between two adjacent vertices u and v is
@@ -168,8 +168,9 @@ sequence<float> RandomNormalNumbers(size_t num_numbers, parlay::random rng);
 // Create a directed version of `graph`, pointing edges from lower degree
 // vertices to higher degree vertices. This upper bounds the out-degree of each
 // vertex in the directed graph with `sqrt(graph->m)`.
-template <template <typename> class VertexTemplate, typename Weight>
-auto DirectGraphByDegree(symmetric_graph<VertexTemplate, Weight>* graph) {
+template <class Graph>
+auto DirectGraphByDegree(Graph* graph) {
+  using Weight = typename Graph::weight_type;
   uintE* vertex_degree_ranking{rankNodes(*graph, graph->n)};
   const auto filter_predicate{[&](const uintE u, const uintE v, Weight) {
     return vertex_degree_ranking[u] < vertex_degree_ranking[v];
@@ -182,9 +183,9 @@ auto DirectGraphByDegree(symmetric_graph<VertexTemplate, Weight>* graph) {
 // Returns a sequence `vertex_offsets` such that if there is another sequence
 // `edges` consisting of the out-edges of `*graph` sorted by source vertex, then
 // `vertex_offsets[i]` is the first appearance of vertex i as a source vertex.
-template <template <typename> class VertexTemplate, typename Weight>
+template <class Graph>
 sequence<uintT> VertexOutOffsets(
-    symmetric_graph<VertexTemplate, Weight>* graph) {
+    Graph* graph) {
   auto vertex_offsets = sequence<uintT>::from_function(
       graph->n,
       [&](const size_t i) { return graph->get_vertex(i).out_degree(); });
@@ -206,9 +207,9 @@ sequence<uintT> VertexOutOffsets(
 //     taking (size of u's neighborhood, size of v's neighborhood, size of the
 //     the intersection of the two neighborhoods) as arguments. The function
 //     should be symmetric, i.e., give the same output when u and v are swapped.
-template <template <typename> class VertexTemplate, class F>
+template <class Graph, class F>
 sequence<EdgeSimilarity> AllEdgeNeighborhoodSimilarities(
-    symmetric_graph<VertexTemplate, gbbs::empty>* graph,
+    Graph* graph,
     F&& neighborhood_sizes_to_similarity) {
   // Counting the neighbors shared between adjacent vertices u and v is the same
   // as counting the number of triangles that the edge {u, v} appears in.
@@ -770,9 +771,10 @@ sequence<EdgeSimilarity> ApproxJaccardEdgeSimilarities(
 
 }  // namespace internal
 
-template <template <typename> class VertexTemplate, typename Weight>
+template <class Graph>
 sequence<EdgeSimilarity> CosineSimilarity::AllEdges(
-    symmetric_graph<VertexTemplate, Weight>* graph) const {
+    Graph* graph) const {
+  using Weight = typename Graph::weight_type;
   if
     constexpr(std::is_same<Weight, gbbs::empty>::value) {  // unweighted
       constexpr auto similarity_func{[](const uintE neighborhood_size_1,
