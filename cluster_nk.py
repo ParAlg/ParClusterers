@@ -188,6 +188,7 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
   runner_utils.appendToFile('Graph: ' + graph + '\n', out_filename)
   runner_utils.appendToFile('Clusterer: ' + clusterer + '\n', out_filename)
   runner_utils.appendToFile('Threads: ' + thread + '\n', out_filename)
+  runner_utils.appendToFile('Config: ' + config + '\n', out_filename)
   runner_utils.appendToFile(print_time, out_filename)
   runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
   # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition

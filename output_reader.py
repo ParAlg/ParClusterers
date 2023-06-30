@@ -60,12 +60,14 @@ def read_out(filename, directory):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
       elif elem.startswith('Graph:'):
         runtime_dict['Input Graph'] = elem.split(' ')[-1].strip()
+      elif elem.startswith('Config:'):
+        runtime_dict['Config'] = elem.split(' ',1)[-1].strip()
   # Snap Clusterer
   elif run_info[0].startswith('Snap:'):
     runtime_dict['Threads'] = 1
     runtime_dict['Config'] = ''
     for elem in run_info[1:]:
-      if elem.startswith('Wealy Connected Component Time:') or elem.startswith('KCore Time:'):
+      if elem.startswith('Wealy Connected Component Time:') or elem.startswith('KCore Time:') or elem.startswith('Cluster Time:'):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
       elif elem.startswith('Input graph:'):
         runtime_dict['Input Graph'] = elem.split(' ')[-1].strip()
