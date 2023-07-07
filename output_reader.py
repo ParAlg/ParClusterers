@@ -17,6 +17,7 @@ def read_out(filename, directory):
   runtime_file = open(directory + '/' + filename,'r')
   run_info = runtime_file.readlines()
   runtime_dict = {}
+  runtime_dict['Iteration'] = filename.split('.')[0].split('_')[-1].strip()
   # Internal Clusterer
   if run_info[0].startswith('PARLAY_NUM_THREADS'):
     threads = run_info[0].split(' ')[0].split('=')[-1]
@@ -133,7 +134,7 @@ def read_files(directory):
       # Take run info from .out file
       try:
         runtime_dict = read_out(filename.split('.')[0] + '.out', directory)
-        for col in ['Clusterer Name', 'Threads', 'Input Graph', 'Config']:
+        for col in ['Clusterer Name', 'Threads', 'Input Graph', 'Config', 'Cluster Time']:
           stats_dict[col] = runtime_dict[col]
       except:
         pass
