@@ -30,7 +30,7 @@ def graph_runtime_overall(arg):
 
 # Graph runtimes for each clusterer
 def graph_runtime_individual(arg):
-    data = pd.read_csv(arg + '/stats.csv')
+    data = pd.read_csv(arg + '/runtimes.csv')
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
