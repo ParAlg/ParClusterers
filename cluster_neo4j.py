@@ -180,6 +180,15 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         mutateProperty = "kcorecommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.kcore.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("LabelPropagation"):
+      community_flag = True
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.labelPropagation.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "labelpropagationcommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.labelPropagation.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
       raise Exception("The algorithm " + algorithm_name + " is not available")
