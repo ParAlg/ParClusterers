@@ -149,8 +149,18 @@ def runNetworKitKCore(G, config):
     #   cores.append(list(coreDec.getCover().getMembers(i)))
     if run_connectivity:
       cores = coreDec.scores()
+      kCore = []
+      other_nodes = []
       try:
-          kCore = [index for index, score in enumerate(cores) if score >= k]
+        for index, score in enumerate(cores):
+          if score >= k:
+            kCore.append(index)
+          else:
+            other_nodes.append(index)
+          # kCore = [index for index, score in enumerate(cores) if score >= k]  
+        # partition = coreDec.getPartition()
+        # for i in range(k, partition.numberOfSubsets() + 1):
+        #   kCore.extend(partition.getMembers(i))
       except IndexError:
           raise RuntimeError("There is no core for the specified k")
 
@@ -158,6 +168,9 @@ def runNetworKitKCore(G, config):
       cc = nk.components.ParallelConnectedComponents(C, False)
       cc.run()
       clusters = cc.getComponents()
+      # nodes that are not in the core are in their separate connected component.
+      for i in other_nodes:
+        clusters.append([i])
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
