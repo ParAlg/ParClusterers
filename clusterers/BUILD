@@ -14,6 +14,7 @@ cc_library(
         "//clusterers/ldd_clusterer:ldd-clusterer",
         "//clusterers/tectonic_clusterer:tectonic-clusterer",
         "//clusterers/scan_clusterer:scan-clusterer",
+        "//clusterers/labelprop_clusterer:labelprop-clusterer",
     ],
     alwayslink = 1,
 )
