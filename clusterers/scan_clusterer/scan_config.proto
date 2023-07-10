@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+message ScanClustererConfig {
+  optional int32 mu = 2 [default = 5];
+  optional double epsilon = 3 [default = 0.6];
+}
