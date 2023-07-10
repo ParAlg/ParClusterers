@@ -53,18 +53,37 @@ def runNetworKitPLP(G, config):
     config_split = [x.strip() for x in config_item.split(':')]
     if config_split:
       if config_split[0].startswith("updateThreshold"):
-        use_updateThreshold = int(config_split[1])
+        if (config_split[1]!="None"):
+          use_updateThreshold = int(config_split[1])
       elif config_split[0].startswith("maxIterations"):
         use_maxIterations = int(config_split[1])
+  kwargs = {}
+  if use_updateThreshold:
+    kwargs["updateThreshold"] = use_updateThreshold
+  if use_maxIterations:
+    kwargs["maxIterations"] = use_maxIterations
   f = io.StringIO()
   with redirect_stdout(f):
     print(config)
     start_time = time.time()
-    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
+    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
+
+
+def runNetworKitLPDegreeOrdered(G, config):
+  f = io.StringIO()
+  with redirect_stdout(f):
+    print(config)
+    start_time = time.time()
+    communities = nk.community.detectCommunities(G, algo=nk.community.LPDegreeOrdered(G))
+    end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
+  out = f.getvalue()
+  return out, communities
+
 
 def runNetworKitParallelLeiden(G, config):
   use_randomize = True
@@ -174,6 +193,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
     print_time, communities = runNetworKitPLM(G, config)
   elif (clusterer == "NetworKitPLP"):
     print_time, communities = runNetworKitPLP(G, config)
+  elif (clusterer == "NetworKitLPDegreeOrdered"):
+    print_time, communities = runNetworKitLPDegreeOrdered(G, config)
   elif (clusterer == "NetworKitParallelLeiden"):
     print_time, communities = runNetworKitParallelLeiden(G, config)
   elif (clusterer == "NetworKitConnectivity"):

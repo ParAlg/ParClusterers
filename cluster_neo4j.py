@@ -182,6 +182,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         res = gds.kcore.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("LabelPropagation"):
       community_flag = True
+      stream_kwargs["maxIterations"]=maxIterations
       mutate_kwargs = stream_kwargs.copy()
       if stream_flag:
         res = gds.labelPropagation.stream(G, **stream_kwargs)
