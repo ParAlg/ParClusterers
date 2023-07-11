@@ -13,6 +13,7 @@ cc_library(
         "//clusterers/example_clusterer:example-clusterer",
         "//clusterers/ldd_clusterer:ldd-clusterer",
         "//clusterers/tectonic_clusterer:tectonic-clusterer",
+        "//clusterers/scan_clusterer:scan-clusterer",
     ],
     alwayslink = 1,
 )
