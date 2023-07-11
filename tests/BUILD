@@ -41,3 +41,26 @@ cc_test(
             "@com_google_absl//absl/strings:str_format",
     ],
 )
+
+cc_test(
+    name = "labelprop_test",
+    size = "small",
+    srcs = ["test_labelprop.cc"],
+    deps = ["@com_google_googletest//:gtest_main",     
+            "//clusterers/labelprop_clusterer:labelprop-clusterer",
+            "//clusterers:gbbs_graph_io",
+            "@com_google_protobuf//:protobuf",
+            "//clusterers/stats:stats_utils",
+            "//external:gflags",
+            "//clusterers:clustering_stats_cc_proto",
+            "//clusterers/labelprop_clusterer:labelprop_config_cc_proto",
+            "@com_google_absl//absl/base",
+            "@com_google_absl//absl/flags:flag",
+            "@com_google_absl//absl/flags:parse",
+            "@com_google_absl//absl/status",
+            "@com_google_absl//absl/status:statusor",
+            "@com_google_absl//absl/strings",
+            "@com_google_absl//absl/strings:str_format",
+            "@gbbs//gbbs:graph_io",
+    ],
+)

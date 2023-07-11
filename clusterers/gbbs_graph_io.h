@@ -17,6 +17,16 @@
 namespace research_graph {
 namespace in_memory {
 
+namespace internal {
+
+template <typename Weight>
+absl::StatusOr<std::size_t> WriteEdgeListAsGraph(
+    InMemoryClusterer::Graph* graph,
+    const std::vector<gbbs::gbbs_io::Edge<Weight>>& edge_list,
+    bool is_symmetric_graph);
+
+} // namespace internal
+
 // TODO(jeshi): This always assumes a symmetric graph
 absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
   InMemoryClusterer::Graph* graph, bool float_weighted);

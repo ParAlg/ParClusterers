@@ -31,6 +31,9 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
   }
 
 
+  // TODO: fix the case when the graph is unweighted, then all wgh should be 1.
+
+
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   auto is_active = parlay::sequence<bool>(n);
