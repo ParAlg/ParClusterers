@@ -21,7 +21,7 @@ def graph_runtime_overall(arg):
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('Cluster Time (Log Seconds)')
         plt.xlabel('Threads')
         plt.title(graph + ' Clustering Time')
@@ -34,25 +34,25 @@ def graph_runtime_individual(arg):
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
+        
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]
             clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)['Cluster Time'].mean()
             clusterer_data = clusterer_data.reset_index(1)
-            #clusterer_data = clusterer_data.sort_values('Cluster Time')
             plt.figure(figsize=(12,14))
-
+            
             for index in sorted(clusterer_data.index.drop_duplicates()):
                 plt.plot(clusterer_data.loc[index, 'Threads'], pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
-                # sub_data.loc[index].apply(lambda row: plt.text(row['communityRecall_mean'], row['communityPrecision_mean'] * (1 + 0.01) , row['Config'], fontsize=12), axis =1)
             ax = plt.subplot(111)
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('Cluster Time (Log Seconds)')
             plt.xlabel('Threads')
             plt.title(clusterer + ' ' + graph + ' Clustering Time')
             plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_runtime_graph.png')
+            
 
 # Graph fscore
 def graph_fscore_overall(arg):
@@ -66,12 +66,12 @@ def graph_fscore_overall(arg):
         plt.figure(figsize=(12,14))
 
         for index in sorted(sub_data.index.drop_duplicates()):
-            plt.plot(pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), sub_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
+            plt.plot(pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), sub_data.loc[index, 'fScore_mean'], label = index, marker='o')
         ax = plt.subplot(111)
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
         plt.xlabel('Cluster Time (Log Seconds)')
         plt.title(graph + ' F-Score')
@@ -82,26 +82,27 @@ def graph_fscore_individual(arg):
     data = pd.read_csv(arg + '/stats.csv')
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
+        
         sub_data = data[data['Input Graph'] == graph]
         for clusterer in data['Clusterer Name'].unique():
-            clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]
+            clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]    
             clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
             clusterer_data = clusterer_data.reset_index(-1)
-            #clusterer_data = clusterer_data.sort_values('Cluster Time')
             plt.figure(figsize=(12,14))
 
             for index in sorted(clusterer_data.index.drop_duplicates()):
+                
                 plt.plot(pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), clusterer_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
-                # sub_data.loc[index].apply(lambda row: plt.text(row['communityRecall_mean'], row['communityPrecision_mean'] * (1 + 0.01) , row['Config'], fontsize=12), axis =1)
+
             ax = plt.subplot(111)
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
             plt.xlabel('Cluster Time (Log Seconds)')
             plt.title(clusterer + ' ' + graph + ' F-Score')
-            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.png')
+            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.png')            
 
 
 
@@ -111,6 +112,7 @@ def graph_precision_recall_individual(arg):
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
+        
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]
             clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
@@ -120,18 +122,19 @@ def graph_precision_recall_individual(arg):
 
             for index in sorted(clusterer_data.index.drop_duplicates()):
                 plt.plot(clusterer_data.loc[index, 'communityRecall_mean'], clusterer_data.loc[index, 'communityPrecision_mean'], label = index, marker = 'o')
-                # sub_data.loc[index].apply(lambda row: plt.text(row['communityRecall_mean'], row['communityPrecision_mean'] * (1 + 0.01) , row['Config'], fontsize=12), axis =1)
+            
             ax = plt.subplot(111)
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('Average Precision')
             plt.xlabel('Average Recall')
             plt.xlim(0,1)
             plt.ylim(0,1)
             plt.title(clusterer + ' ' + graph + ' Precision-Recall')
             plt.savefig(arg + '/' + graph + '_' +  arg + '_' + clusterer +'_precisionrecall_graph.png')
+            
 
 
 # Graph precision recall
@@ -151,7 +154,7 @@ def graph_precision_recall_overall(arg):
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('Average Precision')
         plt.xlabel('Average Recall')
         plt.xlim(0,1)
@@ -182,15 +185,6 @@ def graph_file(arg, config):
             if line.split(' ')[-1].strip() == 'true':
                 graph_runtime_individual(arg)
   
-
-  
-
-  
-
-
-
-
-
 
 def main():
   args = sys.argv[1:]
