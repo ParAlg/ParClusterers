@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import math
 
+CMAP = 'tab20'
 
 # Graph runtimes
 def graph_runtime_overall(arg):
@@ -15,9 +16,15 @@ def graph_runtime_overall(arg):
         sub_data = sub_data.reset_index(level=1)
         plt.figure(figsize=(12,14))
 
-        for index in sorted(sub_data.index.drop_duplicates()):
-            plt.plot(sub_data.loc[index, 'Threads'], pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+        indices = sorted(sub_data.index.drop_duplicates())
+        num_colors = len(indices)
+        cm = plt.get_cmap(CMAP)
         ax = plt.subplot(111)
+        ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+        
+        for index in indices:
+            ax.plot(sub_data.loc[index, 'Threads'], pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+        
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
@@ -25,7 +32,7 @@ def graph_runtime_overall(arg):
         plt.ylabel('Cluster Time (Log Seconds)')
         plt.xlabel('Threads')
         plt.title(graph + ' Clustering Time')
-        plt.savefig(arg + '/' + graph + '_' + arg + '_runtime_graph.png')
+        plt.savefig(arg + '/' + graph + '_' + arg + '_runtime_graph.pdf')
 
 
 # Graph runtimes for each clusterer
@@ -41,9 +48,15 @@ def graph_runtime_individual(arg):
             clusterer_data = clusterer_data.reset_index(1)
             plt.figure(figsize=(12,14))
             
-            for index in sorted(clusterer_data.index.drop_duplicates()):
-                plt.plot(clusterer_data.loc[index, 'Threads'], pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+            indices = sorted(clusterer_data.index.drop_duplicates())
+            num_colors = len(indices)
+            cm = plt.get_cmap(CMAP)
             ax = plt.subplot(111)
+            ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+            
+            for index in indices:
+                ax.plot(clusterer_data.loc[index, 'Threads'], pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+            
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
@@ -51,7 +64,7 @@ def graph_runtime_individual(arg):
             plt.ylabel('Cluster Time (Log Seconds)')
             plt.xlabel('Threads')
             plt.title(clusterer + ' ' + graph + ' Clustering Time')
-            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_runtime_graph.png')
+            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_runtime_graph.pdf')
             
 
 # Graph fscore
@@ -65,9 +78,15 @@ def graph_fscore_overall(arg):
         sub_data =  sub_data.reset_index((1,2))
         plt.figure(figsize=(12,14))
 
-        for index in sorted(sub_data.index.drop_duplicates()):
-            plt.plot(pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), sub_data.loc[index, 'fScore_mean'], label = index, marker='o')
+        indices = sorted(sub_data.index.drop_duplicates())
+        num_colors = len(indices)
+        cm = plt.get_cmap(CMAP)
         ax = plt.subplot(111)
+        ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+        
+        for index in indices:
+            ax.plot(pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), sub_data.loc[index, 'fScore_mean'], label = index, marker='o')
+        
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
@@ -75,7 +94,7 @@ def graph_fscore_overall(arg):
         plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
         plt.xlabel('Cluster Time (Log Seconds)')
         plt.title(graph + ' F-Score')
-        plt.savefig(arg + '/' + graph + '_' + arg + '_fscore_graph.png')
+        plt.savefig(arg + '/' + graph + '_' + arg + '_fscore_graph.pdf')
 
 # Graph fscore for each clusterer
 def graph_fscore_individual(arg):
@@ -89,12 +108,16 @@ def graph_fscore_individual(arg):
             clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
             clusterer_data = clusterer_data.reset_index(-1)
             plt.figure(figsize=(12,14))
-
-            for index in sorted(clusterer_data.index.drop_duplicates()):
-                
-                plt.plot(pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), clusterer_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
-
+            indices = sorted(clusterer_data.index.drop_duplicates())
+            num_colors = len(indices)
+            cm = plt.get_cmap(CMAP)
             ax = plt.subplot(111)
+            ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+            
+            for index in indices:
+                
+                ax.plot(pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), clusterer_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
+
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
@@ -102,7 +125,7 @@ def graph_fscore_individual(arg):
             plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
             plt.xlabel('Cluster Time (Log Seconds)')
             plt.title(clusterer + ' ' + graph + ' F-Score')
-            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.png')            
+            plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.pdf')            
 
 
 
@@ -119,11 +142,17 @@ def graph_precision_recall_individual(arg):
             clusterer_data = clusterer_data.reset_index(-1)
             clusterer_data = clusterer_data.sort_values('communityRecall_mean')
             plt.figure(figsize=(12,14))
-
-            for index in sorted(clusterer_data.index.drop_duplicates()):
-                plt.plot(clusterer_data.loc[index, 'communityRecall_mean'], clusterer_data.loc[index, 'communityPrecision_mean'], label = index, marker = 'o')
             
+            
+            indices = sorted(clusterer_data.index.drop_duplicates())
+            num_colors = len(indices)
+            cm = plt.get_cmap(CMAP)
             ax = plt.subplot(111)
+            ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+            
+            for index in indices:
+                ax.plot(clusterer_data.loc[index, 'communityRecall_mean'], clusterer_data.loc[index, 'communityPrecision_mean'], label = index, marker = 'o')
+            
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
@@ -133,7 +162,7 @@ def graph_precision_recall_individual(arg):
             plt.xlim(0,1)
             plt.ylim(0,1)
             plt.title(clusterer + ' ' + graph + ' Precision-Recall')
-            plt.savefig(arg + '/' + graph + '_' +  arg + '_' + clusterer +'_precisionrecall_graph.png')
+            plt.savefig(arg + '/' + graph + '_' +  arg + '_' + clusterer +'_precisionrecall_graph.pdf')
             
 
 
@@ -148,9 +177,15 @@ def graph_precision_recall_overall(arg):
         sub_data = sub_data.sort_values('communityRecall_mean')
         plt.figure(figsize=(12,14))
 
-        for index in sorted(sub_data.index.drop_duplicates()):
-            plt.plot(sub_data.loc[index, 'communityRecall_mean'], sub_data.loc[index, 'communityPrecision_mean'], label = index, marker = 'o')
+        indices = sorted(sub_data.index.drop_duplicates())
+        num_colors = len(indices)
+        cm = plt.get_cmap(CMAP)
         ax = plt.subplot(111)
+        ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
+
+        for index in indices:
+            plt.plot(sub_data.loc[index, 'communityRecall_mean'], sub_data.loc[index, 'communityPrecision_mean'], label = index, marker = 'o')
+        
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
@@ -160,7 +195,7 @@ def graph_precision_recall_overall(arg):
         plt.xlim(0,1)
         plt.ylim(0,1)
         plt.title(graph + ' Precision-Recall')
-        plt.savefig(arg + '/' + graph + '_' + arg +'_precisionrecall_graph_overall.png')
+        plt.savefig(arg + '/' + graph + '_' + arg +'_precisionrecall_graph_overall.pdf')
 
 def graph_file(arg, config):
     config = open(config,'r')
