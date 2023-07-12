@@ -21,19 +21,18 @@ using research_graph::in_memory::ClustererConfig;
 using testing::UnorderedElementsAre;
 
 
-TEST(TestLP, TestAllSame) {
-  // std::unique_ptr<LabelPropagationClusterer> clusterer;
+TEST(TestLP, TestEdgeGraph) {
   std::unique_ptr<InMemoryClusterer> clusterer;
   clusterer.reset(new LabelPropagationClusterer);
-  // const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>> edge_list = {{0,1}, {1,0}};
-  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0,1, 0.5}, {1,0, 0.5}};
+  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1, 0.5}};
 
   auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
                                         /*is_symmetric_graph*/true);
 
   research_graph::in_memory::LabelPropagationClustererConfig labelprop_config;
   labelprop_config.set_max_iteration(200);
-  labelprop_config.set_update_threshold(300);
+  labelprop_config.set_update_threshold(0);
+  labelprop_config.set_par_threshold(300);
 
   ClustererConfig config;
   google::protobuf::Any* any = config.mutable_any_config();
@@ -43,5 +42,42 @@ TEST(TestLP, TestAllSame) {
 
   EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1)));
 
-  EXPECT_EQ(1,  1);
+
+  labelprop_config.set_par_threshold(0);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1)));
+}
+
+
+TEST(TestLP, TestTwoEdgesGraph) {
+  std::unique_ptr<InMemoryClusterer> clusterer;
+  clusterer.reset(new LabelPropagationClusterer);
+  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1}, {0, 2}};
+
+  auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
+                                        /*is_symmetric_graph*/true);
+
+  research_graph::in_memory::LabelPropagationClustererConfig labelprop_config;
+  labelprop_config.set_max_iteration(3);
+  labelprop_config.set_update_threshold(0);
+  labelprop_config.set_par_threshold(300);
+
+  ClustererConfig config;
+  google::protobuf::Any* any = config.mutable_any_config();
+  any->PackFrom(labelprop_config);
+  auto result = clusterer->Cluster(config);
+  auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1, 2)));
+
+
+  labelprop_config.set_par_threshold(0);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1, 2)));
 }
