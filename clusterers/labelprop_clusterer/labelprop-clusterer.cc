@@ -118,8 +118,8 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
           clusters[node_id] = heaviest;
         } else {
           new_clusters[node_id] = heaviest;
-        }
           round_updates.insert(node_id);
+        }
           n_update.fetch_add(1);
           auto activate_f = [&] (const auto& u, const auto& v, const auto& wgh) {
             if(!is_active[v]) is_active[v] = true; 
