@@ -98,11 +98,10 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
           clusters[node_id] = heaviest;
           n_update.fetch_add(1);
           auto activate_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-            is_active[v] = true; 
+            if(!is_active[v]) is_active[v] = true; 
           };
           graph_.Graph()->get_vertex(node_id).out_neighbors().map(activate_f);
       } 
-
     });
 
 

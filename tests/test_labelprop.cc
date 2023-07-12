@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-
+#include "gmock/gmock.h"
 
 #include <vector>
 
@@ -17,6 +17,8 @@ using research_graph::in_memory::InMemoryClusterer;
 using research_graph::in_memory::internal::WriteEdgeListAsGraph;
 using research_graph::in_memory::LabelPropagationClustererConfig;
 using research_graph::in_memory::ClustererConfig;
+
+using testing::UnorderedElementsAre;
 
 
 TEST(TestLP, TestAllSame) {
@@ -38,6 +40,8 @@ TEST(TestLP, TestAllSame) {
   any->PackFrom(labelprop_config);
   auto result = clusterer->Cluster(config);
   auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1)));
 
   EXPECT_EQ(1,  1);
 }

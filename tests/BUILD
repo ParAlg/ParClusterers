@@ -47,6 +47,7 @@ cc_test(
     size = "small",
     srcs = ["test_labelprop.cc"],
     deps = ["@com_google_googletest//:gtest_main",     
+            "@com_google_googletest//:gtest",     
             "//clusterers/labelprop_clusterer:labelprop-clusterer",
             "//clusterers:gbbs_graph_io",
             "@com_google_protobuf//:protobuf",
