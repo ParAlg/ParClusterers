@@ -27,7 +27,6 @@ cc_library(
         "@parcluster//parcluster/api/parallel:parallel-graph-utils",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/status:statusor",
-        "@gbbs//benchmarks/LowDiameterDecomposition/MPX13:LowDiameterDecomposition",
         "@parlaylib//parlay:hash_table"
     ],
     alwayslink = 1,

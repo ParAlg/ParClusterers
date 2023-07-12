@@ -28,6 +28,7 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
   int max_iteration = labelprop_config.max_iteration();
   int update_threshold = labelprop_config.update_threshold();
   gbbs::uintE par_threshold = labelprop_config.par_threshold();
+  bool async = labelprop_config.async();
 
   if(update_threshold < 0){
     return absl::FailedPreconditionError("update_threshold must be non-negative");
@@ -37,18 +38,19 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
     std::cout << "warning: if update_threhsold is larger than n, the algorithm will finish in 0 round."<< std::endl;
   }
 
-  // TODO: fix the case when the graph is unweighted, then all wgh should be 1.
-
-
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-  auto new_clusters = parlay::sequence<gbbs::uintE>(n);
+
+  auto new_clusters = parlay::sequence<gbbs::uintE>();
+  if(!async){
+    new_clusters.resize(n);
+  }
 
   auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   auto is_active = parlay::sequence<bool>(n);
   
   int n_iterations = 0; // number of iterations
-  int n_update = n;
-  // n_update.store(n);
+  std::atomic<int> n_update;
+  n_update.store(n);
 
   // propagate labels as long as a label has changed... or maximum iterations reached
   while ((n_update > update_threshold) && (n_iterations < max_iteration)) {
@@ -57,7 +59,9 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
 
     // reset updated
     n_update = 0;
-    auto round_updates = parlay::hashtable<parlay::hash_numeric<gbbs::uintE>>(active_nodes.size(), parlay::hash_numeric<gbbs::uintE>());
+
+    auto table_size = async ? 0 :  active_nodes.size();
+    auto round_updates = parlay::hashtable<parlay::hash_numeric<gbbs::uintE>>(table_size, parlay::hash_numeric<gbbs::uintE>());
 
     parlay::parallel_for(0, active_nodes.size(), [&] (size_t i) {
       auto node_id = active_nodes[i];
@@ -110,10 +114,13 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
 
       // A can only change in the next round if any of its neighbors change label.
       if (clusters[node_id] != heaviest) { // UPDATE
-          // clusters_new[node_id] = heaviest;
+        if(async){
+          clusters[node_id] = heaviest;
+        } else {
           new_clusters[node_id] = heaviest;
+        }
           round_updates.insert(node_id);
-          // n_update.fetch_add(1);
+          n_update.fetch_add(1);
           auto activate_f = [&] (const auto& u, const auto& v, const auto& wgh) {
             if(!is_active[v]) is_active[v] = true; 
           };
@@ -121,14 +128,16 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
       } 
     });
 
+    
+
+    if(! async){
     auto updates = round_updates.entries();
-
-    n_update = updates.size();
-
     parlay::parallel_for(0, n_update, [&](std::size_t i){
       auto node_id = updates[i];
       clusters[node_id ] = new_clusters[node_id];
     });
+    }
+
 
 
     active_nodes = parlay::pack(active_nodes, is_active.cut(0, active_nodes.size()));

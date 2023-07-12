@@ -6,4 +6,5 @@ message LabelPropagationClustererConfig {
   optional int32 max_iteration = 1 [default = 100];
   optional int32 update_threshold = 2 [default = 100];
   optional int32 par_threshold = 3 [default = 1000];
+  optional bool async = 4 [default = false];
 }
