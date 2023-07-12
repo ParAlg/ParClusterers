@@ -55,7 +55,7 @@ TEST(TestLP, TestEdgeGraph) {
 TEST(TestLP, TestTwoEdgesGraph) {
   std::unique_ptr<InMemoryClusterer> clusterer;
   clusterer.reset(new LabelPropagationClusterer);
-  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1}, {0, 2}};
+  const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>> edge_list = {{0, 1}, {0, 2}};
 
   auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
                                         /*is_symmetric_graph*/true);
@@ -64,6 +64,7 @@ TEST(TestLP, TestTwoEdgesGraph) {
   labelprop_config.set_max_iteration(3);
   labelprop_config.set_update_threshold(0);
   labelprop_config.set_par_threshold(300);
+  labelprop_config.set_async(false);
 
   ClustererConfig config;
   google::protobuf::Any* any = config.mutable_any_config();
@@ -73,11 +74,151 @@ TEST(TestLP, TestTwoEdgesGraph) {
 
   EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1, 2)));
 
-
   labelprop_config.set_par_threshold(0);
   any->PackFrom(labelprop_config);
   result = clusterer->Cluster(config);
   clustering = *result;
 
   EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1, 2)));
+}
+
+
+TEST(TestLP, Triangle) {
+  std::unique_ptr<InMemoryClusterer> clusterer;
+  clusterer.reset(new LabelPropagationClusterer);
+  const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>> edge_list = {{0, 1}, {0, 2}, {1, 2}};
+
+  auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
+                                        /*is_symmetric_graph*/true);
+
+  research_graph::in_memory::LabelPropagationClustererConfig labelprop_config;
+  labelprop_config.set_max_iteration(3);
+  labelprop_config.set_update_threshold(0);
+  labelprop_config.set_par_threshold(300);
+  labelprop_config.set_async(false);
+
+
+  ClustererConfig config;
+  google::protobuf::Any* any = config.mutable_any_config();
+  any->PackFrom(labelprop_config);
+  auto result = clusterer->Cluster(config);
+  auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 2)));
+
+
+  labelprop_config.set_par_threshold(0);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 2)));
+
+  labelprop_config.set_max_iteration(1);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1), UnorderedElementsAre(2)));
+}
+
+
+
+TEST(TestLP, TriangleWighted) {
+  std::unique_ptr<InMemoryClusterer> clusterer;
+  clusterer.reset(new LabelPropagationClusterer);
+  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1, 0.6}, {0, 2, 0.5}, {1, 2, 0.4}};
+
+  auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
+                                        /*is_symmetric_graph*/true);
+
+  research_graph::in_memory::LabelPropagationClustererConfig labelprop_config;
+  labelprop_config.set_max_iteration(100);
+  labelprop_config.set_update_threshold(0);
+  labelprop_config.set_par_threshold(300);
+  labelprop_config.set_async(false);
+
+
+  ClustererConfig config;
+  google::protobuf::Any* any = config.mutable_any_config();
+  any->PackFrom(labelprop_config);
+  auto result = clusterer->Cluster(config);
+  auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 2), UnorderedElementsAre(0)));
+
+
+  labelprop_config.set_par_threshold(0);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 2), UnorderedElementsAre(0)));
+  labelprop_config.set_max_iteration(1);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 2), UnorderedElementsAre(0)));
+
+}
+
+
+
+TEST(TestLP, MajorityUnweighted) {
+  std::unique_ptr<InMemoryClusterer> clusterer;
+  clusterer.reset(new LabelPropagationClusterer);
+  const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>> edge_list = {{2, 1}, {2, 3}, {2, 0}, {3, 0}};
+
+  auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
+                                        /*is_symmetric_graph*/true);
+
+  research_graph::in_memory::LabelPropagationClustererConfig labelprop_config;
+  labelprop_config.set_max_iteration(100);
+  labelprop_config.set_update_threshold(0);
+  labelprop_config.set_par_threshold(300);
+  labelprop_config.set_async(false);
+
+
+  ClustererConfig config;
+  google::protobuf::Any* any = config.mutable_any_config();
+  any->PackFrom(labelprop_config);
+  auto result = clusterer->Cluster(config);
+  auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 2, 0, 3)));
+
+
+  labelprop_config.set_par_threshold(0);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 2, 3, 0)));
+
+
+  labelprop_config.set_max_iteration(1);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(1, 3), UnorderedElementsAre(2, 0)));
+
+
+  labelprop_config.set_max_iteration(2);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 3), UnorderedElementsAre(2)));
+
+  labelprop_config.set_max_iteration(3);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 2, 3), UnorderedElementsAre(1)));
+
+  labelprop_config.set_max_iteration(4);
+  any->PackFrom(labelprop_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 2, 3)));
+
 }
