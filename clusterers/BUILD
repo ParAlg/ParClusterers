@@ -15,6 +15,7 @@ cc_library(
         "//clusterers/tectonic_clusterer:tectonic-clusterer",
         "//clusterers/scan_clusterer:scan-clusterer",
         "//clusterers/labelprop_clusterer:labelprop-clusterer",
+        "//clusterers/slpa_clusterer:slpa-clusterer",
     ],
     alwayslink = 1,
 )
