@@ -35,6 +35,7 @@ gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, s
             return kv.first;
         rnd -= kv.second;
     }
+    return 0; // should never reach this line
 }
 
 absl::StatusOr<SLPAClusterer::Clustering>
@@ -45,16 +46,18 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
   config.any_config().UnpackTo(&slpa_config);
   int max_iteration = slpa_config.max_iteration();
   gbbs::uintE par_threshold = slpa_config.par_threshold();
+  double prune_threshold = slpa_config.prune_threshold();
+  bool remove_nested = slpa_config.remove_nested();
 
   auto memory = parlay::sequence<std::map<gbbs::uintE, size_t>>::from_function(n, [&] (size_t i) { return std::map<gbbs::uintE, size_t>{{i, 1}}; });
   
-  auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
+  // auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   // auto is_active = parlay::sequence<bool>(n);
   
   for (int n_iterations = 0; n_iterations < max_iteration; n_iterations++) {
 
-    parlay::parallel_for(0, active_nodes.size(), [&] (size_t i) {
-      auto node_id = active_nodes[i];
+    parlay::parallel_for(0, n, [&] (gbbs::uintE node_id) {
+      // auto node_id = active_nodes[i];
 
       // std::cout << "Node " << node_id << std::endl;
       auto degree =  graph_.Graph()->get_vertex(node_id).out_degree();
@@ -63,7 +66,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto listen_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-            auto label = speak_sequential(v, memory[v], n_iterations);
+            auto label = speak_sequential(v, memory[v], n_iterations + 1);
             label_weights_sum[label] += wgh;
           };
           graph_.Graph()->get_vertex(node_id).out_neighbors().map(listen_f, false);
@@ -106,10 +109,62 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
   // TODO: Postprocessing
 
-  auto clusters = parlay::sequence<gbbs::uintE>(n);
-  auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
-  std::cout << "Num clusters = " << ret.size() << std::endl;
-  return ret;
+  parlay::sequence<std::vector<std::pair<gbbs::uintE, gbbs::uintE>>> labels(n);
+  prune_threshold *= max_iteration;
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    for(const auto& kv: memory[i]){
+      if(kv.second > prune_threshold) labels[i].push_back({kv.first, i});
+    }
+  });
+
+  auto pairs = parlay::flatten(labels);
+  parlay::sort_inplace(parlay::make_slice(pairs));
+
+  // auto grouped = parlay::group_by_key(label_flatten);
+  SLPAClusterer::Clustering output;
+  // parlay::parallel_for(0, grouped.size(), [&] (size_t i) {
+  //   ret[i] = std::vector(grouped.second.begin(), grouped.second.end());
+  // });
+
+
+  if(remove_nested){
+    std::vector<std::set<NodeId>> sets;
+    for (std::size_t i=0; i<pairs.size(); i++) {
+      auto& cluster_i = pairs[i].first;
+      if (i == 0 || cluster_i != pairs[i-1].first) {
+        sets.emplace_back(std::set<NodeId>{pairs[i].second});
+      } else {
+        sets[sets.size()-1].insert(pairs[i].second);
+      }
+    }
+
+    for (const auto& set1 : sets) {
+        bool isSubset = false;
+        for (const auto& set2 : sets) {
+            if (&set1 != &set2 && std::includes(set2.begin(), set2.end(), set1.begin(), set1.end())) {
+                isSubset = true;
+                break;
+            }
+        }
+        if (!isSubset) {
+            output.push_back(std::vector(set1.begin(), set1.end()));
+        }
+    }
+    
+  } else {
+    for (std::size_t i=0; i<pairs.size(); i++) {
+      auto& cluster_i = pairs[i].first;
+      if (i == 0 || cluster_i != pairs[i-1].first) {
+        output.emplace_back(std::vector<NodeId>{pairs[i].second});
+      } else {
+        output[output.size()-1].emplace_back(pairs[i].second);
+      }
+    }
+  }
+  
+
+  std::cout << "Num clusters = " << output.size() << std::endl;
+  return output;
 }
 
 }  // namespace in_memory
