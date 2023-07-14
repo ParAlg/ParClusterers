@@ -4,6 +4,8 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <random>
+#include <map>
 
 #include "clusterers/slpa_clusterer/slpa_config.pb.h"
 
@@ -19,6 +21,22 @@
 namespace research_graph {
 namespace in_memory {
 
+
+
+gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, std::size_t>& memory, const std::size_t m){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dist(0, m - 1);
+
+    size_t rnd = dist(gen);
+
+    for (const auto& kv : memory) {
+        if (rnd < kv.second)
+            return kv.first;
+        rnd -= kv.second;
+    }
+}
+
 absl::StatusOr<SLPAClusterer::Clustering>
 SLPAClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
@@ -26,47 +44,14 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
   SLPAClustererConfig slpa_config;
   config.any_config().UnpackTo(&slpa_config);
   int max_iteration = slpa_config.max_iteration();
-  int update_threshold = slpa_config.update_threshold();
   gbbs::uintE par_threshold = slpa_config.par_threshold();
-  bool async = slpa_config.async();
 
-  if(update_threshold < 0){
-    return absl::FailedPreconditionError("update_threshold must be non-negative");
-  }
-
-  if(static_cast<size_t>(update_threshold) > n){
-    std::cout << "warning: if update_threhsold is larger than n, the algorithm will finish in 0 round."<< std::endl;
-  }
-
-  auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-  // TODO: CHANGE IMPLEMENTATION
-  auto new_clusters = parlay::sequence<gbbs::uintE>();
-  if(!async){
-    new_clusters.resize(n);
-  }
-
-  auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-  auto is_active = parlay::sequence<bool>(n);
+  auto memory = parlay::sequence<std::map<gbbs::uintE, size_t>>::from_function(n, [&] (size_t i) { return std::map<gbbs::uintE, size_t>{{i, 1}}; });
   
-  int n_iterations = 0; // number of iterations
-  std::atomic<int> n_update;
-  n_update.store(n);
-
-  // propagate labels as long as a label has changed... or maximum iterations reached
-  while ((n_update > update_threshold) && (n_iterations < max_iteration)) {
-
-    n_iterations += 1;
-
-    // reset updated
-    n_update = 0;
-
-    auto table_size = async ? 0 :  active_nodes.size();
-    auto round_updates = parlay::hashtable<parlay::hash_numeric<gbbs::uintE>>(table_size, parlay::hash_numeric<gbbs::uintE>());
-
-    parlay::parallel_for(0, active_nodes.size(), [&] (size_t i) {
-      auto node_id = active_nodes[i];
-      is_active[node_id] = false;
-      });
+  auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
+  // auto is_active = parlay::sequence<bool>(n);
+  
+  for (int n_iterations = 0; n_iterations < max_iteration; n_iterations++) {
 
     parlay::parallel_for(0, active_nodes.size(), [&] (size_t i) {
       auto node_id = active_nodes[i];
@@ -77,10 +62,11 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
       if(degree < par_threshold){
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
-          auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-            label_weights_sum[clusters[v]] += wgh;
+          auto listen_f = [&] (const auto& u, const auto& v, const auto& wgh) {
+            auto label = speak_sequential(v, memory[v], n_iterations);
+            label_weights_sum[label] += wgh;
           };
-          graph_.Graph()->get_vertex(node_id).out_neighbors().map(map_f, false);
+          graph_.Graph()->get_vertex(node_id).out_neighbors().map(listen_f, false);
 
           // for(auto [v, w]: label_weights_sum){
           //   std::cout << v << " " << w << "\n";
@@ -97,7 +83,8 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
         auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
           auto [v, w] = neighbors.get_ith_neighbor(i);
-          return std::make_pair(clusters[v], w);
+          auto label = speak_sequential(v, memory[v], n_iterations);
+          return std::make_pair(label, w);
         });
 
         auto grouped = parlay::group_by_key(label_weights);
@@ -111,42 +98,15 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
         heaviest = parlay::max_element(label_weights_sum)->second;
       }
 
-
-      // A can only change in the next round if any of its neighbors change label.
-      if (clusters[node_id] != heaviest) { // UPDATE
-        if(async){
-          clusters[node_id] = heaviest;
-        } else {
-          new_clusters[node_id] = heaviest;
-          round_updates.insert(node_id);
-        }
-          n_update.fetch_add(1);
-          auto activate_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-            if(!is_active[v]) is_active[v] = true; 
-          };
-          graph_.Graph()->get_vertex(node_id).out_neighbors().map(activate_f);
-      } 
+      memory[node_id][heaviest]++;
     });
 
-    
 
-    if(! async){
-    auto updates = round_updates.entries();
-    parlay::parallel_for(0, n_update, [&](std::size_t i){
-      auto node_id = updates[i];
-      clusters[node_id ] = new_clusters[node_id];
-    });
-    }
+    } // end for loop
 
+  // TODO: Postprocessing
 
-
-    active_nodes = parlay::pack(active_nodes, is_active.cut(0, active_nodes.size()));
-    // for(int i=0;i < n;++i){
-    //   std::cout << clusters[i] << " ";
-    // }
-    // std::cout << "\n";
-    } // end while
-
+  auto clusters = parlay::sequence<gbbs::uintE>(n);
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
   std::cout << "Num clusters = " << ret.size() << std::endl;
   return ret;
