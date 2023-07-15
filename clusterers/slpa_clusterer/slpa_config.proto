@@ -6,6 +6,5 @@ message SLPAClustererConfig {
   optional int32 max_iteration = 1 [default = 100];
   optional int32 par_threshold = 3 [default = 1000];
   optional double prune_threshold = 2 [default = 0.2];
-  optional bool async = 4 [default = false];
   optional bool remove_nested = 5 [default = false];
 }

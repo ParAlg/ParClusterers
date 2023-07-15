@@ -38,6 +38,78 @@ gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, s
     return 0; // should never reach this line
 }
 
+
+
+std::set<std::set<gbbs::uintE>> SLPAClusterer::findMaximalSets(const std::vector<std::set<gbbs::uintE>>& sets) const {
+    std::set<std::set<gbbs::uintE>> maximalSets;
+    for(const auto& set : sets) {
+        bool isMaximal = true;
+        for(const auto& otherSet : sets) {
+            if(set != otherSet && std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+                isMaximal = false;
+                break;
+            }
+        }
+        if(isMaximal) {
+            maximalSets.insert(set);
+        }
+    }
+    return maximalSets;
+}
+
+SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<std::map<gbbs::uintE, size_t>>& memory, bool remove_nested, int max_iteration, double prune_threshold) const {
+  std::size_t n = memory.size();
+  parlay::sequence<std::vector<std::pair<gbbs::uintE, gbbs::uintE>>> labels(n);
+  prune_threshold *= max_iteration;
+  parlay::parallel_for(0, n, [&] (size_t i) {
+    for(const auto& kv: memory[i]){
+      if(kv.second > prune_threshold) labels[i].push_back({kv.first, i});
+    }
+  });
+
+  auto pairs = parlay::flatten(labels);
+  parlay::sort_inplace(parlay::make_slice(pairs));
+
+  // for(auto [k,v]: pairs){
+  //   std::cout << "k " << k << " v " << v << "\n";
+  // }
+
+  // auto grouped = parlay::group_by_key(label_flatten);
+  SLPAClusterer::Clustering output;
+  // parlay::parallel_for(0, grouped.size(), [&] (size_t i) {
+  //   ret[i] = std::vector(grouped.second.begin(), grouped.second.end());
+  // });
+
+  if(remove_nested){
+    std::vector<std::set<gbbs::uintE>> sets;
+    for (std::size_t i=0; i<pairs.size(); i++) {
+      auto& cluster_i = pairs[i].first;
+      if (i == 0 || cluster_i != pairs[i-1].first) {
+        sets.emplace_back(std::set<gbbs::uintE>{pairs[i].second});
+      } else {
+        sets[sets.size()-1].insert(pairs[i].second);
+      }
+    }
+
+    auto maximal_sets = findMaximalSets(sets);
+    for(auto s: maximal_sets){
+      output.emplace_back(std::vector<gbbs::uintE>(s.begin(), s.end()));
+    }
+    
+  } else {
+    for (std::size_t i=0; i<pairs.size(); i++) {
+      auto& cluster_i = pairs[i].first;
+      if (i == 0 || cluster_i != pairs[i-1].first) {
+        output.emplace_back(std::vector<gbbs::uintE>{pairs[i].second});
+      } else {
+        output[output.size()-1].emplace_back(pairs[i].second);
+      }
+    }
+  }
+  return output;
+}
+
+
 absl::StatusOr<SLPAClusterer::Clustering>
 SLPAClusterer::Cluster(const ClustererConfig& config) const {
   std::size_t n = graph_.Graph()->n;
@@ -107,60 +179,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
     } // end for loop
 
-  // TODO: Postprocessing
-
-  parlay::sequence<std::vector<std::pair<gbbs::uintE, gbbs::uintE>>> labels(n);
-  prune_threshold *= max_iteration;
-  parlay::parallel_for(0, n, [&] (size_t i) {
-    for(const auto& kv: memory[i]){
-      if(kv.second > prune_threshold) labels[i].push_back({kv.first, i});
-    }
-  });
-
-  auto pairs = parlay::flatten(labels);
-  parlay::sort_inplace(parlay::make_slice(pairs));
-
-  // auto grouped = parlay::group_by_key(label_flatten);
-  SLPAClusterer::Clustering output;
-  // parlay::parallel_for(0, grouped.size(), [&] (size_t i) {
-  //   ret[i] = std::vector(grouped.second.begin(), grouped.second.end());
-  // });
-
-
-  if(remove_nested){
-    std::vector<std::set<NodeId>> sets;
-    for (std::size_t i=0; i<pairs.size(); i++) {
-      auto& cluster_i = pairs[i].first;
-      if (i == 0 || cluster_i != pairs[i-1].first) {
-        sets.emplace_back(std::set<NodeId>{pairs[i].second});
-      } else {
-        sets[sets.size()-1].insert(pairs[i].second);
-      }
-    }
-
-    for (const auto& set1 : sets) {
-        bool isSubset = false;
-        for (const auto& set2 : sets) {
-            if (&set1 != &set2 && std::includes(set2.begin(), set2.end(), set1.begin(), set1.end())) {
-                isSubset = true;
-                break;
-            }
-        }
-        if (!isSubset) {
-            output.push_back(std::vector(set1.begin(), set1.end()));
-        }
-    }
-    
-  } else {
-    for (std::size_t i=0; i<pairs.size(); i++) {
-      auto& cluster_i = pairs[i].first;
-      if (i == 0 || cluster_i != pairs[i-1].first) {
-        output.emplace_back(std::vector<NodeId>{pairs[i].second});
-      } else {
-        output[output.size()-1].emplace_back(pairs[i].second);
-      }
-    }
-  }
+  auto output = postprocessing(memory, remove_nested, max_iteration, prune_threshold);
   
 
   std::cout << "Num clusters = " << output.size() << std::endl;
