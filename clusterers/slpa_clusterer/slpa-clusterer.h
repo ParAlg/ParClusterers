@@ -39,12 +39,11 @@ class SLPAClusterer : public InMemoryClusterer {
 
   std::set<std::set<gbbs::uintE>> findMaximalSets(const std::vector<std::set<gbbs::uintE>>& sets) const;
 
-  // Postprocess `memory` and return clustering. If `remove_nested` is true, nested communities are removed. `max_iteration` is the 
-  // total number of labels in each map in `memory`. labels appears with probability less than 
+  // Postprocess `memory` and return clustering. If `remove_nested` is true, nested communities are removed. labels appears with probability less than 
   // `prune_threshold` are removed from each map in `memory`.
   // `memory[i]` contains the memory of node `i`. 
-  Clustering postprocessing(const parlay::sequence<std::map<gbbs::uintE, size_t>>& memory, bool remove_nested, int max_iteration, 
-                            double prune_threshold) const;
+  Clustering postprocessing(const parlay::sequence<std::map<gbbs::uintE, size_t>>& memory, bool remove_nested,
+                            double prune_threshold, int total_n) const;
 
  private:
   GbbsGraph graph_;

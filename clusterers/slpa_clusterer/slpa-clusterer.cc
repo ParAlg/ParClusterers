@@ -23,16 +23,20 @@ namespace in_memory {
 
 
 
-gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, std::size_t>& memory, const std::size_t m){
-    std::random_device rd;
-    std::mt19937 gen(rd());
+gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, std::size_t>& memory, const std::size_t m, int seed){
+    // std::random_device rd;
+    std::mt19937 gen(seed);
     std::uniform_int_distribution<size_t> dist(0, m - 1);
-
     size_t rnd = dist(gen);
+    // std::cout << "speaker: " << v << "\n";
+    // std::cout << "rnd: " << rnd << "\n";
+    // std::cout << "m: " << m << "\n";
 
     for (const auto& kv : memory) {
-        if (rnd < kv.second)
+        if (rnd < kv.second){
+            // std::cout << " return: k " << kv.first << " v " << kv.second << "\n";
             return kv.first;
+        }
         rnd -= kv.second;
     }
     return 0; // should never reach this line
@@ -57,19 +61,24 @@ std::set<std::set<gbbs::uintE>> SLPAClusterer::findMaximalSets(const std::vector
     return maximalSets;
 }
 
-SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<std::map<gbbs::uintE, size_t>>& memory, bool remove_nested, int max_iteration, double prune_threshold) const {
+SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<std::map<gbbs::uintE, size_t>>& memory, bool remove_nested, double prune_threshold, int total_n) const {
   std::size_t n = memory.size();
   parlay::sequence<std::vector<std::pair<gbbs::uintE, gbbs::uintE>>> labels(n);
-  prune_threshold *= max_iteration;
   parlay::parallel_for(0, n, [&] (size_t i) {
+    // double total = 0;
+    // for(const auto& kv: memory[i]){
+    //   total += kv.second;
+    // }
+    // assert(total == total_n);
     for(const auto& kv: memory[i]){
-      if(kv.second > prune_threshold) labels[i].push_back({kv.first, i});
+      if(kv.second > prune_threshold * total_n) labels[i].push_back({kv.first, i});
     }
   });
 
   auto pairs = parlay::flatten(labels);
   parlay::sort_inplace(parlay::make_slice(pairs));
 
+  // std::cout << "pairs: \n";
   // for(auto [k,v]: pairs){
   //   std::cout << "k " << k << " v " << v << "\n";
   // }
@@ -121,6 +130,8 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
   double prune_threshold = slpa_config.prune_threshold();
   bool remove_nested = slpa_config.remove_nested();
 
+  int seed = slpa_config.seed();
+
   auto memory = parlay::sequence<std::map<gbbs::uintE, size_t>>::from_function(n, [&] (size_t i) { return std::map<gbbs::uintE, size_t>{{i, 1}}; });
   
   // auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
@@ -138,11 +149,12 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto listen_f = [&] (const auto& u, const auto& v, const auto& wgh) {
-            auto label = speak_sequential(v, memory[v], n_iterations + 1);
+            auto label = speak_sequential(v, memory[v], n_iterations + 1, seed);
             label_weights_sum[label] += wgh;
           };
           graph_.Graph()->get_vertex(node_id).out_neighbors().map(listen_f, false);
 
+          // std::cout << " label_weights_sum: \n";
           // for(auto [v, w]: label_weights_sum){
           //   std::cout << v << " " << w << "\n";
           // }
@@ -150,7 +162,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
           heaviest = std::max_element(label_weights_sum.begin(), label_weights_sum.end(),
                                                   [](const std::pair<gbbs::uintE, double> &p1,
                                                     const std::pair<gbbs::uintE, double> &p2) {
-                                                      return p1.second < p2.second && p1.first < p2.first;
+                                                      return p1.second < p2.second || (p1.second == p2.second && p1.first < p2.first);
                                                   })
                                     ->first;
       } else {
@@ -158,7 +170,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
         auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
           auto [v, w] = neighbors.get_ith_neighbor(i);
-          auto label = speak_sequential(v, memory[v], n_iterations);
+          auto label = speak_sequential(v, memory[v], n_iterations + 1, seed);
           return std::make_pair(label, w);
         });
 
@@ -173,15 +185,15 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
         heaviest = parlay::max_element(label_weights_sum)->second;
       }
 
+      // std::cout << "node_id " << node_id << " heaviest " << heaviest << "\n";
       memory[node_id][heaviest]++;
     });
 
 
     } // end for loop
 
-  auto output = postprocessing(memory, remove_nested, max_iteration, prune_threshold);
+  auto output = postprocessing(memory, remove_nested, prune_threshold, max_iteration + 1);
   
-
   std::cout << "Num clusters = " << output.size() << std::endl;
   return output;
 }

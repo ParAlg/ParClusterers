@@ -89,7 +89,7 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
           heaviest = std::max_element(label_weights_sum.begin(), label_weights_sum.end(),
                                                   [](const std::pair<gbbs::uintE, double> &p1,
                                                     const std::pair<gbbs::uintE, double> &p2) {
-                                                      return p1.second < p2.second && p1.first < p2.first;
+                                                      return p1.second < p2.second || (p1.second == p2.second && p1.first < p2.first);
                                                   })
                                     ->first;
       } else {

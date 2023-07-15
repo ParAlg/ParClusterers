@@ -54,6 +54,43 @@ TEST(TestSLPA, TestEdgeGraph) {
 }
 
 
+TEST(TestLP, TestTwoEdgesGraph) {
+  std::unique_ptr<InMemoryClusterer> clusterer;
+  clusterer.reset(new SLPAClusterer);
+  const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>> edge_list = {{0, 1}, {0, 2}};
+
+  auto n_status =  WriteEdgeListAsGraph(clusterer->MutableGraph(), edge_list, 
+                                        /*is_symmetric_graph*/true);
+
+  research_graph::in_memory::SLPAClustererConfig slpa_config;
+  slpa_config.set_max_iteration(1);
+  slpa_config.set_par_threshold(300);
+  slpa_config.set_remove_nested(false);
+  slpa_config.set_seed(1234);
+
+
+  ClustererConfig config;
+  google::protobuf::Any* any = config.mutable_any_config();
+  any->PackFrom(slpa_config);
+  auto result = clusterer->Cluster(config);
+  auto clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 2), UnorderedElementsAre(1), UnorderedElementsAre(2, 0)));
+
+  slpa_config.set_par_threshold(0);
+  any->PackFrom(slpa_config);
+  result = clusterer->Cluster(config);
+  clustering = *result;
+
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0, 1, 2), UnorderedElementsAre(1), UnorderedElementsAre(2, 0)));
+
+
+  slpa_config.set_max_iteration(300);
+  any->PackFrom(slpa_config);
+  result = clusterer->Cluster(config);
+}
+
+
 TEST(TestPostprocessing, TestThreshold) {
   SLPAClusterer clusterer;
 
@@ -68,11 +105,11 @@ TEST(TestPostprocessing, TestThreshold) {
   // cluster 1: 1
   // cluster 2: 0
 
-  auto clustering = clusterer.postprocessing(memory, /*remove_nested*/ false, 22, 0.2);
+  auto clustering = clusterer.postprocessing(memory, /*remove_nested*/ false, 0.2, 22);
   EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(0), UnorderedElementsAre(1)));
 
 
-  clustering = clusterer.postprocessing(memory, /*remove_nested*/ true, 22, 0.2);
+  clustering = clusterer.postprocessing(memory, /*remove_nested*/ true, 0.2, 22);
   EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1)));
 
 }
