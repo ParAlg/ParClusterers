@@ -23,11 +23,12 @@ def graph_runtime_overall(arg):
         ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
         
         for index in indices:
-            ax.plot(sub_data.loc[index, 'Threads'], pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+            ax.plot(sub_data.loc[index, 'Threads'], sub_data.loc[index, 'Cluster Time'], label = index, marker = 'o')
         
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
+        plt.yscale('log')
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('Cluster Time (Log Seconds)')
         plt.xlabel('Threads')
@@ -55,11 +56,12 @@ def graph_runtime_individual(arg):
             ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
             
             for index in indices:
-                ax.plot(clusterer_data.loc[index, 'Threads'], pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), label = index, marker = 'o')
+                ax.plot(clusterer_data.loc[index, 'Threads'], clusterer_data.loc[index, 'Cluster Time'], label = index, marker = 'o')
             
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
+            plt.yscale('log')
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('Cluster Time (Log Seconds)')
             plt.xlabel('Threads')
@@ -73,9 +75,9 @@ def graph_fscore_overall(arg):
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
-        sub_data = sub_data.groupby(['Clusterer Name', 'Config', 'Threads'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
+        sub_data = sub_data.groupby(['Clusterer Name', 'Config'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
         sub_data = sub_data.sort_values('Cluster Time')
-        sub_data =  sub_data.reset_index((1,2))
+        sub_data =  sub_data.reset_index(1)
         plt.figure(figsize=(12,14))
 
         indices = sorted(sub_data.index.drop_duplicates())
@@ -85,11 +87,12 @@ def graph_fscore_overall(arg):
         ax.set_prop_cycle(color=[cm(1.*i/num_colors) for i in range(num_colors)])
         
         for index in indices:
-            ax.plot(pd.Series(sub_data.loc[index, 'Cluster Time']).apply(np.log), sub_data.loc[index, 'fScore_mean'], label = index, marker='o')
+            ax.plot(sub_data.loc[index, 'Cluster Time'], sub_data.loc[index, 'fScore_mean'], label = index, marker='o')
         
         box = ax.get_position()
         ax.set_position([box.x0, box.y0 + box.height * 0.5,
                     box.width, box.height * 0.6])
+        plt.yscale('log')
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
         plt.xlabel('Cluster Time (Log Seconds)')
@@ -105,8 +108,8 @@ def graph_fscore_individual(arg):
         sub_data = data[data['Input Graph'] == graph]
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]    
-            clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
-            clusterer_data = clusterer_data.reset_index(-1)
+            clusterer_data = clusterer_data.groupby(['Config'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
+            #clusterer_data = clusterer_data.reset_index(-1)
             plt.figure(figsize=(12,14))
             indices = sorted(clusterer_data.index.drop_duplicates())
             num_colors = len(indices)
@@ -116,11 +119,12 @@ def graph_fscore_individual(arg):
             
             for index in indices:
                 
-                ax.plot(pd.Series(clusterer_data.loc[index, 'Cluster Time']).apply(np.log), clusterer_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
+                ax.plot(clusterer_data.loc[index, 'Cluster Time'], clusterer_data.loc[index, 'fScore_mean'], label = index, marker = 'o')
 
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
+            plt.yscale('log')
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
             plt.xlabel('Cluster Time (Log Seconds)')
@@ -138,8 +142,8 @@ def graph_precision_recall_individual(arg):
         
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]
-            clusterer_data = clusterer_data.groupby(['Config', 'Threads'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
-            clusterer_data = clusterer_data.reset_index(-1)
+            clusterer_data = clusterer_data.groupby(['Config'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
+            #clusterer_data = clusterer_data.reset_index(-1)
             clusterer_data = clusterer_data.sort_values('communityRecall_mean')
             plt.figure(figsize=(12,14))
             
@@ -172,8 +176,8 @@ def graph_precision_recall_overall(arg):
     data = data.fillna('None')
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
-        sub_data = sub_data.groupby(['Clusterer Name', 'Config', 'Threads'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
-        sub_data = sub_data.reset_index((1,2))
+        sub_data = sub_data.groupby(['Clusterer Name', 'Config'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
+        sub_data = sub_data.reset_index(1)
         sub_data = sub_data.sort_values('communityRecall_mean')
         plt.figure(figsize=(12,14))
 
