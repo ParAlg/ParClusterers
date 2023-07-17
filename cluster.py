@@ -49,6 +49,8 @@ def runSnap(clusterer, graph, graph_idx, round):
   print("Compilation done.")
   cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args
   # print(cmds)
+  runner_utils.appendToFile('Snap: \n', out_filename)
+  runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
   out_time = runner_utils.shellGetOutput(cmds)
   runner_utils.appendToFile(out_time, out_filename)
 
@@ -108,6 +110,8 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
   # Output running time to out_filename
   runner_utils.appendToFile(cluster, out_clustering_tmp)
   runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering + " " + out_prefix + ".pickle")
+  runner_utils.appendToFile("Tectonic: \n", out_filename)
+  runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
   runner_utils.appendToFile(config + "\n", out_filename)
   runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time) + "\n", out_filename)
 
