@@ -85,20 +85,33 @@ def load_tigergraph(conn, filename, input_dir, output_dir):
         }}
         RUN LOADING JOB job1'''.format(nodes = output_dir + filename + '_nodes.csv', edges = output_dir + filename + '_edges.csv')))
 
-def run_tigergraph(conn, clusterer, out_clustering):
+def run_tigergraph(conn, clusterer, out_clustering, thread, config):
 
   feat = conn.gds.featurizer()
   
-  params = {
-      "v_type": "Node",
-      "e_type": "Undirected_Edge",
-      "result_attribute": "cluster"
-  }
+  
+  threshold = -1
+  split = [x.strip() for x in config.split(',')]
+  for config_item in split:
+    config_split = [x.strip() for x in config_item.split(':')]
+    if config_split:
+      if config_split[0].startswith("threshold"):
+        if config_split[1] != "None":
+          threshold = float(config_split[1])
+
   f = io.StringIO()
   with redirect_stdout(f):
     start_time = time.time()
     if clusterer == 'TigerGraphKCore':
-      res = feat.runAlgorithm("tg_kcore", params=params)
+      # feat.installAlgorithm("tg_kcore")
+      # conn.runInstalledQuery("tg_kcore", params=params, threadLimit = thread)
+      params = {
+        "v_type": "Node",
+        "e_type": "Undirected_Edge",
+        "result_attribute": "cluster",
+        "k_max": threshold
+      }
+      res = feat.runAlgorithm("tg_kcore", params=params, threadLimit = thread)
       df = conn.getVertexDataFrame("Node")
       result = df.groupby('cluster')['id'].apply(list).tolist()
       print(df["cluster"].value_counts())

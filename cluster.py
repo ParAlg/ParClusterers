@@ -137,7 +137,11 @@ def run_tigergraph(conn, clusterer, graph, thread, config, out_prefix):
   # alg_name = clusterer[5:]
   # thread = int(thread)
   # cluster_tg.run_tigergraph(conn, clusterer)
-  out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering)
+  out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config)
+  runner_utils.appendToFile("Tigergraph: \n", out_filename)
+  runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
+  runner_utils.appendToFile("Threads: " + str(thread) + "\n", out_filename)
+  runner_utils.appendToFile("Config: " + config + "\n", out_filename)
   runner_utils.appendToFile(out_time, out_filename)
 
 def runAll(config_filename):
