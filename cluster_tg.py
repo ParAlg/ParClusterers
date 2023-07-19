@@ -54,10 +54,6 @@ def load_tigergraph(conn, filename, input_dir, output_dir):
 
   conn.graphname = 'current_graph'
 
-  conn.gsql('CREATE VERTEX Node (id INT PRIMARY KEY)')
-  conn.gsql('CREATE UNDIRECTED EDGE Undirected_Edge (FROM Node, TO Node)')
-  conn.gsql("CREATE GRAPH current_graph (Node, Undirected_Edge)")
-
   nodes, edges_from, edges_to, weights = readGraph(input_dir + filename)
 
   node_list = list(nodes)
@@ -72,25 +68,45 @@ def load_tigergraph(conn, filename, input_dir, output_dir):
   with open(output_dir + filename + '_edges.csv', 'w') as f:
       
       writer = csv.writer(f)
+      if len(weights) == 0:
+        writer.writerow(['Number', 'Node1', 'Node2'])
 
-      writer.writerow(['Number', 'Node1', 'Node2'])
-
-      for i in range(0, len(edges_to), 2):
-        writer.writerow([i/2, edges_to[i], edges_to[i+1]])
-  print(conn.gsql('''
+        for i in range(0, len(edges_to), 2):
+          writer.writerow([i/2, edges_to[i], edges_to[i+1]])
+        print(conn.gsql('''
+        CREATE VERTEX Node (id INT PRIMARY KEY)
+        CREATE UNDIRECTED EDGE Undirected_Edge (FROM Node, TO Node)
+        CREATE GRAPH current_graph (Node, Undirected_Edge)
         USE GRAPH current_graph
         CREATE LOADING JOB job1 FOR GRAPH current_graph {{
           LOAD "{nodes}" to VERTEX Node VALUES ($"ID") USING HEADER = "TRUE";
           LOAD "{edges}" to EDGE Undirected_Edge VALUES ($"Node1", $"Node2") USING HEADER = "TRUE";
         }}
         RUN LOADING JOB job1'''.format(nodes = output_dir + filename + '_nodes.csv', edges = output_dir + filename + '_edges.csv')))
+      else: 
+        writer.writerow(['Number', 'Node1', 'Node2', 'Weight'])
 
-def run_tigergraph(conn, clusterer, out_clustering, thread, config):
+        for i in range(0, len(edges_to), 2):
+          writer.writerow([i/2, edges_to[i], edges_to[i+1], weights[int(i/2)]])
+        print(conn.gsql('''
+        CREATE VERTEX Node (id INT PRIMARY KEY)
+        CREATE UNDIRECTED EDGE Undirected_Weighted_Edge (FROM Node, TO Node, weight FLOAT)
+        CREATE GRAPH current_graph (Node, Undirected_Weighted_Edge)
+        USE GRAPH current_graph
+        CREATE LOADING JOB job1 FOR GRAPH current_graph {{
+          LOAD "{nodes}" to VERTEX Node VALUES ($"ID") USING HEADER = "TRUE";
+          LOAD "{edges}" to EDGE Undirected_Weighted_Edge VALUES ($"Node1", $"Node2", $"Weight") USING HEADER = "TRUE";
+        }}
+        RUN LOADING JOB job1'''.format(nodes = output_dir + filename + '_nodes.csv', edges = output_dir + filename + '_edges.csv')))
+  
+
+def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
 
   feat = conn.gds.featurizer()
   
   
   threshold = -1
+  edge = 'Undirected_Edge' if weighted else 'Undirected_Weighted_Edge'
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
@@ -103,23 +119,31 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config):
   with redirect_stdout(f):
     start_time = time.time()
     if clusterer == 'TigerGraphKCore':
-      # feat.installAlgorithm("tg_kcore")
-      # conn.runInstalledQuery("tg_kcore", params=params, threadLimit = thread)
       params = {
         "v_type": "Node",
-        "e_type": "Undirected_Edge",
+        "e_type": edge,
         "result_attribute": "cluster",
         "k_max": threshold
       }
       res = feat.runAlgorithm("tg_kcore", params=params, threadLimit = thread)
-      df = conn.getVertexDataFrame("Node")
-      result = df.groupby('cluster')['id'].apply(list).tolist()
-      print(df["cluster"].value_counts())
+    elif clusterer == 'TigerGraphLouvain':
+      params = {
+        "v_type_set": ["Node"],
+        "e_type_set": [edge],
+        "result_attribute": "cluster"
+      }
+      if weighted:
+        params['wt_attr'] = 'weight'
+      res = feat.runAlgorithm("tg_louvain", params=params, threadLimit = thread)
 
+    df = conn.getVertexDataFrame("Node")
+    result = df.groupby('cluster')['id'].apply(list).tolist()
     if not (result is None):
       for cluster_list in result:
         runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+
     end_time = time.time()
+    
     print("Time: " + str(end_time - start_time))
   out = f.getvalue()
   return out
@@ -129,5 +153,11 @@ def remove_tigergraph(conn):
 
 
 
-# if __name__ == "__main__":
-#   main()
+if __name__ == "__main__":
+  conn = tg.TigerGraphConnection(
+      host='http://127.0.0.1',
+      username='tigergraph',
+      password='tigergraph',
+  )
+  load_tigergraph(conn, 'iris_graph.txt', '/home/jamisonmeindl/ParClusterers/', '/home/jamisonmeindl/ParClusterers/')
+  remove_tigergraph(conn)

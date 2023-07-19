@@ -128,16 +128,13 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
 #./tree-clusters amazon.weighted 334863 > amazon.clusters
 #python2 grade-clusters.py amazon.communities amazon.clusters amazon.grading 
 
-def run_tigergraph(conn, clusterer, graph, thread, config, out_prefix):
+def run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix):
   if (runner_utils.gbbs_format == "true"):
-    raise ValueError("Neo4j can only be run using edge list format")
+    raise ValueError("Tigergraph can only be run using edge list format")
   use_input_graph = runner_utils.input_directory + graph
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
-  # alg_name = clusterer[5:]
-  # thread = int(thread)
-  # cluster_tg.run_tigergraph(conn, clusterer)
-  out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config)
+  out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted)
   runner_utils.appendToFile("Tigergraph: \n", out_filename)
   runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
   runner_utils.appendToFile("Threads: " + str(thread) + "\n", out_filename)
@@ -186,7 +183,8 @@ def runAll(config_filename):
                   )
                   cluster_tg.load_tigergraph(conn, graph, runner_utils.input_directory, runner_utils.output_directory)
                   tigergraph_loaded = True
-                run_tigergraph(conn, clusterer, graph, thread, config, out_prefix)
+                weighted = runner_utils.weighted == "true"
+                run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix)
               else:
                 out_filename = out_prefix + ".out"
                 out_clustering = out_prefix + ".cluster"
