@@ -45,11 +45,6 @@ def readGraph(filename):
         
   return nodes, edges_from, edges_to, weights
 
-# # Read in DB configs
-# with open('../config.json', "r") as config_file:
-#     config = json.load(config_file)
-
-
 def load_tigergraph(conn, filename, input_dir, output_dir):
 
   conn.graphname = 'current_graph'
@@ -135,6 +130,20 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
       if weighted:
         params['wt_attr'] = 'weight'
       res = feat.runAlgorithm("tg_louvain", params=params, threadLimit = thread)
+    elif clusterer == 'TigerGraphWCC':
+      params = {
+        "v_type_set": ["Node"],
+        "e_type_set": [edge],
+        "result_attribute": "cluster"
+      }
+      res = feat.runAlgorithm("tg_wcc", params=params, threadLimit = thread)
+    elif clusterer == 'TigerGraphLabelProp':
+      params = {
+        "v_type_set": ["Node"],
+        "e_type_set": [edge],
+        "result_attribute": "cluster"
+      }
+      res = feat.runAlgorithm("tg_label_prop", params=params, threadLimit = thread)
 
     df = conn.getVertexDataFrame("Node")
     result = df.groupby('cluster')['id'].apply(list).tolist()

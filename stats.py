@@ -19,6 +19,7 @@ def runStats(out_prefix, graph, graph_idx):
   ss = ("bazel run //clusterers:stats-in-memory_main -- "
   "--input_graph=" + use_input_graph + " "
   "--is_gbbs_format=" + runner_utils.gbbs_format + " "
+  "--float_weighted=" + runner_utils.weighted + " "
   "--input_clustering=" + in_clustering + " "
   "--output_statistics=" + out_statistics + " " + use_input_communities + " "
   "--statistics_config='" + runner_utils.stats_config + "'")
