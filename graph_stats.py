@@ -30,7 +30,7 @@ def graph_runtime_overall(arg):
                     box.width, box.height * 0.6])
         plt.yscale('log')
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
-        plt.ylabel('Cluster Time (Log Seconds)')
+        plt.ylabel('Cluster Time (Seconds)')
         plt.xlabel('Threads')
         plt.title(graph + ' Clustering Time')
         plt.savefig(arg + '/' + graph + '_' + arg + '_runtime_graph.pdf')
@@ -63,7 +63,7 @@ def graph_runtime_individual(arg):
                         box.width, box.height * 0.6])
             plt.yscale('log')
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
-            plt.ylabel('Cluster Time (Log Seconds)')
+            plt.ylabel('Cluster Time (Seconds)')
             plt.xlabel('Threads')
             plt.title(clusterer + ' ' + graph + ' Clustering Time')
             plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_runtime_graph.pdf')
@@ -95,7 +95,7 @@ def graph_fscore_overall(arg):
         plt.yscale('log')
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
         plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
-        plt.xlabel('Cluster Time (Log Seconds)')
+        plt.xlabel('Cluster Time (Seconds)')
         plt.title(graph + ' F-Score')
         plt.savefig(arg + '/' + graph + '_' + arg + '_fscore_graph.pdf')
 
@@ -109,7 +109,6 @@ def graph_fscore_individual(arg):
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]    
             clusterer_data = clusterer_data.groupby(['Config'], dropna=False)[['Cluster Time', 'fScore_mean', 'fScoreParam']].mean()
-            #clusterer_data = clusterer_data.reset_index(-1)
             plt.figure(figsize=(12,14))
             indices = sorted(clusterer_data.index.drop_duplicates())
             num_colors = len(indices)
@@ -127,10 +126,9 @@ def graph_fscore_individual(arg):
             plt.yscale('log')
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
-            plt.xlabel('Cluster Time (Log Seconds)')
+            plt.xlabel('Cluster Time (Seconds)')
             plt.title(clusterer + ' ' + graph + ' F-Score')
             plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.pdf')            
-
 
 
 # Graph precision recall for each clusterer
@@ -143,10 +141,8 @@ def graph_precision_recall_individual(arg):
         for clusterer in data['Clusterer Name'].unique():
             clusterer_data = sub_data[sub_data['Clusterer Name'] == clusterer]
             clusterer_data = clusterer_data.groupby(['Config'], dropna=False)[['communityRecall_mean', 'communityPrecision_mean']].mean()
-            #clusterer_data = clusterer_data.reset_index(-1)
             clusterer_data = clusterer_data.sort_values('communityRecall_mean')
             plt.figure(figsize=(12,14))
-            
             
             indices = sorted(clusterer_data.index.drop_duplicates())
             num_colors = len(indices)
