@@ -181,6 +181,7 @@ def runAll(config_filename):
                       username='tigergraph',
                       password='tigergraph',
                   )
+                  cluster_tg.remove_tigergraph(conn)
                   cluster_tg.load_tigergraph(conn, graph, runner_utils.input_directory, runner_utils.output_directory)
                   tigergraph_loaded = True
                 weighted = runner_utils.weighted == "true"

@@ -101,7 +101,7 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
   
   
   threshold = -1
-  edge = 'Undirected_Edge' if weighted else 'Undirected_Weighted_Edge'
+  edge = 'Undirected_Weighted_Edge' if weighted else 'Undirected_Edge'
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
