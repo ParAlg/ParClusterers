@@ -145,6 +145,10 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
       }
       res = feat.runAlgorithm("tg_label_prop", params=params, threadLimit = thread)
 
+    end_time = time.time()
+    
+    print("Cluster Time: " + str(end_time - start_time))
+
     df = conn.getVertexDataFrame("Node")
     result = df.groupby('cluster')['id'].apply(list).tolist()
     if not (result is None):
@@ -153,7 +157,7 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
 
     end_time = time.time()
     
-    print("Time: " + str(end_time - start_time))
+    print("Total Time: " + str(end_time - start_time))
   out = f.getvalue()
   return out
 
