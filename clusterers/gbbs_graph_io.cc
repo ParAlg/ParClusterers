@@ -74,6 +74,22 @@ absl::StatusOr<std::size_t> WriteEdgeListAsGraph(
   return n;
 }
 
+// Explicit instantiation of the template
+template absl::StatusOr<std::size_t> WriteEdgeListAsGraph<double>(
+    InMemoryClusterer::Graph* graph,
+    const std::vector<gbbs::gbbs_io::Edge<double>>& edge_list,
+    bool is_symmetric_graph);
+
+template absl::StatusOr<std::size_t> WriteEdgeListAsGraph<gbbs::empty>(
+    InMemoryClusterer::Graph* graph,
+    const std::vector<gbbs::gbbs_io::Edge<gbbs::empty>>& edge_list,
+    bool is_symmetric_graph);
+
+template absl::StatusOr<std::size_t> WriteEdgeListAsGraph<int>(
+    InMemoryClusterer::Graph* graph,
+    const std::vector<gbbs::gbbs_io::Edge<int>>& edge_list,
+    bool is_symmetric_graph);
+
 } // namespace internal
 
 // TODO(jeshi): This always assumes a symmetric graph

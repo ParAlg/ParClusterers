@@ -53,18 +53,37 @@ def runNetworKitPLP(G, config):
     config_split = [x.strip() for x in config_item.split(':')]
     if config_split:
       if config_split[0].startswith("updateThreshold"):
-        use_updateThreshold = int(config_split[1])
+        if (config_split[1]!="None"):
+          use_updateThreshold = int(config_split[1])
       elif config_split[0].startswith("maxIterations"):
         use_maxIterations = int(config_split[1])
+  kwargs = {}
+  if use_updateThreshold:
+    kwargs["updateThreshold"] = use_updateThreshold
+  if use_maxIterations:
+    kwargs["maxIterations"] = use_maxIterations
   f = io.StringIO()
   with redirect_stdout(f):
     print(config)
     start_time = time.time()
-    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, updateThreshold=use_updateThreshold, maxIterations=use_maxIterations, baseClustering=None))
+    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
   return out, communities
+
+
+def runNetworKitLPDegreeOrdered(G, config):
+  f = io.StringIO()
+  with redirect_stdout(f):
+    print(config)
+    start_time = time.time()
+    communities = nk.community.detectCommunities(G, algo=nk.community.LPDegreeOrdered(G))
+    end_time = time.time()
+    print("Communities detected in %f \n" % (end_time - start_time))
+  out = f.getvalue()
+  return out, communities
+
 
 def runNetworKitParallelLeiden(G, config):
   use_randomize = True
@@ -130,8 +149,18 @@ def runNetworKitKCore(G, config):
     #   cores.append(list(coreDec.getCover().getMembers(i)))
     if run_connectivity:
       cores = coreDec.scores()
+      kCore = []
+      other_nodes = []
       try:
-          kCore = [index for index, score in enumerate(cores) if score >= k]
+        for index, score in enumerate(cores):
+          if score >= k:
+            kCore.append(index)
+          else:
+            other_nodes.append(index)
+          # kCore = [index for index, score in enumerate(cores) if score >= k]  
+        # partition = coreDec.getPartition()
+        # for i in range(k, partition.numberOfSubsets() + 1):
+        #   kCore.extend(partition.getMembers(i))
       except IndexError:
           raise RuntimeError("There is no core for the specified k")
 
@@ -139,6 +168,9 @@ def runNetworKitKCore(G, config):
       cc = nk.components.ParallelConnectedComponents(C, False)
       cc.run()
       clusters = cc.getComponents()
+      # nodes that are not in the core are in their separate connected component.
+      for i in other_nodes:
+        clusters.append([i])
     end_time = time.time()
     print("Communities detected in %f \n" % (end_time - start_time))
   out = f.getvalue()
@@ -174,6 +206,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
     print_time, communities = runNetworKitPLM(G, config)
   elif (clusterer == "NetworKitPLP"):
     print_time, communities = runNetworKitPLP(G, config)
+  elif (clusterer == "NetworKitLPDegreeOrdered"):
+    print_time, communities = runNetworKitLPDegreeOrdered(G, config)
   elif (clusterer == "NetworKitParallelLeiden"):
     print_time, communities = runNetworKitParallelLeiden(G, config)
   elif (clusterer == "NetworKitConnectivity"):
