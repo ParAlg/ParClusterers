@@ -101,6 +101,7 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
   
   
   threshold = -1
+  maximum_iteration = 10
   edge = 'Undirected_Weighted_Edge' if weighted else 'Undirected_Edge'
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
@@ -109,6 +110,8 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
       if config_split[0].startswith("threshold"):
         if config_split[1] != "None":
           threshold = float(config_split[1])
+      if config_split[0].startswith("maximum_iteration"):
+        maximum_iteration = float(config_split[1])
 
   f = io.StringIO()
   with redirect_stdout(f):
@@ -141,9 +144,30 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
       params = {
         "v_type_set": ["Node"],
         "e_type_set": [edge],
-        "result_attribute": "cluster"
+        "result_attribute": "cluster",
+        "maximum_iteration": maximum_iteration,
+        "print_limit": -1
       }
       res = feat.runAlgorithm("tg_label_prop", params=params, threadLimit = thread)
+    # elif clusterer == 'TigerGraphSLLabelProp':
+    #   # print(conn.gsql('INSTALL QUERY <Speaker-Listener Label Propagation Algorithm>'))
+    #   # feat.installAlgorithm("tg_slpa")
+    #   params = {
+    #     "v_type_set": ["Node"],
+    #     "e_type_set": [edge],
+    #     "result_attribute": "cluster",
+    #     "maximum_iteration": maximum_iteration,
+    #     "print_limit": -1, 
+    #     "threshold": max(0, threshold)
+    #   }
+    #   print(conn.gsql(
+    #   '''
+    #   IMPORT PACKAGE GDBMS_ALGO.community'''))
+    #   print(conn.gsql(
+    #   '''
+    #   USE GRAPH current_graph
+    #   CALL GDBMS_ALGO.community.slpa(["Node"], ["Undirected_Edge"], 0, 10, -1, False, "") GSQL-TIMEOUT: 100000'''))
+    #   # res = feat.runAlgorithm("tg_slpa", params=params, threadLimit = thread)
 
     end_time = time.time()
     
