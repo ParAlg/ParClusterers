@@ -23,11 +23,12 @@ namespace in_memory {
 
 
 
-gbbs::uintE speak_sequential(const gbbs::uintE& v, const std::map<gbbs::uintE, std::size_t>& memory, const std::size_t m, int seed){
+gbbs::uintE speak_sequential(const gbbs::uintE v, const std::map<gbbs::uintE, std::size_t>& memory, const std::size_t m, int seed){
     // std::random_device rd;
-    std::mt19937 gen(seed);
-    std::uniform_int_distribution<size_t> dist(0, m - 1);
-    size_t rnd = dist(gen);
+    // std::mt19937 gen(seed);
+    // std::uniform_int_distribution<size_t> dist(0, m - 1);
+    // size_t rnd = dist(gen);
+    size_t rnd = parlay::hash64(seed + static_cast<std::size_t>(v) + m) % m;
     // std::cout << "speaker: " << v << "\n";
     // std::cout << "rnd: " << rnd << "\n";
     // std::cout << "m: " << m << "\n";
@@ -138,6 +139,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
   // auto is_active = parlay::sequence<bool>(n);
   
   for (int n_iterations = 0; n_iterations < max_iteration; n_iterations++) {
+      // std::cout << "Round " << n_iterations << std::endl;
 
     parlay::parallel_for(0, n, [&] (gbbs::uintE node_id) {
       // auto node_id = active_nodes[i];
@@ -192,6 +194,7 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
     } // end for loop
 
+  std::cout << "postprocessing" << "\n";
   auto output = postprocessing(memory, remove_nested, prune_threshold, max_iteration + 1);
   
   std::cout << "Num clusters = " << output.size() << std::endl;
