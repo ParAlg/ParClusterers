@@ -149,25 +149,17 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
         "print_limit": -1
       }
       res = feat.runAlgorithm("tg_label_prop", params=params, threadLimit = thread)
-    # elif clusterer == 'TigerGraphSLLabelProp':
-    #   # print(conn.gsql('INSTALL QUERY <Speaker-Listener Label Propagation Algorithm>'))
-    #   # feat.installAlgorithm("tg_slpa")
-    #   params = {
-    #     "v_type_set": ["Node"],
-    #     "e_type_set": [edge],
-    #     "result_attribute": "cluster",
-    #     "maximum_iteration": maximum_iteration,
-    #     "print_limit": -1, 
-    #     "threshold": max(0, threshold)
-    #   }
-    #   print(conn.gsql(
-    #   '''
-    #   IMPORT PACKAGE GDBMS_ALGO.community'''))
-    #   print(conn.gsql(
-    #   '''
-    #   USE GRAPH current_graph
-    #   CALL GDBMS_ALGO.community.slpa(["Node"], ["Undirected_Edge"], 0, 10, -1, False, "") GSQL-TIMEOUT: 100000'''))
-    #   # res = feat.runAlgorithm("tg_slpa", params=params, threadLimit = thread)
+    elif clusterer == 'TigerGraphSLLabelProp':
+      params = {
+        "v_type_set": ["Node"],
+        "e_type_set": [edge],
+        "maximum_iteration": maximum_iteration,
+        "result_attribute": "cluster",
+        "print_limit": -1,
+        "threshold": threshold
+      }
+      print(feat.installAlgorithm('tg_slpa', query_path='../tigergraph-3.9.2-offline/query/tg_slpa.gsql'))
+      res = feat.runAlgorithm("tg_slpa", params=params, threadLimit = thread, custom_query=True, feat_type = 'INT', schema_name = ["Node"], feat_name= 'cluster', timeout = 10000000)
 
     end_time = time.time()
     
