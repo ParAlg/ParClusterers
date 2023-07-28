@@ -128,7 +128,8 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
       params = {
         "v_type_set": ["Node"],
         "e_type_set": [edge],
-        "result_attribute": "cluster"
+        "result_attribute": "cluster",
+        "maximum_iteration": maximum_iteration
       }
       if weighted:
         params['wt_attr'] = 'weight'
