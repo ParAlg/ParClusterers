@@ -4,10 +4,12 @@ cd external/gbbs/utils/generators/
 echo "in external/gbbs/utils/generators/"
 make
 
-# nums=(262144 1048576 4194304)
+# nums=(16777216) #262144 1048576 
 # edge_nums=(1000000000) #1,000,000,000
-nums=(64)
-edge_nums=(10)
+nums=(2097152 32768)
+edge_nums=(100000000) #100,000,000
+# nums=(64)
+# edge_nums=(10)
 output_dir="/home/sy/datasets/RMAT"
 for num in ${nums[@]}
 do
