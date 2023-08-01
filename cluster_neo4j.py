@@ -192,17 +192,17 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         mutateProperty = "labelpropagationcommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.labelPropagation.mutate(G, **mutate_kwargs)
-    # elif algorithm_name.startswith("SLPA"):
-    #   overlapping_community_flag = True
-    #   stream_kwargs["maxIterations"]=maxIterations
-    #   # minAssociationStrength TODO add flag
-    #   mutate_kwargs = stream_kwargs.copy()
-    #   if stream_flag:
-    #     res = gds.alpha.sllpa.stream(G, **stream_kwargs)
-    #   else:
-    #     mutateProperty = "SLPAcommunity" + config + str(thread)
-    #     mutate_kwargs["mutateProperty"] = mutateProperty
-    #     res = gds.labelPropagation.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("SLPA"):
+      overlapping_community_flag = True
+      stream_kwargs["maxIterations"]=maxIterations
+      # minAssociationStrength TODO add flag
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.alpha.sllpa.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "SLPAcommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.labelPropagation.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
       raise Exception("The algorithm " + algorithm_name + " is not available")
@@ -246,7 +246,9 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       if (community_flag):
         result = res.groupby('communityId')['nodeId'].apply(list).tolist()
       if overlapping_community_flag:
-        result = None
+        res['communityIds'] = res['values'].apply(lambda x: x['communityIds'])
+        res_exploded = res.explode('communityIds', ignore_index=True)
+        result = res_exploded.groupby('communityIds')['nodeId'].apply(list).tolist()
     
     if not (result is None):
       for cluster_list in result:
