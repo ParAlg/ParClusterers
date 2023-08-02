@@ -86,6 +86,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
   maxIterations = 10
   gamma = 1.0
   theta = 0.01
+  minAssociationStrength = 0.2
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
@@ -97,6 +98,8 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         maxLevels = int(config_split[1])
       if config_split[0].startswith("maxIterations"):
         maxIterations = int(config_split[1])
+      if config_split[0].startswith("minAssociationStrength"):
+        minAssociationStrength = float(config_split[1])
       if config_split[0].startswith("gamma"):
         gamma = float(config_split[1])
       if config_split[0].startswith("theta"):
@@ -195,7 +198,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     elif algorithm_name.startswith("SLPA"):
       overlapping_community_flag = True
       stream_kwargs["maxIterations"]=maxIterations
-      # minAssociationStrength TODO add flag
+      stream_kwargs["minAssociationStrength"]=minAssociationStrength
       mutate_kwargs = stream_kwargs.copy()
       if stream_flag:
         res = gds.alpha.sllpa.stream(G, **stream_kwargs)
