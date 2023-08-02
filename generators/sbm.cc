@@ -25,6 +25,12 @@ ABSL_FLAG(double, p_in, 1.0,
 ABSL_FLAG(double, p_out, 0.0,
           "Probability between communities");
 
+ABSL_FLAG(int, n_block, 5,
+          "number of blocks");
+
+ABSL_FLAG(bool, is_homo, true,
+          "homogeneous");
+
 
 namespace{
 
@@ -71,12 +77,36 @@ absl::Status Main() {
   std::string out_f_cmty = absl::GetFlag(FLAGS_cmty_output_file);
   double p_in = absl::GetFlag(FLAGS_p_in);
   double p_out = absl::GetFlag(FLAGS_p_out);
+  int nBlocks = absl::GetFlag(FLAGS_n_block);
+  bool is_homo = absl::GetFlag(FLAGS_is_homo);
 
   using uintE = gbbs::uintE;
-  uintE n = 100;
-  int nBlocks = 5;
-  // std::vector<int> blockSizes{n/nBlocks, n/nBlocks, n/nBlocks, n/nBlocks, n/nBlocks};
-  std::vector<int> blockSizes{10, 20, 30, 15, 25};
+  uintE n = 10000;
+  std::vector<int> blockSizes(nBlocks, n/nBlocks);
+  if(!is_homo){
+    // int divider = nBlocks + (nBlocks % 3 == 0 ? 0 : (3-nBlocks % 3));
+    // int large = 0;
+    // int middle = divider/3;
+    // int small = divider * 2 / 3;
+    // parlay::parallel_for(0, large, [&](size_t i){
+    //   blockSizes[i] = n / 2 / large;
+    // });
+    if(nBlocks==50){
+      parlay::parallel_for(0, nBlocks/2, [&](size_t i){
+        blockSizes[i] = 300;
+      });
+      parlay::parallel_for(nBlocks/2, nBlocks, [&](size_t i){
+        blockSizes[i] = 100;
+      });
+    }else if(nBlocks == 5){
+      blockSizes = std::vector({5000, 3000, 1000, 500, 500});
+    } else {
+      return absl::UnimplementedError("not implemented");
+    }
+
+    // blockSizes = std::vector({5000, 3000, 1000, 500, 500});
+  }
+  // std::vector<int> blockSizes{10, 20, 30, 15, 25};
 
   assert(nBlocks == blockSizes.size());
 

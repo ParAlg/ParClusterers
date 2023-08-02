@@ -6,6 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 
 n = int(sys.argv[1])
+filename = sys.argv[2]
 
 def readGraph(filename):
   matrix = np.zeros((n,n))
@@ -30,4 +31,4 @@ def readGraph(filename):
   plt.ylabel('Row')
   plt.savefig("/home/ubuntu/outputs/tmp.png")
 
-readGraph("/home/ubuntu/outputs/tmp.txt")
+readGraph("/home/ubuntu/outputs/%s.ungraph.txt" % filename)
