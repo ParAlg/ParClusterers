@@ -184,6 +184,16 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         mutateProperty = "kcorecommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.kcore.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("ModularityOptimization"):
+      community_flag = True
+      stream_kwargs["maxIterations"]=maxIterations
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.beta.modularityOptimization.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "modularityOptimizationcommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.beta.modularityOptimization.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("LabelPropagation"):
       community_flag = True
       stream_kwargs["maxIterations"]=maxIterations
