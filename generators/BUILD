@@ -1,7 +1,22 @@
+
+
+cc_library(
+    name = "sbm",
+    hdrs = ["sbm.h"],
+    deps = [
+        "//clusterers/metric_example_clusterer:metric-example-clusterer",
+        "@gbbs//gbbs:macros",
+        "@gbbs//gbbs:bridge",
+    ],
+    alwayslink = 1,
+)
+
+
 cc_library(
     name = "sbm_lib",
     srcs = ["sbm.cc"],
     deps = [
+        ":sbm",
         "//external:gflags",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/flags:flag",
@@ -11,13 +26,11 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_protobuf//:protobuf",
-        "@gbbs//gbbs:macros",
-        "@gbbs//gbbs:bridge",
     ],
 )
 
 cc_binary(
-    name = "sbm",
+    name = "sbm_main",
     deps = [
         ":sbm_lib",
         "//external:gflags",
