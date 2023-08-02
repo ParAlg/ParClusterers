@@ -68,7 +68,7 @@ parlay::sequence<std::tuple<gbbs::uintE, gbbs::uintE>> SBM(gbbs::uintE n, std::v
           double r = hashDouble(hash1);
           if (r <= p) {
             E[u*n + v] = std::make_tuple(u, v);
-            std::cout << u << " " << v << std::endl;
+            // std::cout << u << " " << v << std::endl;
           }
         }
     });
