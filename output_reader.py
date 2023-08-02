@@ -84,6 +84,18 @@ def read_out(filename, directory):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
       elif elem.startswith('Input graph:'):
         runtime_dict['Input Graph'] = elem.split(' ')[-1].strip()
+  # Tigergraph Clusterer
+  elif run_info[0].startswith('Tigergraph:'):
+    runtime_dict['Clusterer Name'] = 'Tigergraph'
+    for elem in run_info[1:]:
+      if elem.startswith('Total Time:'):
+        runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+      elif elem.startswith('Config:'):
+        runtime_dict['Config'] = elem.split(' ')[-1].strip()
+      elif elem.startswith('Threads:'):
+        runtime_dict['Threads'] = elem.split(' ')[-1].strip()
+      elif elem.startswith('Input graph:'):
+        runtime_dict['Input Graph'] = elem.split(' ')[-1].strip()
   
   runtime_file.close()
   return runtime_dict
