@@ -102,8 +102,6 @@ def readConfig(filename):
   num_rounds = 1 if (num_rounds is None) else num_rounds
   gbbs_format = "false" if (gbbs_format is None or gbbs_format == "") else gbbs_format
   weighted = "false" if (weighted is None or weighted == "") else weighted
-  # tigergraph_format = "false" if (tigergraph_format is None or tigergraph_format == "") else tigergraph_format
-
 
 
 def readStatsConfig(filename):
