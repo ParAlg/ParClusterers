@@ -48,7 +48,8 @@ def readConfig(filename):
   global clusterer_configs, num_rounds, timeout, clusterer_config_names
   global gbbs_format
   global weighted
-  num_threads = num_rounds = timeout = gbbs_format = weighted = None
+  global tigergraph_edges, tigergraph_nodes
+  num_threads = num_rounds = timeout = gbbs_format = weighted = tigergraph_edges = tigergraph_nodes = None
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
@@ -73,6 +74,10 @@ def readConfig(filename):
           timeout = split[1]
         elif split[0].startswith("GBBS format") and len(split) > 1:
           gbbs_format = split[1]
+        elif split[0].startswith("TigerGraph files") and len(split) > 1:
+          tigergraph_files = [x.strip() for x in split[1].split(';')]
+          tigergraph_edges = tigergraph_files[0]
+          tigergraph_nodes = tigergraph_files[1]
         elif split[0].startswith("Wighted") and len(split) > 1:
           weighted = split[1]
         else:
@@ -97,6 +102,8 @@ def readConfig(filename):
   num_rounds = 1 if (num_rounds is None) else num_rounds
   gbbs_format = "false" if (gbbs_format is None or gbbs_format == "") else gbbs_format
   weighted = "false" if (weighted is None or weighted == "") else weighted
+  # tigergraph_format = "false" if (tigergraph_format is None or tigergraph_format == "") else tigergraph_format
+
 
 
 def readStatsConfig(filename):

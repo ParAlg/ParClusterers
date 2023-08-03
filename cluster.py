@@ -13,7 +13,6 @@ import traceback
 import postprocess_clustering
 from pyTigerGraph import TigerGraphConnection
 
-
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
   if (runner_utils.gbbs_format == "true"):
@@ -175,6 +174,7 @@ def runAll(config_filename):
                 weighted = runner_utils.weighted == "true"
                 runNeo4j(clusterer, graph, thread, config + ', num_rounds: ' + str(i), weighted, out_prefix)
               elif clusterer.startswith("TigerGraph"):
+                weighted = runner_utils.weighted == "true"
                 if not tigergraph_loaded:
                   conn = TigerGraphConnection(
                       host='http://127.0.0.1',
@@ -182,9 +182,8 @@ def runAll(config_filename):
                       password='tigergraph',
                   )
                   cluster_tg.remove_tigergraph(conn)
-                  cluster_tg.load_tigergraph(conn, graph, runner_utils.input_directory, runner_utils.output_directory)
+                  cluster_tg.load_tigergraph(conn, graph, runner_utils.input_directory, runner_utils.output_directory, runner_utils.tigergraph_nodes, runner_utils.tigergraph_edges, weighted)
                   tigergraph_loaded = True
-                weighted = runner_utils.weighted == "true"
                 run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix)
               else:
                 out_filename = out_prefix + ".out"
