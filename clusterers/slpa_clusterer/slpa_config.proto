@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package research_graph.in_memory;
+
+message SLPAClustererConfig {
+  optional int32 max_iteration = 1 [default = 100];
+  optional int32 par_threshold = 3 [default = 1000];
+  optional double prune_threshold = 2 [default = 0.2];
+  optional bool remove_nested = 5 [default = false];
+  optional int32 seed = 6 [default = 1234];
+}
