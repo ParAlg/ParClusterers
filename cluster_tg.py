@@ -19,7 +19,6 @@ def load_tigergraph(conn, filename, input_dir, output_dir, tigergraph_nodes, tig
   else:
     nodes = input_dir + tigergraph_nodes
     edges = input_dir + tigergraph_edges
-
   if not weighted:
     print(conn.gsql('''
     CREATE VERTEX Node (id INT PRIMARY KEY)
@@ -81,7 +80,7 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
         "maximum_iteration": maximum_iteration
       }
       if weighted:
-        params['wt_attr'] = 'weight'
+        params['weight_attribute'] = 'weight'
       res = feat.runAlgorithm("tg_louvain", params=params, threadLimit = thread)
     elif clusterer == 'TigerGraphWCC':
       params = {
