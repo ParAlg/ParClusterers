@@ -127,6 +127,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     stream_flag = True
     community_flag = False
     component_flag = False
+    overlapping_community_flag = False
     mutateProperty = ""
     print("Graph: ", graph_name,  ", Alg.: ", algorithm_name)
     sys.stdout.flush()
@@ -180,6 +181,28 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         mutateProperty = "kcorecommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
         res = gds.kcore.mutate(G, **mutate_kwargs)
+    elif algorithm_name.startswith("LabelPropagation"):
+      community_flag = True
+      stream_kwargs["maxIterations"]=maxIterations
+      # minCommunitySize
+      mutate_kwargs = stream_kwargs.copy()
+      if stream_flag:
+        res = gds.labelPropagation.stream(G, **stream_kwargs)
+      else:
+        mutateProperty = "labelpropagationcommunity" + config + str(thread)
+        mutate_kwargs["mutateProperty"] = mutateProperty
+        res = gds.labelPropagation.mutate(G, **mutate_kwargs)
+    # elif algorithm_name.startswith("SLPA"):
+    #   overlapping_community_flag = True
+    #   stream_kwargs["maxIterations"]=maxIterations
+    #   # minAssociationStrength TODO add flag
+    #   mutate_kwargs = stream_kwargs.copy()
+    #   if stream_flag:
+    #     res = gds.alpha.sllpa.stream(G, **stream_kwargs)
+    #   else:
+    #     mutateProperty = "SLPAcommunity" + config + str(thread)
+    #     mutate_kwargs["mutateProperty"] = mutateProperty
+    #     res = gds.labelPropagation.mutate(G, **mutate_kwargs)
     else:
       print("The algorithm ", algorithm_name, " is not available")
       raise Exception("The algorithm " + algorithm_name + " is not available")
@@ -222,6 +245,8 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         result = res.groupby('componentId')['nodeId'].apply(list).tolist()
       if (community_flag):
         result = res.groupby('communityId')['nodeId'].apply(list).tolist()
+      if overlapping_community_flag:
+        result = None
     
     if not (result is None):
       for cluster_list in result:

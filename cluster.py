@@ -6,10 +6,13 @@ import subprocess
 import re
 import itertools
 import cluster_nk
+import cluster_tg
 import runner_utils
 import cluster_neo4j
 import traceback
 import postprocess_clustering
+from pyTigerGraph import TigerGraphConnection
+
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -125,11 +128,26 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
 #./tree-clusters amazon.weighted 334863 > amazon.clusters
 #python2 grade-clusters.py amazon.communities amazon.clusters amazon.grading 
 
+def run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix):
+  if (runner_utils.gbbs_format == "true"):
+    raise ValueError("Tigergraph can only be run using edge list format")
+  use_input_graph = runner_utils.input_directory + graph
+  out_clustering = out_prefix + ".cluster"
+  out_filename = out_prefix + ".out"
+  out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted)
+  runner_utils.appendToFile("Tigergraph: \n", out_filename)
+  runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
+  runner_utils.appendToFile("Threads: " + str(thread) + "\n", out_filename)
+  runner_utils.appendToFile("Config: " + config + "\n", out_filename)
+  runner_utils.appendToFile(out_time, out_filename)
+
 def runAll(config_filename):
   runner_utils.readConfig(config_filename)
   
   for graph_idx, graph in enumerate(runner_utils.graphs):
     neo4j_graph_loaded = False
+    tigergraph_loaded = False
+    conn = None
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
       try:
         if clusterer.startswith("Snap"):
@@ -156,6 +174,18 @@ def runAll(config_filename):
                   neo4j_graph_loaded = True
                 weighted = runner_utils.weighted == "true"
                 runNeo4j(clusterer, graph, thread, config + ', num_rounds: ' + str(i), weighted, out_prefix)
+              elif clusterer.startswith("TigerGraph"):
+                if not tigergraph_loaded:
+                  conn = TigerGraphConnection(
+                      host='http://127.0.0.1',
+                      username='tigergraph',
+                      password='tigergraph',
+                  )
+                  cluster_tg.remove_tigergraph(conn)
+                  cluster_tg.load_tigergraph(conn, graph, runner_utils.input_directory, runner_utils.output_directory)
+                  tigergraph_loaded = True
+                weighted = runner_utils.weighted == "true"
+                run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix)
               else:
                 out_filename = out_prefix + ".out"
                 out_clustering = out_prefix + ".cluster"
@@ -173,6 +203,8 @@ def runAll(config_filename):
           traceback.print_exc()
     if neo4j_graph_loaded:
       cluster_neo4j.clearDB(graph)
+    if tigergraph_loaded:
+      cluster_tg.remove_tigergraph(conn)
 
 def main():
   args = sys.argv[1:]
