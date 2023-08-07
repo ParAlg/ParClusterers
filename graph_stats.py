@@ -124,17 +124,11 @@ def graph_fscore_individual(arg):
             box = ax.get_position()
             ax.set_position([box.x0, box.y0 + box.height * 0.5,
                         box.width, box.height * 0.6])
-<<<<<<< HEAD
             plt.xscale('log')
             plt.ylim(0,1)
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
             plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
             plt.xlabel('Cluster Time (Seconds)')
-=======
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), title = 'Config')
-            plt.ylabel('F Score (param : ' + str(sub_data.iloc[0]['fScoreParam']) + ')')
-            plt.xlabel('Cluster Time (Log Seconds)')
->>>>>>> master
             plt.title(clusterer + ' ' + graph + ' F-Score')
             plt.savefig(arg + '/' + graph + '_' + arg + '_' + clusterer + '_fscore_graph.pdf')            
 
