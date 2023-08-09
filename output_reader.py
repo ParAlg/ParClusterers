@@ -90,6 +90,8 @@ def read_out(filename, directory):
     for elem in run_info[1:]:
       if elem.startswith('Total Time:'):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+      elif elem.startswith('Clusterer:'):
+        runtime_dict['Clusterer Name'] = elem.split(' ')[-1].strip()
       elif elem.startswith('Config:'):
         runtime_dict['Config'] = elem.split(' ')[-1].strip()
       elif elem.startswith('Threads:'):
