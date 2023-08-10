@@ -10,6 +10,8 @@ CMAP = 'tab20'
 def graph_runtime_overall(arg):
     data = pd.read_csv(arg + '/runtimes.csv')
     data = data.fillna('None')
+    if len(data['Iteration'].unique()) > 1:
+        data = data[data['Iteration'] != 0]
     for graph in data['Input Graph'].unique():
         sub_data = data[data['Input Graph'] == graph]
         sub_data = sub_data.groupby(['Clusterer Name', 'Threads'], dropna=False)['Cluster Time'].mean()
