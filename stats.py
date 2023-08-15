@@ -23,6 +23,7 @@ def runStats(out_prefix, graph, graph_idx):
   "--input_clustering=" + in_clustering + " "
   "--output_statistics=" + out_statistics + " " + use_input_communities + " "
   "--statistics_config='" + runner_utils.stats_config + "'")
+  print(ss)
   out = runner_utils.shellGetOutput(ss)
 
 def runAll(config_filename, stats_config_filename):

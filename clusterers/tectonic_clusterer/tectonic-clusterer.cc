@@ -29,6 +29,11 @@ TectonicClusterer::Cluster(const ClustererConfig& config) const {
   const auto ordering_function = tectonic_config.ordering_function();
   bool match_real_tectonic = tectonic_config.match_real_tectonic();
 
+  std::cout << "threshold = " << threshold << std::endl;
+  std::cout << "eps = " << eps << std::endl;
+  std::cout << "ordering_function = " << ordering_function  << std::endl;
+  std::cout << "match_real_tectonic = " << match_real_tectonic << std::endl;
+
   parlay::sequence<gbbs::uintE> clusters;
   switch (ordering_function) {
     case TectonicClustererConfig::DEFAULT_DEGREE:
