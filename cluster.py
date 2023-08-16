@@ -241,9 +241,9 @@ def runAll(config_filename):
       cluster_tg.remove_tigergraph(conn)
     
     runtime_dataframe = pd.DataFrame(runtimes)
-    if not os.path.exists(runner_utils.runtime_output_directory):
-      os.makedirs(runner_utils.runtime_output_directory)
-    runtime_dataframe.to_csv(runner_utils.runtime_output_directory + '/runtimes.csv')
+    if not os.path.exists(runner_utils.csv_output_directory):
+      os.makedirs(runner_utils.csv_output_directory)
+    runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv')
 
 
 def main():

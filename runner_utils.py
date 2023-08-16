@@ -44,7 +44,7 @@ def readSystemConfig(filename):
           python_ver = split[1]
 
 def readConfig(filename):
-  global input_directory, output_directory, runtime_output_directory, clusterers, graphs, num_threads
+  global input_directory, output_directory, csv_output_directory, clusterers, graphs, num_threads
   global clusterer_configs, num_rounds, timeout, clusterer_config_names
   global gbbs_format
   global weighted
@@ -62,8 +62,8 @@ def readConfig(filename):
           input_directory = split[1]
         elif split[0].startswith("Output directory"):
           output_directory = split[1]
-        elif split[0].startswith("Runtime output directory"):
-          runtime_output_directory = split[1]
+        elif split[0].startswith("CSV output directory"):
+          csv_output_directory = split[1]
         elif split[0].startswith("Clusterers"):
           clusterers = [x.strip() for x in split[1].split(';')]
           clusterer_configs = len(clusterers)*[None]
@@ -111,10 +111,11 @@ def readConfig(filename):
 
 
 def readStatsConfig(filename):
-  global communities, stats_config
+  global communities, stats_config, deterministic
   communities = []
   stats_config_list = []
   stats_config = ""
+  deterministic = "false"
   with open(filename, "r") as in_file:
     for line in in_file:
       line = line.strip()
@@ -122,6 +123,8 @@ def readStatsConfig(filename):
       if split:
         if split[0].startswith("Input communities") and len(split) > 1:
           communities = [x.strip() for x in split[1].split(';')]
+        elif split[0].startswith("Deterministic") and len(split) > 1:
+          deterministic = split[1]
         elif split[0].startswith("statistics_config"):
           next_line = in_file.readline().strip()
           while next_line != "":
