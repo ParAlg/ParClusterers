@@ -52,17 +52,21 @@ def isNumber(s, modifier_index):
       except TypeError:
         return math.nan
 
-def plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier):
+def plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier, thread):
   out_statistics = out_prefix + ".stats"
   out_statistics_file = open(out_statistics, "r")
   out_statistics_string = out_statistics_file.read()
   out_statistics_file.close()
   parse_out_statistics = json.loads(out_statistics_string)
-  if (x_axis != "clusterTime"):
+  if (x_axis == "threads"):
+    xes[index].append(thread)
+  elif (x_axis != "clusterTime"):
     xes[index].append(isNumber(parse_out_statistics[x_axis], x_axis_modifier))
   else:
     xes[index].append(readClusterTime(out_prefix + ".out"))
-  if (y_axis != "clusterTime"):
+  if (y_axis == "threads"):
+    yes[index].append(thread)
+  elif (y_axis != "clusterTime"):
     yes[index].append(isNumber(parse_out_statistics[y_axis], y_axis_modifier))
   else:
     yes[index].append(readClusterTime(out_prefix + ".out"))
@@ -102,7 +106,7 @@ def configPlotAll(
               elif legend == "Config":
                 index = config_idx
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
-              plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier)
+              plotAllHelper(xes, yes, index, out_prefix, x_axis, x_axis_modifier, y_axis, y_axis_modifier, thread)
   plotAll(xes, yes, labels, x_axis + " " + x_axis_modifier, y_axis + " " + y_axis_modifier, runner_utils.output_directory + graph_name)
 
 def runAll(config_filename, stats_config_filename, graph_config_filename):
