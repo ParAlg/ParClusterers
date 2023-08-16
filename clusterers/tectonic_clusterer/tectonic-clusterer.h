@@ -179,6 +179,7 @@ inline size_t intersect_f_par_idx(Nghs* A, Nghs* B, const F& f) {
         // Edge i -> v = u -> v = offset[i] + iv_index
         // Edge i -> w = u -> w = offset[i] + u_idx
         // Edge v -> w = offset[v] + v_idx
+        // rank: i=u < v < w
         // f should be (uintE w, u_idx, v_idx)
         auto their_neighbors = DG.get_vertex(v).out_neighbors();
         auto f_tmp = [&](uintE w, size_t u_idx, size_t v_idx){
@@ -317,7 +318,7 @@ inline sequence<uintE> Triangle_degree_ordering_edge(Graph& G, double threshold,
     gbbs::write_add(&triangle_degrees[uw], 1);
     gbbs::write_add(&triangle_degrees[vw], 1);
     if (match_real_tectonic) {
-      gbbs::write_add(&vertex_triangle_degrees[u], 2);
+      gbbs::write_add(&vertex_triangle_degrees[u], 2); // why add 2?
       gbbs::write_add(&vertex_triangle_degrees[v], 2);
       gbbs::write_add(&vertex_triangle_degrees[w], 2);
     }
