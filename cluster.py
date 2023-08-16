@@ -12,6 +12,7 @@ import cluster_neo4j
 import traceback
 import postprocess_clustering
 from pyTigerGraph import TigerGraphConnection
+import pandas as pd
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round):
@@ -74,7 +75,7 @@ def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix):
 
 
 # Graph must be in edge format
-def runTectonic(clusterer, graph, thread, config, out_prefix):
+def runTectonic(clusterer, graph, thread, config, out_prefix, runtime_dict):
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("Tectonic can only be run using edge list format")
   runner_utils.readSystemConfig(sys.argv[2])
@@ -95,27 +96,45 @@ def runTectonic(clusterer, graph, thread, config, out_prefix):
           threshold = config_split[1]
       # elif config_split[0].startswith("no_pruning"):
       #   no_pruning = True if config_split[1].startswith("True") else False
-  # Timing from here
-  start_time = time.time()
-  # relabel the graph so the node vertices are consecutive. The result format: each line i is the neighbors of i, and each edge only appear once in the smaller id's line.
-  num_vert = runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace" + " " + out_prefix + ".pickle")
-  num_vert = num_vert.strip()
-  runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
-  runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
-  # if (no_pruning):
-  runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/weighted-edges-no-mixed.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
-  cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter-no-mixed " + out_prefix + ".weighted " + num_vert + " " + threshold)
-  # else:
-  #   runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
-  #   cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
-  end_time = time.time()
-  # Output running time to out_filename
-  runner_utils.appendToFile(cluster, out_clustering_tmp)
-  runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering + " " + out_prefix + ".pickle")
-  runner_utils.appendToFile("Tectonic: \n", out_filename)
-  runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
-  runner_utils.appendToFile(config + "\n", out_filename)
-  runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time) + "\n", out_filename)
+
+  if runner_utils.postprocess_only == "true":
+    print("postprocessing..." + out_filename)
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith('Cluster Time:'):
+          runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+  else:
+    # Timing from here
+    start_time = time.time()
+    # relabel the graph so the node vertices are consecutive. The result format: each line i is the neighbors of i, and each edge only appear once in the smaller id's line.
+    num_vert = runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-graph-no-comm.py " + use_input_graph + " " + out_prefix + ".mace" + " " + out_prefix + ".pickle")
+    num_vert = num_vert.strip()
+    runner_utils.shellGetOutput("external/Tectonic/mace/mace C -l 3 -u 3 "+ out_prefix + ".mace " + out_prefix + ".triangles")
+    runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/mace-to-list.py " + out_prefix + ".mace " + out_prefix + ".edges")
+    # if (no_pruning):
+    runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/weighted-edges-no-mixed.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
+    cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter-no-mixed " + out_prefix + ".weighted " + num_vert + " " + threshold)
+    # else:
+    #   runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/weighted-edges.py " + out_prefix + ".triangles " + out_prefix + ".edges " + out_prefix + ".weighted " + out_prefix + ".mixed " + num_vert)
+    #   cluster = runner_utils.shellGetOutput("external/Tectonic/tree-clusters-parameter " + out_prefix + ".weighted " + num_vert + " " + threshold)
+    end_time = time.time()
+    # Output running time to out_filename
+    runner_utils.appendToFile(cluster, out_clustering_tmp)
+    runner_utils.shellGetOutput(runner_utils.python_ver + " external/Tectonic/relabel-clusters.py " + use_input_graph + " " + out_clustering_tmp + " " + out_clustering + " " + out_prefix + ".pickle")
+    runner_utils.appendToFile("Tectonic: \n", out_filename)
+    runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
+    runner_utils.appendToFile(config + "\n", out_filename)
+    runner_utils.appendToFile("Cluster Time: " + str(end_time - start_time) + "\n", out_filename)
+    runtime_dict['Cluster Time'] = str(end_time - start_time)
+
+    ## remove intermediate files
+    runner_utils.shellGetOutput("rm " + out_prefix + ".triangles ")
+    runner_utils.shellGetOutput("rm " + out_prefix + ".mace ")
+    runner_utils.shellGetOutput("rm " + out_prefix + ".edges ")
+    runner_utils.shellGetOutput("rm " + out_prefix + ".weighted ")
+    runner_utils.shellGetOutput("rm " + out_prefix + ".tmpcluster ")
+    runner_utils.shellGetOutput("rm " + out_prefix + ".pickle")
 
 #cd external/Tectonic/
 #cd mace; make
@@ -144,6 +163,7 @@ def run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix)
 def runAll(config_filename):
   runner_utils.readConfig(config_filename)
   
+  runtimes = []
   for graph_idx, graph in enumerate(runner_utils.graphs):
     neo4j_graph_loaded = False
     tigergraph_loaded = False
@@ -160,13 +180,19 @@ def runAll(config_filename):
           config_postfix = "}" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
           for config_idx, config in enumerate(configs):
             for i in range(runner_utils.num_rounds):
+              runtime_dict = {}
+              runtime_dict['Clusterer Name'] = clusterer
+              runtime_dict["Input Graph"] = graph
+              runtime_dict["Threads"] = thread
+              runtime_dict["Config"] = config
+              runtime_dict["Round"] = i
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
               if not os.path.exists(runner_utils.output_directory):
                 os.makedirs(runner_utils.output_directory)
               if clusterer.startswith("NetworKit"):
                 cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix)
               elif clusterer == "Tectonic":
-                runTectonic(clusterer, graph, thread, config, out_prefix)
+                runTectonic(clusterer, graph, thread, config, out_prefix, runtime_dict)
               elif clusterer.startswith("Neo4j"):
                 if not neo4j_graph_loaded:
                   use_input_graph = runner_utils.input_directory + graph
@@ -195,9 +221,17 @@ def runAll(config_filename):
                 "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --float_weighted=" + runner_utils.weighted + " --clusterer_name=" + clusterer + " "
                 "--clusterer_config='" + config_prefix + config + config_postfix + "' "
                 "--output_clustering=" + out_clustering)
-                out = runner_utils.shellGetOutput(ss)
-                runner_utils.appendToFile(ss + "\n", out_filename)
-                runner_utils.appendToFile(out, out_filename)
+                if runner_utils.postprocess_only != "true":
+                  out = runner_utils.shellGetOutput(ss)
+                  runner_utils.appendToFile(ss + "\n", out_filename)
+                  runner_utils.appendToFile(out, out_filename)
+                print("postprocessing... " + out_filename)
+                with open(out_filename,'r') as f:
+                  run_info = f.readlines()
+                  for elem in run_info[1:]:
+                    if elem.startswith('Cluster Time:'):
+                      runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+              runtimes.append(runtime_dict)
       except Exception as e:
           # Print the stack trace
           traceback.print_exc()
@@ -205,6 +239,12 @@ def runAll(config_filename):
       cluster_neo4j.clearDB(graph)
     if tigergraph_loaded:
       cluster_tg.remove_tigergraph(conn)
+    
+    runtime_dataframe = pd.DataFrame(runtimes)
+    if not os.path.exists(runner_utils.runtime_output_directory):
+      os.makedirs(runner_utils.runtime_output_directory)
+    runtime_dataframe.to_csv(runner_utils.runtime_output_directory + '/runtimes.csv')
+
 
 def main():
   args = sys.argv[1:]

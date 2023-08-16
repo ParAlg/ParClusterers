@@ -44,12 +44,14 @@ def readSystemConfig(filename):
           python_ver = split[1]
 
 def readConfig(filename):
-  global input_directory, output_directory, clusterers, graphs, num_threads
+  global input_directory, output_directory, runtime_output_directory, clusterers, graphs, num_threads
   global clusterer_configs, num_rounds, timeout, clusterer_config_names
   global gbbs_format
   global weighted
   global tigergraph_edges, tigergraph_nodes
+  global postprocess_only
   num_threads = num_rounds = timeout = gbbs_format = weighted = tigergraph_edges = tigergraph_nodes = None
+  postprocess_only = "false"
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
@@ -60,6 +62,8 @@ def readConfig(filename):
           input_directory = split[1]
         elif split[0].startswith("Output directory"):
           output_directory = split[1]
+        elif split[0].startswith("Runtime output directory"):
+          runtime_output_directory = split[1]
         elif split[0].startswith("Clusterers"):
           clusterers = [x.strip() for x in split[1].split(';')]
           clusterer_configs = len(clusterers)*[None]
@@ -80,6 +84,8 @@ def readConfig(filename):
           tigergraph_nodes = tigergraph_files[1]
         elif split[0].startswith("Wighted") and len(split) > 1:
           weighted = split[1]
+        elif split[0].startswith("Postprocess only"):
+          postprocess_only = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0] == clusterer_name:
