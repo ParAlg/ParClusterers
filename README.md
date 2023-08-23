@@ -13,6 +13,9 @@ bazel build //clusterers:cluster-in-memory_main
 
 ```
 
+# Config Files
+
+Should not have dangling `;` at the end.
 
 
 The parameters for each Clusterers
