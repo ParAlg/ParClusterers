@@ -185,7 +185,7 @@ def extractNetworKitTime(out):
       return line_split[3]
   return ""
 
-def runNetworKit(clusterer, graph, thread, config, out_prefix):
+def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("NetworKit can only be run using edge list format")
   out_filename = out_prefix + ".out"
@@ -194,47 +194,55 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix):
   # if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
   #   raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
   # G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
-  reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
-  G = reader.read(use_input_graph)
-  # print([edge for edge in G.iterEdgesWeights()])
-  if (thread != "" and thread != "ALL"):
-    nk.setNumberOfThreads(int(thread))
-  # This is k-core with a thresholding argument (double-check)
-  #nk.community.kCoreCommunityDetection(G, k, algo=None, inspect=False)
-  cluster_flag = False
-  if (clusterer == "NetworKitPLM"):
-    print_time, communities = runNetworKitPLM(G, config)
-  elif (clusterer == "NetworKitPLP"):
-    print_time, communities = runNetworKitPLP(G, config)
-  elif (clusterer == "NetworKitLPDegreeOrdered"):
-    print_time, communities = runNetworKitLPDegreeOrdered(G, config)
-  elif (clusterer == "NetworKitParallelLeiden"):
-    print_time, communities = runNetworKitParallelLeiden(G, config)
-  elif (clusterer == "NetworKitConnectivity"):
-    cluster_flag = True
-    print_time, clusters = runNetworKitConnectivity(G, config)
-  elif (clusterer == "NetworKitKCore"):
-    cluster_flag = True
-    print_time, clusters = runNetworKitKCore(G, config)
-  else:
-    raise ValueError("NetworKit clusterer not supported")
-  runner_utils.appendToFile('NetworKit: \n', out_filename)
-  runner_utils.appendToFile('Graph: ' + graph + '\n', out_filename)
-  runner_utils.appendToFile('Clusterer: ' + clusterer + '\n', out_filename)
-  runner_utils.appendToFile('Threads: ' + thread + '\n', out_filename)
-  runner_utils.appendToFile('Config: ' + config + '\n', out_filename)
-  runner_utils.appendToFile(print_time, out_filename)
-  runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
-  # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
-  #   return
-  if not cluster_flag:
-    communities.compact()
-    cluster_index = 0
-    cluster_list = communities.getMembers(cluster_index)
-    while (cluster_list):
-      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-      cluster_index += 1
+  if not runner_utils.postprocess_only:
+    reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
+    G = reader.read(use_input_graph)
+    # print([edge for edge in G.iterEdgesWeights()])
+    if (thread != "" and thread != "ALL"):
+      nk.setNumberOfThreads(int(thread))
+    # This is k-core with a thresholding argument (double-check)
+    #nk.community.kCoreCommunityDetection(G, k, algo=None, inspect=False)
+    cluster_flag = False
+    if (clusterer == "NetworKitPLM"):
+      print_time, communities = runNetworKitPLM(G, config)
+    elif (clusterer == "NetworKitPLP"):
+      print_time, communities = runNetworKitPLP(G, config)
+    elif (clusterer == "NetworKitLPDegreeOrdered"):
+      print_time, communities = runNetworKitLPDegreeOrdered(G, config)
+    elif (clusterer == "NetworKitParallelLeiden"):
+      print_time, communities = runNetworKitParallelLeiden(G, config)
+    elif (clusterer == "NetworKitConnectivity"):
+      cluster_flag = True
+      print_time, clusters = runNetworKitConnectivity(G, config)
+    elif (clusterer == "NetworKitKCore"):
+      cluster_flag = True
+      print_time, clusters = runNetworKitKCore(G, config)
+    else:
+      raise ValueError("NetworKit clusterer not supported")
+    runner_utils.appendToFile('NetworKit: \n', out_filename)
+    runner_utils.appendToFile('Graph: ' + graph + '\n', out_filename)
+    runner_utils.appendToFile('Clusterer: ' + clusterer + '\n', out_filename)
+    runner_utils.appendToFile('Threads: ' + thread + '\n', out_filename)
+    runner_utils.appendToFile('Config: ' + config + '\n', out_filename)
+    runner_utils.appendToFile(print_time, out_filename)
+    runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
+    # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
+    #   return
+    if not cluster_flag:
+      communities.compact()
+      cluster_index = 0
       cluster_list = communities.getMembers(cluster_index)
-  else:
-    for cluster_list in clusters:
-      runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+      while (cluster_list):
+        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+        cluster_index += 1
+        cluster_list = communities.getMembers(cluster_index)
+    else:
+      for cluster_list in clusters:
+        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+
+  print("postprocessing..." + out_filename)
+  with open(out_filename,'r') as f:
+    run_info = f.readlines()
+    for elem in run_info[1:]:
+      if elem.startswith('Total Time:'):
+        runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()

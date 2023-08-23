@@ -54,7 +54,14 @@ def runAll(config_filename, stats_config_filename):
           if runner_utils.deterministic and i != 0:
             continue
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
-          runStats(out_prefix, graph, graph_idx)
+          stats_dict = {}
+          stats_dict['Clusterer Name'] = clusterer
+          stats_dict["Input Graph"] = graph
+          stats_dict["Threads"] = 1
+          stats_dict["Config"] = config
+          stats_dict["Round"] = i
+          runStats(out_prefix, graph, graph_idx, stats_dict)
+          stats.append(stats_dict)
         continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
         if runner_utils.deterministic and thread != runner_utils.num_threads[0]:
