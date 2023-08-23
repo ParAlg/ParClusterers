@@ -100,6 +100,7 @@ inline absl::Status ComputeARI(
 
   std::atomic<size_t> nChoose2ContingencySum;
   nChoose2ContingencySum.store(0);
+  // linear time output two cluster ids, and use a group by
   parlay::parallel_for(0, num_cluster_1, [&](size_t i){
   parlay::parallel_for(0, num_cluster_2, [&](size_t j){
     size_t val = 0;
