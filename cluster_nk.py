@@ -244,5 +244,5 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
   with open(out_filename,'r') as f:
     run_info = f.readlines()
     for elem in run_info[1:]:
-      if elem.startswith('Total Time:'):
+      if elem.startswith('Cluster Time:'):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()

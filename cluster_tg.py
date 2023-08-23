@@ -137,5 +137,5 @@ if __name__ == "__main__":
       username='tigergraph',
       password='tigergraph',
   )
-  load_tigergraph(conn, 'iris_graph.txt', '/home/jamisonmeindl/ParClusterers/', '/home/jamisonmeindl/ParClusterers/')
+  load_tigergraph(conn, 'com-lj.ungraph.txt', '/home/sy/mount-data/', '/home/sy/ParClusterers/results/', None, None, False)
   remove_tigergraph(conn)
