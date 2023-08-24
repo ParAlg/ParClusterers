@@ -21,6 +21,15 @@ bazel build //clusterers:cluster-in-memory_main
 Num clusters: the number of clusters. Note that this number also includes singleton zero-degree node clusters, even if `include_zero_deg_v` is set to true.
 
 
+# Input
+
+Input can be in either edge list format or GBBS format. SNAP edge list format can be converted to GBBS format like this;
+
+```bash
+cd ParClusterers/external/gbbs
+bazel run //utils:snap_converter -- -s -i com-friendster.ungraph.txt -o com-friendster.gbbs.txt
+```
+
 # Config Files
 
 Should not have dangling `;` at the end.
