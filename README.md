@@ -13,6 +13,15 @@ bazel build //clusterers:cluster-in-memory_main
 
 ```
 
+# Flags
+
+`include_zero_deg_v`: default to false. Use this flag if zero degree vertices should be included in the *output flat clustering*.
+
+
+# Output
+Num clusters: the number of clusters. Note that this number also includes singleton zero-degree node clusters, even if `include_zero_deg_v` is set to true.
+
+
 # Config Files
 
 Should not have dangling `;` at the end.

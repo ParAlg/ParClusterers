@@ -73,6 +73,10 @@ ABSL_FLAG(bool, is_hierarchical, false,
           "Use this flag if a hierarchical clustering is desired. Not all "
           "clusterers suppoort a hierarchical clustering.");
 
+ABSL_FLAG(bool, include_zero_deg_v, false,
+          "Use this flag if zero degree vertices should be included in the  "
+          "output flat clustering.");
+
 namespace research_graph {
 namespace in_memory {
 namespace {
@@ -89,7 +93,7 @@ void PrintTime(std::chrono::steady_clock::time_point begin,
 }
 
 absl::Status WriteClustering(const char* filename,
-                             InMemoryClusterer::Clustering clustering) {
+                             const InMemoryClusterer::Clustering clustering) {
   std::ofstream file{filename};
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
@@ -99,6 +103,27 @@ absl::Status WriteClustering(const char* filename,
       file << node_id << "\t";
     }
     file << std::endl;
+  }
+  return absl::OkStatus();
+}
+
+absl::Status WriteClusteringNoZeroDegree(const char* filename,
+                             const InMemoryClusterer::Clustering clustering, 
+                             research_graph::in_memory::InMemoryClusterer::Graph* G) {
+  std::ofstream file{filename};
+  if (!file.is_open()) {
+    return absl::NotFoundError("Unable to open file.");
+  }
+  for (gbbs::uintE i = 0; i < clustering.size(); i++) {
+    bool flag = false;
+    for (auto node_id : clustering[i]) {
+      auto degree = G->Degree(node_id);
+      if (degree > 0){
+        flag = true;
+        file << node_id << "\t";
+      }
+    }
+    if (flag) file << std::endl;
   }
   return absl::OkStatus();
 }
@@ -194,6 +219,7 @@ absl::Status Main() {
   bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph);
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
   bool is_gbbs_format = absl::GetFlag(FLAGS_is_gbbs_format);
+  bool include_zero_degree_v = absl::GetFlag(FLAGS_include_zero_deg_v);
 
   std::size_t n = 0;
   if (!is_gbbs_format) {
@@ -210,6 +236,7 @@ absl::Status Main() {
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Graph: " << input_file << std::endl;
   std::cout << "Num vertices: " << n << std::endl;
+  std::cout << "Cluster include zero-deg vertices: " << (include_zero_degree_v ? "true" : "false") << std::endl;
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
 
@@ -236,7 +263,10 @@ absl::Status Main() {
   if(output_file == "") return absl::OkStatus();
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  return WriteClustering(output_file.c_str(), clusterings[0]);
+  if (include_zero_degree_v){
+    return WriteClustering(output_file.c_str(), clusterings[0]);
+  }
+  return WriteClusteringNoZeroDegree(output_file.c_str(), clusterings[0], clusterer->MutableGraph());
 }
 
 }  // namespace
