@@ -433,6 +433,8 @@ KCoreClusterer::Cluster(const ClustererConfig& config) const {
   int threshold = kcore_config.threshold();
   auto cores = gbbs::KCore(*(graph_.Graph()));
 
+  std::cout << " threshold = " << threshold << std::endl;
+
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   parlay::parallel_for(0, n, [&] (size_t i) {
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
