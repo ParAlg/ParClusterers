@@ -81,11 +81,12 @@ def runAll(config_filename, stats_config_filename):
             stats_dict["Config"] = config
             stats_dict["Round"] = i
             runStats(out_prefix, graph, graph_idx, stats_dict)
+            stats_dict["Ground Truth"] = runner_utils.communities[graph_idx]
             stats.append(stats_dict)
   stats_dataframe = pd.DataFrame(stats)
   if not os.path.exists(runner_utils.csv_output_directory):
     os.makedirs(runner_utils.csv_output_directory)
-  stats_dataframe.to_csv(runner_utils.csv_output_directory + '/stats.csv')
+  stats_dataframe.to_csv(runner_utils.csv_output_directory + '/stats.csv', mode='a')
 
 def main():
   args = sys.argv[1:]

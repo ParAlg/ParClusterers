@@ -30,6 +30,11 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
   gbbs::uintE par_threshold = labelprop_config.par_threshold();
   bool async = labelprop_config.async();
 
+std::cout << "max_iteration: " << max_iteration << std::endl;
+std::cout << "update_threshold: " << update_threshold << std::endl;
+std::cout << "par_threshold: " << par_threshold << std::endl;
+std::cout << "async: " << async << std::endl;
+
   if(update_threshold < 0){
     return absl::FailedPreconditionError("update_threshold must be non-negative");
   }
@@ -148,6 +153,7 @@ LabelPropagationClusterer::Cluster(const ClustererConfig& config) const {
     } // end while
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
+  std::cout << "Num iterations = " << n_iterations << std::endl;
   std::cout << "Num clusters = " << ret.size() << std::endl;
   return ret;
 }

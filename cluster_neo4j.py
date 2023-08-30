@@ -87,6 +87,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
   gamma = 1.0
   theta = 0.01
   minAssociationStrength = 0.2
+  minCommunitySize = 0
   split = [x.strip() for x in config.split(',')]
   for config_item in split:
     config_split = [x.strip() for x in config_item.split(':')]
@@ -104,6 +105,8 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         gamma = float(config_split[1])
       if config_split[0].startswith("theta"):
         theta = float(config_split[1])
+      if config_split[0].startswith("minCommunitySize"):
+        minCommunitySize = int(config_split[1])
 
   f = io.StringIO()
   with redirect_stdout(f):
@@ -197,7 +200,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     elif algorithm_name.startswith("LabelPropagation"):
       community_flag = True
       stream_kwargs["maxIterations"]=maxIterations
-      # minCommunitySize
+      stream_kwargs["minCommunitySize"]=minCommunitySize
       mutate_kwargs = stream_kwargs.copy()
       if stream_flag:
         res = gds.labelPropagation.stream(G, **stream_kwargs)

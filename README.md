@@ -44,3 +44,11 @@ The parameters for each Clusterers
 
 ## KCoreClusterer
 - `threshold`: if (u,v) both have core number >= threshold, they are connected.
+
+## Label Propagation
+
+- max_iteration: maximum iteration to run. If labels converges, can also stop early.
+- update_threshold: stop if less than update_threshold number of nodes need to be updated.
+
+#### Neo4j
+- minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.

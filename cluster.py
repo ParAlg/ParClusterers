@@ -274,7 +274,7 @@ def runAll(config_filename):
     runtime_dataframe = pd.DataFrame(runtimes)
     if not os.path.exists(runner_utils.csv_output_directory):
       os.makedirs(runner_utils.csv_output_directory)
-    runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv')
+    runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv', mode='a')
 
 
 def main():
