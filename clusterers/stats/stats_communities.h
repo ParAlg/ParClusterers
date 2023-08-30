@@ -41,7 +41,7 @@ inline absl::Status ReadCommunities(const char* filename,
   return absl::OkStatus();
 }
 
-inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& communities, const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats, const ClusteringStatsConfig& clustering_stats_config) {
+inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& communities, const InMemoryClusterer::Clustering& clustering_, ClusteringStatistics* clustering_stats, const ClusteringStatsConfig& clustering_stats_config) {
   const bool compute_precision_recall = clustering_stats_config.compute_precision_recall();
   if (!compute_precision_recall) {
     return absl::OkStatus();
@@ -49,6 +49,12 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
 
   const double f_score = clustering_stats_config.f_score_param() != 0 ? clustering_stats_config.f_score_param() : 1;
   clustering_stats->set_f_score_param(f_score);
+
+  auto clustering = clustering_;
+  // Pre-sort clusters to optimize the inner loop
+  for (auto& cluster : clustering) {
+    std::sort(cluster.begin(), cluster.end());
+  }
 
   // precision = num correct results (matches b/w clustering and comm) / num returned results (in clustering)
   // recall = num correct results (matches b/w clustering and comm) / num relevant results (in comm)
@@ -70,8 +76,8 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     std::size_t max_idx = 0;
     // Find the community in communities that has the greatest intersection with cluster
     for (std::size_t i = 0; i < clustering.size(); i++) {
-      auto cluster = clustering[i];
-      std::sort(cluster.begin(), cluster.end());
+      const auto& cluster = clustering[i];
+      // std::sort(cluster.begin(), cluster.end());
       auto it = std::set_intersection(cluster.begin(), cluster.end(), 
         community.begin(), community.end(), intersect.begin());
       std::size_t it_size = it - intersect.begin();

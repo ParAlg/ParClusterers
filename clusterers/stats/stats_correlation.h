@@ -72,7 +72,8 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
   size_t n = graph.Graph()->n;
   const google::protobuf::RepeatedField<double>& resolution = clustering_stats_config.modularity_resolutions();
 
-  for(size_t k = 0; k < resolution.size(); k++){
+  std::vector<double> modularities(resolution.size());
+  parlay::parallel_for(0, resolution.size(), [&](std::size_t k){
     double total_edge_weight = 0;
     double modularity = 0;
     for (std::size_t i = 0; i < n; i++) {
@@ -86,16 +87,26 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
       vtx.out_neighbors().map(map_out, false);
     }
     //modularity = modularity / 2; // avoid double counting
-    for (std::size_t i = 0; i < clustering.size(); i++) {
-      double degree = 0;
-      for (std::size_t j = 0; j < clustering[i].size(); j++) {
+
+    auto modularity_deltas = parlay::delayed_seq<double>(clustering.size(), [&](std::size_t i){
+      auto degrees = parlay::delayed_seq<double>(clustering[i].size(), [&](std::size_t j){
         auto vtx_id = clustering[i][j];
         auto vtx = graph.Graph()->get_vertex(vtx_id);
-        degree += vtx.out_degree();
-      }
-      modularity -= (resolution[k] * degree * degree) / (total_edge_weight);
-    }
+        return vtx.out_degree();
+      });
+      double degree = parlay::reduce(degrees);
+      return (resolution[k] * degree * degree) / (total_edge_weight);
+    });
+    double modularity_delta = parlay::reduce(modularity_deltas);
+
+    modularity -= modularity_delta;
+
     modularity = modularity / (total_edge_weight);
+    // clustering_stats->add_modularity_objective(modularity);
+    modularities[k] = modularity;
+  }); 
+
+  for (auto modularity: modularities){
     clustering_stats->add_modularity_objective(modularity);
   }
   return absl::OkStatus();
