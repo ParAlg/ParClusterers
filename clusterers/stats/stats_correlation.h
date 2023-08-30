@@ -74,18 +74,28 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
 
   std::vector<double> modularities(resolution.size());
   parlay::parallel_for(0, resolution.size(), [&](std::size_t k){
-    double total_edge_weight = 0;
-    double modularity = 0;
-    for (std::size_t i = 0; i < n; i++) {
+    parlay::sequence<double> edge_weights(n, 0);  // Initialized with zeros
+    parlay::sequence<double> modularities_tmp(n, 0);
+
+    parlay::parallel_for(0, n, [&](std::size_t i) {
       auto vtx = graph.Graph()->get_vertex(i);
-      auto map_out = [&](gbbs::uintE u, gbbs::uintE nbhr, float w){
-        total_edge_weight++;
-        if (cluster_ids[i] == cluster_ids[nbhr]) {
-          modularity++;
-        }
+      double local_edge_weight = 0;
+      double local_modularity = 0;
+      auto map_out = [&](gbbs::uintE u, gbbs::uintE nbhr, float w) {
+          local_edge_weight++;
+          if (cluster_ids[i] == cluster_ids[nbhr]) {
+              local_modularity++;
+          }
       };
       vtx.out_neighbors().map(map_out, false);
-    }
+      edge_weights[i] = local_edge_weight;
+      modularities_tmp[i] = local_modularity;
+    });
+
+    // Accumulate the results using parallel reduction
+    const double total_edge_weight = parlay::reduce(edge_weights);
+    double modularity = parlay::reduce(modularities_tmp);
+
     //modularity = modularity / 2; // avoid double counting
 
     auto modularity_deltas = parlay::delayed_seq<double>(clustering.size(), [&](std::size_t i){
@@ -102,7 +112,6 @@ inline absl::Status ComputeModularityObjective(const GbbsGraph& graph,
     modularity -= modularity_delta;
 
     modularity = modularity / (total_edge_weight);
-    // clustering_stats->add_modularity_objective(modularity);
     modularities[k] = modularity;
   }); 
 
