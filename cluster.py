@@ -199,6 +199,7 @@ def runAll(config_filename):
             runtime_dict["Threads"] = 1
             runtime_dict["Config"] = ""
             runtime_dict["Round"] = i
+            runtime_dict['Num Iterations'] = -1
             runSnap(clusterer, graph, graph_idx, i, runtime_dict)
             runtimes.append(runtime_dict)
           continue
@@ -214,6 +215,7 @@ def runAll(config_filename):
               runtime_dict["Threads"] = thread
               runtime_dict["Config"] = config
               runtime_dict["Round"] = i
+              runtime_dict['Num Iterations'] = -1
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
               if not os.path.exists(runner_utils.output_directory):
                 os.makedirs(runner_utils.output_directory)

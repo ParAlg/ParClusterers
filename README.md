@@ -55,3 +55,6 @@ TODO: remove async? async seeems to be always better.
 
 #### Neo4j
 - minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.
+
+#### NetWorkIt LPDegreeOrdered
+ Stop when < n/1e5 nodes need to be upadted.
