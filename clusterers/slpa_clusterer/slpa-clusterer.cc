@@ -44,10 +44,21 @@ gbbs::uintE speak_sequential(const gbbs::uintE v, const std::map<gbbs::uintE, st
 }
 
 
-
+        // for (size_t j = 0; j < sets.size(); ++j) {
+        //   if (isMaximal && i != j) {
+        //       const auto& otherSet = sets[j];
+        //       if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+        //           if (set.size() == otherSet.size()) { // same set
+        //               isMaximal = i < j;
+        //           } else {
+        //               isMaximal = false;
+        //               break;
+        //           }
+        //       }
+        //   }
+        // }
 SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gbbs::uintE>>& sets) const {
     std::vector<bool> flags(sets.size(), true);
-      double max_d = 0;
     auto start = std::chrono::high_resolution_clock::now();
     parlay::parallel_for(0, sets.size(), [&](size_t i){
         const auto& set = sets[i];
@@ -63,8 +74,6 @@ SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gb
                   isMaximal = false;
                 }
               }
-              // 
-
             }
         });
         flags[i] = isMaximal;
@@ -72,7 +81,7 @@ SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gb
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     
-    // std::cout << "Time taken by function: " << duration.count() / 1e6 << " seconds" << std::endl;
+    std::cout << "Time taken by function: " << duration.count() / 1e6 << " seconds" << std::endl;
 
     SLPAClusterer::Clustering maximalSets;
     for (int i=0;i<sets.size();++i){
@@ -114,7 +123,7 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
   //   ret[i] = std::vector(grouped.second.begin(), grouped.second.end());
   // });
 
-  if(remove_nested){
+  if(remove_nested && prune_threshold <= 0.5){ // impossible to have nested cluster if prune_threshold >0.5
     std::vector<std::set<gbbs::uintE>> sets;
     for (std::size_t i=0; i<pairs.size(); i++) {
       auto& cluster_i = pairs[i].first;
