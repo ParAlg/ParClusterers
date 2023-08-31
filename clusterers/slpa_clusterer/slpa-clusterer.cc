@@ -131,12 +131,14 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
   double prune_threshold = slpa_config.prune_threshold();
   bool remove_nested = slpa_config.remove_nested();
 
+  std::cout << "max_iteration: " << max_iteration << std::endl;
+  std::cout << "par_threshold: " << par_threshold << std::endl;
+  std::cout << "prune_threshold: " << prune_threshold << std::endl;
+  std::cout << "remove_nested: " << (remove_nested ? "true" : "false") << std::endl;
+
   int seed = slpa_config.seed();
 
   auto memory = parlay::sequence<std::map<gbbs::uintE, size_t>>::from_function(n, [&] (size_t i) { return std::map<gbbs::uintE, size_t>{{i, 1}}; });
-  
-  // auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
-  // auto is_active = parlay::sequence<bool>(n);
   
   for (int n_iterations = 0; n_iterations < max_iteration; n_iterations++) {
       // std::cout << "Round " << n_iterations << std::endl;
@@ -147,7 +149,10 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
       // std::cout << "Node " << node_id << std::endl;
       auto degree =  graph_.Graph()->get_vertex(node_id).out_degree();
       gbbs::uintE heaviest;
-      if(degree < par_threshold){
+      if(degree == 0){
+          heaviest = node_id;
+      // } else {
+      } else if(degree < par_threshold){
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto listen_f = [&] (const auto& u, const auto& v, const auto& wgh) {
