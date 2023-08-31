@@ -34,6 +34,7 @@ bazel run //utils:snap_converter -- -s -i com-friendster.ungraph.txt -o com-frie
 
 Should not have dangling `;` at the end.
 
+`Write clustering`: if set to false, do not write clustering out.
 
 The parameters for each Clusterers
 

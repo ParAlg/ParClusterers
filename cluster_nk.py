@@ -3,6 +3,31 @@ import runner_utils
 import time
 import io
 from contextlib import redirect_stdout
+import os
+import sys
+
+def capture_output(func, *args, **kwargs):
+    # Backup the original stdout
+    original_stdout_fd = os.dup(sys.stdout.fileno())
+    # Create a pipe
+    read_fd, write_fd = os.pipe()
+
+    # Redirect stdout to the write end of the pipe
+    os.dup2(write_fd, sys.stdout.fileno())
+    os.close(write_fd)
+
+    try:
+        result = func(*args, **kwargs)
+    finally:
+        # Restore the original stdout
+        os.dup2(original_stdout_fd, sys.stdout.fileno())
+        os.close(original_stdout_fd)
+
+    # Read the captured output from the pipe
+    with os.fdopen(read_fd, 'r') as pipe:
+        captured = pipe.read()
+
+    return captured, result
 
 # pip3 install --upgrade pip
 # pip3 install cmake cython
@@ -62,26 +87,36 @@ def runNetworKitPLP(G, config):
     kwargs["updateThreshold"] = use_updateThreshold
   if use_maxIterations:
     kwargs["maxIterations"] = use_maxIterations
-  f = io.StringIO()
-  with redirect_stdout(f):
-    print(config)
-    start_time = time.time()
-    communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
-    end_time = time.time()
-    print("Communities detected in %f \n" % (end_time - start_time))
-  out = f.getvalue()
+  # f = io.StringIO()
+  # with redirect_stdout(f):
+  #   print(config)
+  #   start_time = time.time()
+  #   communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
+  #   end_time = time.time()
+  #   print("Communities detected in %f \n" % (end_time - start_time))
+  # out = f.getvalue()
+  print("running NetworKitPLP...")
+  start_time = time.time()
+  out, communities = capture_output(nk.community.detectCommunities, G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
+  end_time = time.time()
+  out += "\nCommunities detected in %f \n" % (end_time - start_time)
   return out, communities
 
 
 def runNetworKitLPDegreeOrdered(G, config):
-  f = io.StringIO()
-  with redirect_stdout(f):
-    print(config)
-    start_time = time.time()
-    communities = nk.community.detectCommunities(G, algo=nk.community.LPDegreeOrdered(G))
-    end_time = time.time()
-    print("Communities detected in %f \n" % (end_time - start_time))
-  out = f.getvalue()
+  # f = io.StringIO()
+  # with redirect_stdout(f):
+  #   print(config)
+  #   start_time = time.time()
+  #   communities = nk.community.detectCommunities(G, algo=nk.community.LPDegreeOrdered(G))
+  #   end_time = time.time()
+  #   print("Communities detected in %f \n" % (end_time - start_time))
+  # out = f.getvalue()
+  print("running NetworKitLPDegreeOrdered...")
+  start_time = time.time()
+  out, communities = capture_output(nk.community.detectCommunities, G, algo=nk.community.LPDegreeOrdered(G))
+  end_time = time.time()
+  out += "\nCommunities detected in %f \n" % (end_time - start_time)
   return out, communities
 
 
@@ -195,8 +230,11 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
   #   raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
   # G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
   if runner_utils.postprocess_only != "true":
+    start_time = time.time()
     reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
     G = reader.read(use_input_graph)
+    end_time = time.time()
+    print("Read Graph in %f \n" % (end_time - start_time))
     # print([edge for edge in G.iterEdgesWeights()])
     if (thread != "" and thread != "ALL"):
       nk.setNumberOfThreads(int(thread))
@@ -228,18 +266,41 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
     runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
     # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
     #   return
-    if not cluster_flag:
-      communities.compact()
-      cluster_index = 0
-      cluster_list = communities.getMembers(cluster_index)
-      while (cluster_list):
-        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-        cluster_index += 1
-        cluster_list = communities.getMembers(cluster_index)
-    else:
-      for cluster_list in clusters:
-        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+    # if not cluster_flag:
+    #   communities.compact()
+    #   cluster_index = 0
+    #   cluster_list = communities.getMembers(cluster_index)
+    #   while (cluster_list):
+    #     runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+    #     cluster_index += 1
+    #     cluster_list = communities.getMembers(cluster_index)
+    # else:
+    #   for cluster_list in clusters:
+    #     runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+    # Create an empty list to hold all the lines you want to write to the file
+    if runner_utils.write_clustering != "false":
+      print("writing results...")
+      start_time = time.time()
+      lines_to_write = []
 
+      if not cluster_flag:
+          communities.compact()
+          cluster_index = 0
+          cluster_list = communities.getMembers(cluster_index)
+          while cluster_list:
+              lines_to_write.append("\t".join(str(x) for x in cluster_list))
+              cluster_index += 1
+              cluster_list = communities.getMembers(cluster_index)
+      else:
+          for cluster_list in clusters:
+              lines_to_write.append("\t".join(str(x) for x in cluster_list))
+
+      # Write all lines to the file at once
+      with open(out_clustering, 'a+') as file:
+          file.write('\n'.join(lines_to_write) + '\n')
+      end_time = time.time()
+      print("Wrote result in %f \n" % (end_time - start_time))
+  
   print("postprocessing..." + out_filename)
   with open(out_filename,'r') as f:
     run_info = f.readlines()

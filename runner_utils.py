@@ -49,9 +49,10 @@ def readConfig(filename):
   global gbbs_format
   global weighted
   global tigergraph_edges, tigergraph_nodes
-  global postprocess_only
+  global postprocess_only, write_clustering
   num_threads = num_rounds = timeout = gbbs_format = weighted = tigergraph_edges = tigergraph_nodes = None
   postprocess_only = "false"
+  write_clustering = "true"
   clusterers = []
   with open(filename, "r") as in_file:
     for line in in_file:
@@ -86,6 +87,8 @@ def readConfig(filename):
           weighted = split[1]
         elif split[0].startswith("Postprocess only"):
           postprocess_only = split[1]
+        elif split[0].startswith("Write clustering"):
+          write_clustering = split[1]
         else:
           for index, clusterer_name in enumerate(clusterers):
             if split[0] == clusterer_name:
