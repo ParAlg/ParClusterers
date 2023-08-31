@@ -52,7 +52,7 @@ def runSnap(clusterer, graph, graph_idx, round, runtime_dict):
   print("Compilation done.")
   cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args
   # print(cmds)
-  if not runner_utils.postprocess_only:
+  if runner_utils.postprocess_only != "true":
     runner_utils.appendToFile('Snap: \n', out_filename)
     runner_utils.appendToFile("Input graph: " + graph + "\n", out_filename)
     out_time = runner_utils.shellGetOutput(cmds)
@@ -78,7 +78,7 @@ def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix, runtime_dic
   out_filename = out_prefix + ".out"
   alg_name = clusterer[5:]
   thread = int(thread)
-  if not runner_utils.postprocess_only:
+  if runner_utils.postprocess_only != "true":
     out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, weighted, out_clustering)
     runner_utils.appendToFile(out_time, out_filename)
   print("postprocessing..." + out_filename)
@@ -166,7 +166,7 @@ def run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix,
   use_input_graph = runner_utils.input_directory + graph
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
-  if not runner_utils.postprocess_only:
+  if runner_utils.postprocess_only != "true":
     out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted)
     runner_utils.appendToFile("Tigergraph: \n", out_filename)
     runner_utils.appendToFile("Clusterer: " + clusterer + "\n", out_filename)
@@ -225,7 +225,7 @@ def runAll(config_filename):
                 if int(thread) > 4:
                   print("neo4j only run up to 4 threads")
                   continue
-                if (not neo4j_graph_loaded) and (not runner_utils.postprocess_only):
+                if (not neo4j_graph_loaded) and (runner_utils.postprocess_only != "true"):
                   use_input_graph = runner_utils.input_directory + graph
                   cluster_neo4j.projectGraph(graph, use_input_graph)
                   neo4j_graph_loaded = True
@@ -233,7 +233,7 @@ def runAll(config_filename):
                 runNeo4j(clusterer, graph, thread, config + ', num_rounds: ' + str(i), weighted, out_prefix, runtime_dict)
               elif clusterer.startswith("TigerGraph"):
                 weighted = runner_utils.weighted == "true"
-                if (not tigergraph_loaded) and (not runner_utils.postprocess_only):
+                if (not tigergraph_loaded) and (runner_utils.postprocess_only != "true"):
                   conn = TigerGraphConnection(
                       host='http://127.0.0.1',
                       username='tigergraph',

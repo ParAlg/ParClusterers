@@ -194,7 +194,7 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
   # if(not (use_input_graph.endswith("ungraph.txt") or use_input_graph.endswith("ngraph.txt"))):
   #   raise ValueError("input graph file name must ends with ungraph.txt or ngraph.txt")
   # G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
-  if not runner_utils.postprocess_only:
+  if runner_utils.postprocess_only != "true":
     reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
     G = reader.read(use_input_graph)
     # print([edge for edge in G.iterEdgesWeights()])
@@ -246,3 +246,5 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
     for elem in run_info[1:]:
       if elem.startswith('Cluster Time:'):
         runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+      if elem.startswith('Num iterations:'):
+        runtime_dict['Num Iterations'] = elem.split(' ')[-1].strip()
