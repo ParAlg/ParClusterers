@@ -262,6 +262,8 @@ def runAll(config_filename):
                   for elem in run_info[1:]:
                     if elem.startswith('Cluster Time:'):
                       runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+                    if elem.startswith('Num iterations:'):
+                      runtime_dict['Num Iterations'] = elem.split(' ')[-1].strip()
               runtimes.append(runtime_dict)
       except Exception as e:
           # Print the stack trace
@@ -274,7 +276,9 @@ def runAll(config_filename):
     runtime_dataframe = pd.DataFrame(runtimes)
     if not os.path.exists(runner_utils.csv_output_directory):
       os.makedirs(runner_utils.csv_output_directory)
-    runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv', mode='a')
+    runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv', mode='a',
+                             columns=["Clusterer Name","Input Graph","Threads","Config","Round","Cluster Time","Num Iterations"])
+
 
 
 def main():

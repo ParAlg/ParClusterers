@@ -60,6 +60,7 @@ std::cout << "async: " << async << std::endl;
 
   // propagate labels as long as a label has changed... or maximum iterations reached
   while ((n_update > update_threshold) && (n_iterations < max_iteration)) {
+    // std::cout << "num iterations " << n_iterations << "\n";
     n_iterations += 1;
 
     // reset updated
@@ -81,7 +82,8 @@ std::cout << "async: " << async << std::endl;
       gbbs::uintE heaviest;
       if(degree == 0){
           heaviest = node_id;
-      } else if(degree < par_threshold){
+      } else {
+      // } else if(degree < par_threshold){
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
@@ -99,25 +101,24 @@ std::cout << "async: " << async << std::endl;
                                                       return p1.second < p2.second || (p1.second == p2.second && p1.first < p2.first);
                                                   })
                                     ->first;
-      } else {
-        auto neighbors = graph_.Graph()->get_vertex(node_id).out_neighbors();
+      // } else {
+      //   auto neighbors = graph_.Graph()->get_vertex(node_id).out_neighbors();
 
-        auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
-          auto [v, w] = neighbors.get_ith_neighbor(i);
-          return std::make_pair(clusters[v], w);
-        });
+      //   auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
+      //     auto [v, w] = neighbors.get_ith_neighbor(i);
+      //     return std::make_pair(clusters[v], w);
+      //   });
 
-        auto grouped = parlay::group_by_key(label_weights);
-        auto label_weights_sum = parlay::sequence<std::pair<double, gbbs::uintE>>(grouped.size());
-        parlay::parallel_for(0, grouped.size(), [&](gbbs::uintE i){
-          auto cluster_id = grouped[i].first;
-          auto w = parlay::reduce(grouped[i].second);
-          label_weights_sum[i] = {w, cluster_id};
-        });
+      //   auto grouped = parlay::group_by_key(label_weights);
+      //   auto label_weights_sum = parlay::sequence<std::pair<double, gbbs::uintE>>(grouped.size());
+      //   parlay::parallel_for(0, grouped.size(), [&](gbbs::uintE i){
+      //     auto cluster_id = grouped[i].first;
+      //     auto w = parlay::reduce(grouped[i].second);
+      //     label_weights_sum[i] = {w, cluster_id};
+      //   });
 
-        heaviest = parlay::max_element(label_weights_sum)->second;
+      //   heaviest = parlay::max_element(label_weights_sum)->second;
       }
-
 
       // A can only change in the next round if any of its neighbors change label.
       if (clusters[node_id] != heaviest) { // UPDATE
@@ -139,7 +140,7 @@ std::cout << "async: " << async << std::endl;
       auto updates = round_updates.entries();
       parlay::parallel_for(0, n_update, [&](std::size_t i){
         auto node_id = updates[i];
-        clusters[node_id ] = new_clusters[node_id];
+        clusters[node_id] = new_clusters[node_id];
       });
     }
 
@@ -148,7 +149,7 @@ std::cout << "async: " << async << std::endl;
     } // end while
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
-  std::cout << "Num iterations = " << n_iterations << std::endl;
+  std::cout << "Num iterations: " << n_iterations << std::endl;
   std::cout << "Num clusters = " << ret.size() << std::endl;
   return ret;
 }
