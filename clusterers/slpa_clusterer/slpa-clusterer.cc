@@ -43,23 +43,8 @@ gbbs::uintE speak_sequential(const gbbs::uintE v, const std::map<gbbs::uintE, st
     return 0; // should never reach this line
 }
 
-
-        // for (size_t j = 0; j < sets.size(); ++j) {
-        //   if (isMaximal && i != j) {
-        //       const auto& otherSet = sets[j];
-        //       if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
-        //           if (set.size() == otherSet.size()) { // same set
-        //               isMaximal = i < j;
-        //           } else {
-        //               isMaximal = false;
-        //               break;
-        //           }
-        //       }
-        //   }
-        // }
 SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gbbs::uintE>>& sets) const {
     std::vector<bool> flags(sets.size(), true);
-    auto start = std::chrono::high_resolution_clock::now();
     parlay::parallel_for(0, sets.size(), [&](size_t i){
         const auto& set = sets[i];
         bool isMaximal = true;
@@ -78,11 +63,6 @@ SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gb
         });
         flags[i] = isMaximal;
     });
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    
-    std::cout << "Time taken by function: " << duration.count() / 1e6 << " seconds" << std::endl;
-
     SLPAClusterer::Clustering maximalSets;
     for (int i=0;i<sets.size();++i){
       if(flags[i]) {
@@ -137,11 +117,6 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
     std::cout << "Num. clusters before removing: " << sets.size() << std::endl;
     
     output = findMaximalSets(sets);
-    // output.resize(maximal_sets.size());
-    // parlay::parallel_for(0, maximal_sets.size(), [&](size_t i){
-    //   const auto& s = maximal_sets[i];
-    //   output[i] = std::vector<gbbs::uintE>(s.begin(), s.end())
-    // });
     
   } else {
     // for (std::size_t i=0; i<pairs.size(); i++) {
