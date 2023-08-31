@@ -114,6 +114,32 @@ TEST(TestPostprocessing, TestThreshold) {
 
 }
 
+TEST(TestPostprocessing, TestMoreClusters) {
+  SLPAClusterer clusterer;
+
+  parlay::sequence<std::map<gbbs::uintE, size_t>> memory(3);
+  memory[0][0] = 10;
+  memory[0][1] = 1;
+  memory[0][2] = 11;
+
+  memory[1][1] = 22;
+
+  memory[2][1] = 22;
+
+
+  // cluster 0: 0
+  // cluster 1: 1, 2
+  // cluster 2: 0
+
+  auto clustering = clusterer.postprocessing(memory, /*remove_nested*/ false, 0.2, 22);
+  EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(0), UnorderedElementsAre(1, 2)));
+
+
+  // clustering = clusterer.postprocessing(memory, /*remove_nested*/ true, 0.2, 22);
+  // EXPECT_THAT(clustering, UnorderedElementsAre(UnorderedElementsAre(0), UnorderedElementsAre(1)));
+
+}
+
 
 TEST(FindMaximalSetsTest, EmptySet) {
     SLPAClusterer clusterer;
