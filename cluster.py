@@ -248,6 +248,8 @@ def runAll(config_filename):
                 out_clustering = out_prefix + ".cluster"
                 use_thread = "" if (thread == "" or thread == "ALL") else "PARLAY_NUM_THREADS=" + thread
                 use_input_graph = runner_utils.input_directory + graph
+                if (runner_utils.gbbs_format == "true" and "ungraph" in graph):
+                  print("warning: use gbbs format is true, but seems like snap format is used from graph file name")
                 ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
                 "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --float_weighted=" + runner_utils.weighted + " --clusterer_name=" + clusterer + " "
                 "--clusterer_config='" + config_prefix + config + config_postfix + "' "

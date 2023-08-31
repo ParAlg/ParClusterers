@@ -51,6 +51,7 @@ The parameters for each Clusterers
 - update_threshold: stop if less than update_threshold number of nodes need to be updated.
 
 TODO: delete par_threshold in the end if we actually don't use it.
+TODO: remove async? async seeems to be always better.
 
 #### Neo4j
 - minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.
