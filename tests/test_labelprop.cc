@@ -20,6 +20,7 @@ using research_graph::in_memory::ClustererConfig;
 
 using testing::UnorderedElementsAre;
 
+// bazel run //tests:labelprop_test -- --gtest_color=yes
 
 TEST(TestLP, TestEdgeGraph) {
   std::unique_ptr<InMemoryClusterer> clusterer;
@@ -33,6 +34,7 @@ TEST(TestLP, TestEdgeGraph) {
   labelprop_config.set_max_iteration(200);
   labelprop_config.set_update_threshold(0);
   labelprop_config.set_par_threshold(300);
+  labelprop_config.set_async(false);
 
   ClustererConfig config;
   google::protobuf::Any* any = config.mutable_any_config();

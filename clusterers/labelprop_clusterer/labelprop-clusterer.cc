@@ -50,6 +50,7 @@ std::cout << "async: " << async << std::endl;
     new_clusters.resize(n);
   }
 
+  const auto all_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   auto active_nodes = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   auto is_active = parlay::sequence<bool>(n);
   
@@ -59,7 +60,6 @@ std::cout << "async: " << async << std::endl;
 
   // propagate labels as long as a label has changed... or maximum iterations reached
   while ((n_update > update_threshold) && (n_iterations < max_iteration)) {
-
     n_iterations += 1;
 
     // reset updated
@@ -79,7 +79,9 @@ std::cout << "async: " << async << std::endl;
       // std::cout << "Node " << node_id << std::endl;
       auto degree =  graph_.Graph()->get_vertex(node_id).out_degree();
       gbbs::uintE heaviest;
-      if(degree < par_threshold){
+      if(degree == 0){
+          heaviest = node_id;
+      } else if(degree < par_threshold){
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
@@ -133,23 +135,16 @@ std::cout << "async: " << async << std::endl;
       } 
     });
 
-    
-
-    if(! async){
-    auto updates = round_updates.entries();
-    parlay::parallel_for(0, n_update, [&](std::size_t i){
-      auto node_id = updates[i];
-      clusters[node_id ] = new_clusters[node_id];
-    });
+    if(!async){
+      auto updates = round_updates.entries();
+      parlay::parallel_for(0, n_update, [&](std::size_t i){
+        auto node_id = updates[i];
+        clusters[node_id ] = new_clusters[node_id];
+      });
     }
 
+    active_nodes = parlay::pack(all_nodes, is_active);
 
-
-    active_nodes = parlay::pack(active_nodes, is_active.cut(0, active_nodes.size()));
-    // for(int i=0;i < n;++i){
-    //   std::cout << clusters[i] << " ";
-    // }
-    // std::cout << "\n";
     } // end while
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
