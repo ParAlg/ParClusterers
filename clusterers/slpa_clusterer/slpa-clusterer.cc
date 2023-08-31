@@ -45,18 +45,39 @@ gbbs::uintE speak_sequential(const gbbs::uintE v, const std::map<gbbs::uintE, st
 
 
 
-std::set<std::set<gbbs::uintE>> SLPAClusterer::findMaximalSets(const std::vector<std::set<gbbs::uintE>>& sets) const {
-    std::set<std::set<gbbs::uintE>> maximalSets;
-    for(const auto& set : sets) {
+SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gbbs::uintE>>& sets) const {
+    std::vector<bool> flags(sets.size(), true);
+      double max_d = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    parlay::parallel_for(0, sets.size(), [&](size_t i){
+        const auto& set = sets[i];
         bool isMaximal = true;
-        for(const auto& otherSet : sets) {
-            if(set != otherSet && std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
-                isMaximal = false;
-                break;
+        parlay::parallel_for(0, sets.size(), [&](size_t j){
+            if (isMaximal && i != j){
+              //
+              const auto& otherSet = sets[j];
+              if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+                if (set.size() == otherSet.size()){ // same set
+                  isMaximal = i < j;
+                } else {
+                  isMaximal = false;
+                }
+              }
+              // 
+
             }
-        }
-        if(isMaximal) {
-            maximalSets.insert(set);
+        });
+        flags[i] = isMaximal;
+    });
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    
+    // std::cout << "Time taken by function: " << duration.count() / 1e6 << " seconds" << std::endl;
+
+    SLPAClusterer::Clustering maximalSets;
+    for (int i=0;i<sets.size();++i){
+      if(flags[i]) {
+          maximalSets.push_back(std::vector<gbbs::uintE>(sets[i].begin(), sets[i].end()));
         }
     }
     return maximalSets;
@@ -74,6 +95,9 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
     for(const auto& kv: memory[i]){
       if(kv.second > prune_threshold * total_n) labels[i].push_back({kv.first, i});
     }
+    // if (labels[i].size() > 1){
+    //   std::cout << "label size larger than 1\n";
+    // }
   });
 
   auto pairs = parlay::flatten(labels); // cluster id, node id
@@ -101,10 +125,14 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
       }
     }
 
-    auto maximal_sets = findMaximalSets(sets);
-    for(auto s: maximal_sets){
-      output.emplace_back(std::vector<gbbs::uintE>(s.begin(), s.end()));
-    }
+    std::cout << "Num. clusters before removing: " << sets.size() << std::endl;
+    
+    output = findMaximalSets(sets);
+    // output.resize(maximal_sets.size());
+    // parlay::parallel_for(0, maximal_sets.size(), [&](size_t i){
+    //   const auto& s = maximal_sets[i];
+    //   output[i] = std::vector<gbbs::uintE>(s.begin(), s.end())
+    // });
     
   } else {
     // for (std::size_t i=0; i<pairs.size(); i++) {
@@ -148,9 +176,7 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
 
     // 4. Fill the output in parallel.
     parlay::parallel_for(0, n, [&](std::size_t i) {
-        std::size_t pos = prefix_sums[i] - 1;
         if (i==0 || prefix_sums[i] != prefix_sums[i-1]) {
-            std::size_t start_point = i == 0 ? 0 : prefix_sums[i-1];
             start_ids[prefix_sums[i]] = i;
         }
     });
@@ -258,11 +284,10 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
 
     } // end for loop
-
+  std::cout << "Num iterations: " << max_iteration << std::endl;
   std::cout << "postprocessing" << "\n";
   auto output = postprocessing(memory, remove_nested, prune_threshold, max_iteration + 1);
 
-  std::cout << "Num iterations: " << max_iteration << std::endl;
   std::cout << "Num clusters = " << output.size() << std::endl;
   return output;
 }
