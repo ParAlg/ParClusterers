@@ -225,9 +225,6 @@ def is_bin_extension(filename):
     return os.path.splitext(filename)[1].lower() == '.bin'
 
 def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
-  if (("friendster" not in graph)):
-    runtime_dict["Cluster Time"] = 0
-    return runtime_dict
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("NetworKit can only be run using edge list format")
   out_filename = out_prefix + ".out"
