@@ -38,6 +38,11 @@ Should not have dangling `;` at the end.
 
 The parameters for each Clusterers
 
+
+# networkit
+
+(TODO): networkit output currently uses `https://github.com/yushangdi/networkit/tree/master`. the output is much faster. We should add a flag that also supports normal networkit outputting.
+
 ## ConenctivityClusterer
 - `threshold`: edges with weight higher (or lower if `upper_bound` is set) than threshold are excluded.
 - `upper_bound`: A boolean variable. If true, the threshold is used as an upperbound instead of a lower bound.
@@ -59,3 +64,8 @@ TODO: remove async? async seeems to be always better.
 
 #### NetWorkIt LPDegreeOrdered
  Stop when < n/1e5 nodes need to be upadted.
+
+
+ ## SLLP
+
+ `remove_nested` is slow. Will be automatically skipped if `prune_threshold` > 0.5

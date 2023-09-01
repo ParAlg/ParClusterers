@@ -5,6 +5,7 @@ import io
 from contextlib import redirect_stdout
 import os
 import sys
+from tqdm import tqdm
 
 def capture_output(func, *args, **kwargs):
     # Backup the original stdout
@@ -221,6 +222,9 @@ def extractNetworKitTime(out):
   return ""
 
 def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
+  # if (("friendster" not in graph)):
+  #   runtime_dict["Cluster Time"] = 0
+  #   return runtime_dict
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("NetworKit can only be run using edge list format")
   out_filename = out_prefix + ".out"
@@ -284,20 +288,34 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
       lines_to_write = []
 
       if not cluster_flag:
-          communities.compact()
-          cluster_index = 0
-          cluster_list = communities.getMembers(cluster_index)
-          while cluster_list:
-              lines_to_write.append("\t".join(str(x) for x in cluster_list))
-              cluster_index += 1
-              cluster_list = communities.getMembers(cluster_index)
+          use_original_networkit = False
+          if use_original_networkit:
+            communities.compact() # Change subset IDs to be consecutive, starting at 0.
+            num_clusters = communities.numberOfSubsets()
+            # cluster_index = 0
+            for cluster_index in range(num_clusters):
+                cluster_list = communities.getMembers(cluster_index)
+                lines_to_write.append("\t".join(str(x) for x in cluster_list))
+                # if cluster_index % 500 == 0:
+                  # progress_percentage = (cluster_index + 1) * 100.0 / num_clusters
+                  # print(f"Processing: {progress_percentage:.2f}% done")
+                cluster_index += 1
+            # Write all lines to the file at once
+            with open(out_clustering, 'a+') as file:
+                file.write('\n'.join(lines_to_write) + '\n')
+          else:
+            # cluster_lists = communities.getSubsets()
+            # for cluster_list in cluster_lists:
+            #   cluster_index += 1
+            #   lines_to_write.append("\t".join(str(x) for x in cluster_list))
+            nk.community.writeCommunitiesNestedFormat(communities, out_clustering)
       else:
           for cluster_list in clusters:
               lines_to_write.append("\t".join(str(x) for x in cluster_list))
 
-      # Write all lines to the file at once
-      with open(out_clustering, 'a+') as file:
-          file.write('\n'.join(lines_to_write) + '\n')
+          # Write all lines to the file at once
+          with open(out_clustering, 'a+') as file:
+              file.write('\n'.join(lines_to_write) + '\n')
       end_time = time.time()
       print("Wrote result in %f \n" % (end_time - start_time))
   
