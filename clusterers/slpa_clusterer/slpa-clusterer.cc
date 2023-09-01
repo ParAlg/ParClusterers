@@ -48,19 +48,32 @@ SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gb
     parlay::parallel_for(0, sets.size(), [&](size_t i){
         const auto& set = sets[i];
         bool isMaximal = true;
-        parlay::parallel_for(0, sets.size(), [&](size_t j){
-            if (isMaximal && i != j){
-              //
-              const auto& otherSet = sets[j];
-              if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
-                if (set.size() == otherSet.size()){ // same set
-                  isMaximal = i < j;
-                } else {
-                  isMaximal = false;
+        // parlay::parallel_for(0, sets.size(), [&](size_t j){
+        //     if (isMaximal && i != j){
+        //       //
+        //       const auto& otherSet = sets[j];
+        //       if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+        //         if (set.size() == otherSet.size()){ // same set
+        //           isMaximal = i < j;
+        //         } else {
+        //           isMaximal = false;
+        //         }
+        //       }
+        //     }
+        // });
+        for (size_t j = 0; j < sets.size(); ++j) {
+            if (i != j) {
+                const auto& otherSet = sets[j];
+                if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+                    if (set.size() == otherSet.size()) { // same set
+                        isMaximal = i < j;
+                    } else {
+                        isMaximal = false;
+                    }
+                    if (!isMaximal) break;
                 }
-              }
             }
-        });
+        }
         flags[i] = isMaximal;
     });
     SLPAClusterer::Clustering maximalSets;
