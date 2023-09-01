@@ -221,10 +221,13 @@ def extractNetworKitTime(out):
       return line_split[3]
   return ""
 
+def is_bin_extension(filename):
+    return os.path.splitext(filename)[1].lower() == '.bin'
+
 def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
-  # if (("friendster" not in graph)):
-  #   runtime_dict["Cluster Time"] = 0
-  #   return runtime_dict
+  if (("friendster" not in graph)):
+    runtime_dict["Cluster Time"] = 0
+    return runtime_dict
   if (runner_utils.gbbs_format == "true"):
     raise ValueError("NetworKit can only be run using edge list format")
   out_filename = out_prefix + ".out"
@@ -235,8 +238,12 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
   # G = nk.readGraph(use_input_graph, nk.Format.EdgeListTabZero)
   if runner_utils.postprocess_only != "true":
     start_time = time.time()
-    reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
-    G = reader.read(use_input_graph)
+    G = None
+    if(is_bin_extension(use_input_graph)):
+      G = nk.readGraph(use_input_graph, nk.Format.NetworkitBinary)
+    else:
+      reader = nk.graphio.EdgeListReader('\t', 0, commentPrefix='#', directed=False) #continuous=False, 
+      G = reader.read(use_input_graph)
     end_time = time.time()
     print("Read Graph in %f \n" % (end_time - start_time))
     # print([edge for edge in G.iterEdgesWeights()])

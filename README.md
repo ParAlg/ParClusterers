@@ -43,6 +43,8 @@ The parameters for each Clusterers
 
 (TODO): networkit output currently uses `https://github.com/yushangdi/networkit/tree/master`. the output is much faster. We should add a flag that also supports normal networkit outputting.
 
+Input: if .bin filename is used, will use NetworkitBinary file reader. Otherwise use EdgeListReader.
+
 ## ConenctivityClusterer
 - `threshold`: edges with weight higher (or lower if `upper_bound` is set) than threshold are excluded.
 - `upper_bound`: A boolean variable. If true, the threshold is used as an upperbound instead of a lower bound.
