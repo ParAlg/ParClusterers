@@ -51,7 +51,7 @@ def runAll(config_filename, stats_config_filename):
     for graph_idx, graph in enumerate(runner_utils.graphs):
       if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
-          if runner_utils.deterministic and i != 0:
+          if runner_utils.deterministic == "true" and i != 0:
             continue
           out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + str(i)
           stats_dict = {}
@@ -64,14 +64,14 @@ def runAll(config_filename, stats_config_filename):
           stats.append(stats_dict)
         continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
-        if runner_utils.deterministic and thread != runner_utils.num_threads[0]:
+        if runner_utils.deterministic == "true" and thread != runner_utils.num_threads[0]:
             continue
         configs = runner_utils.clusterer_configs[clusterer_idx] if runner_utils.clusterer_configs[clusterer_idx] is not None else [""]
         config_prefix = runner_utils.clusterer_config_names[clusterer_idx] + "{" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
         config_postfix = "}" if runner_utils.clusterer_configs[clusterer_idx] is not None else ""
         for config_idx, config in enumerate(configs):
           for i in range(runner_utils.num_rounds):
-            if runner_utils.deterministic and i != 0:
+            if runner_utils.deterministic == "true" and i != 0:
               continue
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
             stats_dict = {}
