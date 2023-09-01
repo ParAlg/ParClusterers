@@ -43,20 +43,30 @@ gbbs::uintE speak_sequential(const gbbs::uintE v, const std::map<gbbs::uintE, st
     return 0; // should never reach this line
 }
 
-
-
-std::set<std::set<gbbs::uintE>> SLPAClusterer::findMaximalSets(const std::vector<std::set<gbbs::uintE>>& sets) const {
-    std::set<std::set<gbbs::uintE>> maximalSets;
-    for(const auto& set : sets) {
+SLPAClusterer::Clustering SLPAClusterer::findMaximalSets(std::vector<std::set<gbbs::uintE>>& sets) const {
+    std::vector<bool> flags(sets.size(), true);
+    parlay::parallel_for(0, sets.size(), [&](size_t i){
+        const auto& set = sets[i];
         bool isMaximal = true;
-        for(const auto& otherSet : sets) {
-            if(set != otherSet && std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
-                isMaximal = false;
-                break;
+        parlay::parallel_for(0, sets.size(), [&](size_t j){
+            if (isMaximal && i != j){
+              //
+              const auto& otherSet = sets[j];
+              if(std::includes(otherSet.begin(), otherSet.end(), set.begin(), set.end())) {
+                if (set.size() == otherSet.size()){ // same set
+                  isMaximal = i < j;
+                } else {
+                  isMaximal = false;
+                }
+              }
             }
-        }
-        if(isMaximal) {
-            maximalSets.insert(set);
+        });
+        flags[i] = isMaximal;
+    });
+    SLPAClusterer::Clustering maximalSets;
+    for (int i=0;i<sets.size();++i){
+      if(flags[i]) {
+          maximalSets.push_back(std::vector<gbbs::uintE>(sets[i].begin(), sets[i].end()));
         }
     }
     return maximalSets;
@@ -74,9 +84,12 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
     for(const auto& kv: memory[i]){
       if(kv.second > prune_threshold * total_n) labels[i].push_back({kv.first, i});
     }
+    // if (labels[i].size() > 1){
+    //   std::cout << "label size larger than 1\n";
+    // }
   });
 
-  auto pairs = parlay::flatten(labels);
+  auto pairs = parlay::flatten(labels); // cluster id, node id
   parlay::sort_inplace(parlay::make_slice(pairs));
 
   // std::cout << "pairs: \n";
@@ -90,7 +103,7 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
   //   ret[i] = std::vector(grouped.second.begin(), grouped.second.end());
   // });
 
-  if(remove_nested){
+  if(remove_nested && prune_threshold <= 0.5){ // impossible to have nested cluster if prune_threshold >0.5
     std::vector<std::set<gbbs::uintE>> sets;
     for (std::size_t i=0; i<pairs.size(); i++) {
       auto& cluster_i = pairs[i].first;
@@ -101,20 +114,77 @@ SLPAClusterer::Clustering SLPAClusterer::postprocessing(const parlay::sequence<s
       }
     }
 
-    auto maximal_sets = findMaximalSets(sets);
-    for(auto s: maximal_sets){
-      output.emplace_back(std::vector<gbbs::uintE>(s.begin(), s.end()));
-    }
+    std::cout << "Num. clusters before removing: " << sets.size() << std::endl;
+    
+    output = findMaximalSets(sets);
     
   } else {
-    for (std::size_t i=0; i<pairs.size(); i++) {
-      auto& cluster_i = pairs[i].first;
-      if (i == 0 || cluster_i != pairs[i-1].first) {
-        output.emplace_back(std::vector<gbbs::uintE>{pairs[i].second});
-      } else {
-        output[output.size()-1].emplace_back(pairs[i].second);
-      }
-    }
+    // for (std::size_t i=0; i<pairs.size(); i++) {
+    //   auto& cluster_i = pairs[i].first;
+    //   if (i == 0 || cluster_i != pairs[i-1].first) {
+    //     output.emplace_back(std::vector<gbbs::uintE>{pairs[i].second});
+    //   } else {
+    //     output[output.size()-1].emplace_back(pairs[i].second);
+    //   }
+    // }
+    // std::cout << "[ ";
+    // for (const auto& p : pairs) {
+    //     std::cout << "(" << p.first << ", " << p.second << ") ";
+    // }
+    // std::cout << "]" << std::endl;
+
+    std::size_t n = pairs.size();
+    parlay::sequence<int>prefix_sums(n, 0);
+
+    // 1. Compute the binary prefix_sums array.
+    parlay::parallel_for(1, n, [&](std::size_t i) {
+        if (pairs[i].first != pairs[i-1].first) {
+            prefix_sums[i] = 1;
+        }
+    });
+    prefix_sums[0] = 1; // The first cluster always starts a new sequence.
+
+    // 2. Compute the prefix sum.
+    parlay::scan_inclusive_inplace(prefix_sums);
+    prefix_sums.push_back(prefix_sums[n-1]+1);
+
+    // std::cout << "[ ";
+    // for (const auto& elem : prefix_sums) {
+    //     std::cout << elem << " ";
+    // }
+    // std::cout << "]" << std::endl;
+
+    // 3. Allocate space for the output.
+    output.resize(prefix_sums[n-1]); // Total number of unique clusters.
+    parlay::sequence<int> start_ids(prefix_sums[n]);
+
+    // 4. Fill the output in parallel.
+    parlay::parallel_for(0, n, [&](std::size_t i) {
+        if (i==0 || prefix_sums[i] != prefix_sums[i-1]) {
+            start_ids[prefix_sums[i]] = i;
+        }
+    });
+    start_ids.push_back(n);
+
+    // std::cout << "[ ";
+    // for (const auto& elem : start_ids) {
+    //     std::cout << elem << " ";
+    // }
+    // std::cout << "]" << std::endl;
+
+    parlay::parallel_for(0, n, [&](std::size_t i) {
+        std::size_t pos = prefix_sums[i] - 1;
+        if (i==0 || prefix_sums[i] != prefix_sums[i-1]) {
+            std::size_t start_point = start_ids[prefix_sums[i]];
+            std::size_t cluster_size = start_ids[prefix_sums[i]+1] - start_point;
+            output[pos].resize(cluster_size);
+            parlay::parallel_for(0, cluster_size, [&](std::size_t j){
+              output[pos][j] = pairs[start_point + j].second;
+            });
+        }
+    });
+
+
   }
   return output;
 }
@@ -151,8 +221,8 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
       gbbs::uintE heaviest;
       if(degree == 0){
           heaviest = node_id;
-      // } else {
-      } else if(degree < par_threshold){
+      } else {
+      // } else if(degree < par_threshold){
           // neighborLabelCounts maps label -> frequency in the neighbors
           std::map<gbbs::uintE, double> label_weights_sum;
           auto listen_f = [&] (const auto& u, const auto& v, const auto& wgh) {
@@ -172,24 +242,24 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
                                                       return p1.second < p2.second || (p1.second == p2.second && p1.first < p2.first);
                                                   })
                                     ->first;
-      } else {
-        auto neighbors = graph_.Graph()->get_vertex(node_id).out_neighbors();
+      // } else {
+      //   auto neighbors = graph_.Graph()->get_vertex(node_id).out_neighbors();
 
-        auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
-          auto [v, w] = neighbors.get_ith_neighbor(i);
-          auto label = speak_sequential(v, memory[v], n_iterations + 1, seed);
-          return std::make_pair(label, w);
-        });
+      //   auto label_weights = parlay::delayed_seq<std::pair<gbbs::uintE, double>>(degree, [&](size_t i){
+      //     auto [v, w] = neighbors.get_ith_neighbor(i);
+      //     auto label = speak_sequential(v, memory[v], n_iterations + 1, seed);
+      //     return std::make_pair(label, w);
+      //   });
 
-        auto grouped = parlay::group_by_key(label_weights);
-        auto label_weights_sum = parlay::sequence<std::pair<double, gbbs::uintE>>(grouped.size());
-        parlay::parallel_for(0, grouped.size(), [&](gbbs::uintE i){
-          auto cluster_id = grouped[i].first;
-          auto w = parlay::reduce(grouped[i].second);
-          label_weights_sum[i] = {w, cluster_id};
-        });
+      //   auto grouped = parlay::group_by_key(label_weights);
+      //   auto label_weights_sum = parlay::sequence<std::pair<double, gbbs::uintE>>(grouped.size());
+      //   parlay::parallel_for(0, grouped.size(), [&](gbbs::uintE i){
+      //     auto cluster_id = grouped[i].first;
+      //     auto w = parlay::reduce(grouped[i].second);
+      //     label_weights_sum[i] = {w, cluster_id};
+      //   });
 
-        heaviest = parlay::max_element(label_weights_sum)->second;
+      //   heaviest = parlay::max_element(label_weights_sum)->second;
       }
 
       // std::cout << "node_id " << node_id << " heaviest " << heaviest << "\n";
@@ -198,10 +268,10 @@ SLPAClusterer::Cluster(const ClustererConfig& config) const {
 
 
     } // end for loop
-
+  std::cout << "Num iterations: " << max_iteration << std::endl;
   std::cout << "postprocessing" << "\n";
   auto output = postprocessing(memory, remove_nested, prune_threshold, max_iteration + 1);
-  
+
   std::cout << "Num clusters = " << output.size() << std::endl;
   return output;
 }

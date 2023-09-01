@@ -257,6 +257,7 @@ def runAll(config_filename):
                 "--clusterer_config='" + config_prefix + config + config_postfix + "' "
                 "--output_clustering=" + out_clustering)
                 if runner_utils.postprocess_only != "true":
+                  print(ss)
                   out = runner_utils.shellGetOutput(ss)
                   runner_utils.appendToFile(ss + "\n", out_filename)
                   runner_utils.appendToFile(out, out_filename)

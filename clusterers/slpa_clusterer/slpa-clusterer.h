@@ -37,7 +37,7 @@ class SLPAClusterer : public InMemoryClusterer {
   absl::StatusOr<Clustering> Cluster(
       const ClustererConfig& config) const override;
 
-  std::set<std::set<gbbs::uintE>> findMaximalSets(const std::vector<std::set<gbbs::uintE>>& sets) const;
+  Clustering findMaximalSets(std::vector<std::set<gbbs::uintE>>& sets) const;
 
   // Postprocess `memory` and return clustering. If `remove_nested` is true, nested communities are removed. labels appears with probability less than 
   // `prune_threshold` are removed from each map in `memory`.
