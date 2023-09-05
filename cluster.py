@@ -51,6 +51,8 @@ def runSnap(clusterer, graph, graph_idx, round, runtime_dict):
     raise("Clusterer is not implemented.")
   print("Compilation done.")
   cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph + " -o:" + out_clustering + args
+  if runner_utils.write_clustering == "false":
+    cmds = runner_utils.timeout + " external/snap/examples/%s/%s -i:"  % (snap_binary, snap_binary) + use_input_graph
   # print(cmds)
   if runner_utils.postprocess_only != "true":
     runner_utils.appendToFile('Snap: \n', out_filename)
@@ -59,8 +61,9 @@ def runSnap(clusterer, graph, graph_idx, round, runtime_dict):
     runner_utils.appendToFile(out_time, out_filename)
     # postprocess to match our clustering format
     if (clusterer == "SnapConnectivity"):
-      os.rename(out_clustering + output_postfix, out_clustering)
-      postprocess_clustering.snap_connectivity(out_clustering)
+      if runner_utils.write_clustering != "false":
+        os.rename(out_clustering + output_postfix, out_clustering)
+        postprocess_clustering.snap_connectivity(out_clustering)
   print("postprocessing..." + out_filename)
   with open(out_filename,'r') as f:
     run_info = f.readlines()
@@ -255,7 +258,7 @@ def runAll(config_filename):
                 ss = (use_thread + " " + runner_utils.timeout + " bazel run //clusterers:cluster-in-memory_main -- --"
                 "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --float_weighted=" + runner_utils.weighted + " --clusterer_name=" + clusterer + " "
                 "--clusterer_config='" + config_prefix + config + config_postfix + "' "
-                "--output_clustering=" + out_clustering)
+                "--output_clustering=" + out_clustering + " --no_cluster_output=" + runner_utils.write_clustering)
                 if runner_utils.postprocess_only != "true":
                   out = runner_utils.shellGetOutput(ss)
                   runner_utils.appendToFile(ss + "\n", out_filename)

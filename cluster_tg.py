@@ -115,12 +115,19 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
     print("Cluster Time: " + str(end_time - start_time))
 
     df = conn.getVertexDataFrame("Node")
-    result = df.groupby('cluster')['id'].apply(list).tolist()
-    if not (result is None):
-      for cluster_list in result:
-        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
 
     end_time = time.time()
+    
+    result = df.groupby('cluster')['id'].apply(list).tolist()
+
+
+
+    if runner_utils.write_clustering != "false":
+      if not (result is None):
+        for cluster_list in result:
+          runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+
+    
     
     print("Total Time: " + str(end_time - start_time))
   out = f.getvalue()

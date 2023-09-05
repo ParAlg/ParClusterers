@@ -265,10 +265,10 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
         res['communityIds'] = res['values'].apply(lambda x: x['communityIds'])
         res_exploded = res.explode('communityIds', ignore_index=True)
         result = res_exploded.groupby('communityIds')['nodeId'].apply(list).tolist()
-    
-    if not (result is None):
-      for cluster_list in result:
-        runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+    if runner_utils.write_clustering != "false":
+      if not (result is None):
+        for cluster_list in result:
+          runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
 
     sys.stdout.flush()
     gds.close()

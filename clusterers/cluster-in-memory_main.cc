@@ -77,6 +77,9 @@ ABSL_FLAG(bool, include_zero_deg_v, false,
           "Use this flag if zero degree vertices should be included in the  "
           "output flat clustering.");
 
+ABSL_FLAG(bool, no_cluster_output, false,
+          "Use this flag if the clusters should not be written to the disk.");
+
 namespace research_graph {
 namespace in_memory {
 namespace {
@@ -220,6 +223,7 @@ absl::Status Main() {
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
   bool is_gbbs_format = absl::GetFlag(FLAGS_is_gbbs_format);
   bool include_zero_degree_v = absl::GetFlag(FLAGS_include_zero_deg_v);
+  bool no_cluster_output = absl::GetFlag(FLAGS_no_cluster_output);
 
   std::size_t n = 0;
   if (!is_gbbs_format) {
@@ -263,10 +267,12 @@ absl::Status Main() {
   if(output_file == "") return absl::OkStatus();
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  if (include_zero_degree_v){
-    return WriteClustering(output_file.c_str(), clusterings[0]);
+  if (no_cluster_output){
+    if (include_zero_degree_v){
+      return WriteClustering(output_file.c_str(), clusterings[0]);
+    }
+    return WriteClusteringNoZeroDegree(output_file.c_str(), clusterings[0], clusterer->MutableGraph());
   }
-  return WriteClusteringNoZeroDegree(output_file.c_str(), clusterings[0], clusterer->MutableGraph());
 }
 
 }  // namespace
