@@ -83,6 +83,10 @@ def readConfig(filename):
           tigergraph_files = [x.strip() for x in split[1].split(';')]
           tigergraph_edges = tigergraph_files[0]
           tigergraph_nodes = tigergraph_files[1]
+        elif split[0].startswith("TigerGraph nodes") and len(split) > 1:
+          tigergraph_nodes = [x.strip() for x in split[1].split(';')]
+        elif split[0].startswith("TigerGraph edges") and len(split) > 1:
+          tigergraph_edges = [x.strip() for x in split[1].split(';')]
         elif split[0].startswith("Wighted") and len(split) > 1:
           weighted = split[1]
         elif split[0].startswith("Postprocess only"):
