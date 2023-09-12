@@ -5,7 +5,7 @@ import load_tg
 input_dir = "/home/sy/mount-data/"
 
 ## convert from snap format to tigergraph format.
-for g in ["orkut", "friendster"]: #"amazon", "youtube", "dblp", "lj", 
+for g in ["friendster"]: #"amazon", "youtube", "dblp", "lj", "orkut", 
   graph = "com-%s.ungraph.txt" % g
   path = "com-%s.tg" % g
   print(graph)
