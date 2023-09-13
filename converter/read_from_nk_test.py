@@ -1,4 +1,5 @@
 import networkit as nk
+import numpy as np
 import time 
 input_dir = "/home/sy/mount-data/"
 
@@ -31,7 +32,7 @@ def NKGraphToEdgeLists(G):
     edges_to.append(u)
 
   
-  return nodes, edges_from, edges_to, weights
+  return list(nodes), edges_from, edges_to, weights
 
 def readNKGraphToEdgeLists(filename):
   start_time = time.time()
@@ -42,9 +43,19 @@ def readNKGraphToEdgeLists(filename):
 
 
 
-
-path = input_dir + "com-amazon.bin"
+graph =  "com-orkut.bin"
+path = input_dir + graph 
+start_time = time.time()
 nodes, edges_from, edges_to, weights = readNKGraphToEdgeLists(path)
+end_time = time.time()
+print("Converted Graph in %f \n" % (end_time - start_time))
+
+start_time = time.time()
+np.save(graph + "_nodes.npy", nodes)
+np.save(graph + "_edges_from.npy", edges_from)
+np.save(graph + "_edges_to.npy", edges_to)
+end_time = time.time()
+print("Saved Graph in %f \n" % (end_time - start_time))
 
 # print(nodes)
 # print(edges_from)
