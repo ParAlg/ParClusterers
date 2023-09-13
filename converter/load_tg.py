@@ -1,5 +1,7 @@
 import sys
 import csv
+import time
+import networkit as nk
 
 def readGraph(filename):
   print_index = 1000000
@@ -37,10 +39,42 @@ def readGraph(filename):
         
   return nodes, edges_from, edges_to, weights
 
+# TODO: add it for weighted graphs
+def NKGraphToEdgeLists(G):
+  edge_list = [(u, v) for u, v in G.iterEdges()]
 
-def convert_to_tigergraph_format(filename, input_dir, output_dir):
+  print("read " + str(len(edge_list)) + " edges")
 
-  nodes, edges_from, edges_to, weights = readGraph(input_dir + filename)
+  nodes = set()
+  edges_from = []
+  edges_to = []
+  weights = []
+
+  for (u,v) in edge_list:
+    nodes.add(u)
+    nodes.add(v)
+    edges_from.append(u)
+    edges_to.append(v)
+    edges_from.append(v)
+    edges_to.append(u)
+
+  
+  return nodes, edges_from, edges_to, weights
+
+def readNKGraphToEdgeLists(filename):
+  start_time = time.time()
+  G = nk.readGraph(filename, nk.Format.NetworkitBinary)
+  end_time = time.time()
+  print("Read Graph in %f \n" % (end_time - start_time))
+  return NKGraphToEdgeLists(G)
+
+def convert_to_tigergraph_format(filename, input_dir, output_dir, use_nk = False):
+
+  if use_nk:
+    nodes, edges_from, edges_to, weights = readNKGraphToEdgeLists(input_dir + filename)
+  else:
+    nodes, edges_from, edges_to, weights = readGraph(input_dir + filename)
+    
 
   node_list = list(nodes)
   with open(output_dir + filename + '_nodes.csv', 'w') as f:
