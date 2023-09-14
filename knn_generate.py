@@ -55,7 +55,7 @@ def convert_to_weighted(input, config):
 
     for i in range(res.shape[0]):
         for j in res[i].nonzero()[1]:
-            file.write(str(i) + '\t' + str(j) + '\t'+ str(res[i,j]) + '\n')
+            file.write(str(i) + '\t' + str(j) + '\t'+ str(1/ (1 + res[i,j])) + '\n')
     file.close()
 
     file = open(name + '.cmty.txt','w')
