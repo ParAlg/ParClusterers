@@ -1,6 +1,7 @@
 import time
 import io
 import pandas
+import numpy as np
 import sys
 from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase
@@ -334,7 +335,7 @@ def projectGraph(graph_name, graph_path):
     sys.stdout.flush()
 
     start_time = time.time()
-    G = gds.alpha.graph.construct( #G_dir
+    G = gds.graph.construct( #G_dir
       graph_name,      # Graph name
       nodes,           # One or more dataframes containing node data
       relationships,    # One or more dataframes containing relationship data
