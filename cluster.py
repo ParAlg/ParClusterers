@@ -192,6 +192,8 @@ def runAll(config_filename):
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
       try:
         if clusterer.startswith("Snap"):
+          if not os.path.exists(runner_utils.output_directory):
+            os.makedirs(runner_utils.output_directory)
           for i in range(runner_utils.num_rounds):
             runtime_dict = {}
             runtime_dict['Clusterer Name'] = clusterer
