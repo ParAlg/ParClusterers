@@ -8,3 +8,4 @@ conn = tg.TigerGraphConnection(
 )
 print(conn)
 print("success")
+print(conn.gsql("DROP ALL"))
