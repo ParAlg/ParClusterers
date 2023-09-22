@@ -58,7 +58,7 @@ def runAll(config_filename, stats_config_filename):
           stats_dict['Clusterer Name'] = clusterer
           stats_dict["Input Graph"] = graph
           stats_dict["Threads"] = 1
-          stats_dict["Config"] = config
+          stats_dict["Config"] = None
           stats_dict["Round"] = i
           runStats(out_prefix, graph, graph_idx, stats_dict)
           stats.append(stats_dict)
