@@ -23,6 +23,12 @@ local_repository(
     path = "external/gbbs/external/PAM/include",
 )
 
+git_repository(
+    name = "com_github_graph_mining",
+    remote = "https://github.com/google/graph-mining.git",
+    commit = "c1c54b486f7a8a5f83a88ead02a211a9372e33b0"
+)
+
 #http_archive(
 #    name = "com_github_gflags_gflags",
 #    strip_prefix = "gflags-master",

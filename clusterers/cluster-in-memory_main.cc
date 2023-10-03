@@ -41,6 +41,7 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
+#include "graph-mining/clustering/affinity/affinity.h"
 ABSL_FLAG(std::string, clusterer_name, "",
           "Name of a clusterer (e.g., ParallelAffinityClusterer).");
 

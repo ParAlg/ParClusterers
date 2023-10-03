@@ -16,6 +16,7 @@ cc_library(
         "//clusterers/scan_clusterer:scan-clusterer",
         "//clusterers/labelprop_clusterer:labelprop-clusterer",
         "//clusterers/slpa_clusterer:slpa-clusterer",
+        "@com_github_graph_mining//in_memory/clustering/affinity:affinity"
     ],
     alwayslink = 1,
 )
