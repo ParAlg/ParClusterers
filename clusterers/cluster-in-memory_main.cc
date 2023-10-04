@@ -269,7 +269,7 @@ absl::Status Main() {
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Graph: " << input_file << std::endl;
   std::cout << "Num vertices: " << n << std::endl;
-  std::cout << "Cluster include zero-deg vertices: " << (include_zero_degree_v ? "true" : "false") << std::endl;
+  std::cout << "Cluster include zero-deg vertices: " << ((using_google_clusterer || include_zero_degree_v) ? "true" : "false") << std::endl;
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
   std::vector<graph_mining::in_memory::InMemoryClusterer::Clustering> clusterings_google;
@@ -287,7 +287,6 @@ absl::Status Main() {
     PrintTime(begin_cluster, end_cluster, "Cluster");
     return WriteClustering(output_file.c_str(), dendrogram);
   } else {
-    // InMemoryClusterer::Clustering clustering;
     if (using_google_clusterer){
       ASSIGN_OR_RETURN(auto clustering, clusterer_google->Cluster(config_google));
       clusterings_google.push_back(std::move(clustering));
@@ -295,7 +294,6 @@ absl::Status Main() {
       ASSIGN_OR_RETURN(auto clustering, clusterer->Cluster(config));
       clusterings.push_back(std::move(clustering));
     }
-    // clusterings.push_back(std::move(clustering));
   }
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
