@@ -248,10 +248,10 @@ absl::Status Main() {
   if(using_google_clusterer){
     if (!is_gbbs_format) {
       ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
-        input_file, clusterer->MutableGraph(), float_weighted, is_symmetric_graph));
+        input_file, clusterer_google->MutableGraph(), float_weighted, is_symmetric_graph));
     } else {
       ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
-        input_file, clusterer->MutableGraph(), float_weighted));
+        input_file, clusterer_google->MutableGraph(), float_weighted));
     }
   } else {
     if (!is_gbbs_format) {
