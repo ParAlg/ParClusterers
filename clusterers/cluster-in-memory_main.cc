@@ -41,7 +41,8 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
-#include "graph-mining/clustering/affinity/affinity.h"
+#include "in_memory/clustering/affinity/affinity.h"
+
 ABSL_FLAG(std::string, clusterer_name, "",
           "Name of a clusterer (e.g., ParallelAffinityClusterer).");
 
@@ -145,7 +146,8 @@ bool IsAnyProto(const std::string& clusterer_name){
   return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer") || 
          (clusterer_name == "KCoreClusterer") || (clusterer_name == "ConnectivityClusterer") || 
          (clusterer_name == "LDDClusterer") || (clusterer_name == "ScanClusterer") || 
-         (clusterer_name == "LabelPropagationClusterer") || (clusterer_name == "SLPAClusterer");
+         (clusterer_name == "LabelPropagationClusterer") || (clusterer_name == "SLPAClusterer") || 
+         (clusterer_name == "AffinityClusterer");
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
@@ -200,6 +202,9 @@ absl::Status Main() {
     clusterer.reset(new LabelPropagationClusterer);
   } else if (clusterer_name == "SLPAClusterer") {
     clusterer.reset(new SLPAClusterer);
+  } else if (clusterer_name == "AffinityClusterer") {
+    // clusterer.reset(new AffinityClusterer);
+    std::unique_ptr<graph_mining::in_memory::InMemoryClusterer> clusterer_google;
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;

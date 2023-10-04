@@ -25,8 +25,26 @@ local_repository(
 
 git_repository(
     name = "com_github_graph_mining",
-    remote = "https://github.com/google/graph-mining.git",
-    commit = "c1c54b486f7a8a5f83a88ead02a211a9372e33b0"
+    remote = "https://github.com/yushangdi/graph-mining.git",
+    commit = "6d82469ef805caf9b567592ea2af5a21bcb39645"
+)
+
+
+FARMHASH_COMMIT = "0d859a811870d10f53a594927d0d0b97573ad06d"
+FARMHASH_SHA256 = "18392cf0736e1d62ecbb8d695c31496b6507859e8c75541d7ad0ba092dc52115"
+
+http_archive(
+    name = "farmhash_archive",
+    build_file = "@com_github_graph_mining//utils:farmhash.BUILD",
+    sha256 = FARMHASH_SHA256,
+    strip_prefix = "farmhash-{commit}".format(commit = FARMHASH_COMMIT),
+    urls = ["https://github.com/google/farmhash/archive/{commit}.tar.gz".format(commit = FARMHASH_COMMIT)],
+)
+
+git_repository(
+    name = "com_github_gbbs",
+    remote = "https://github.com/ParAlg/gbbs.git",
+    commit = "8d512cb62677fa3c878e8a0a0105bc2e38a8ce43",
 )
 
 #http_archive(
