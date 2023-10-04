@@ -151,8 +151,7 @@ bool IsAnyProto(const std::string& clusterer_name){
   return (clusterer_name == "ExampleClusterer") || (clusterer_name == "TectonicClusterer") || 
          (clusterer_name == "KCoreClusterer") || (clusterer_name == "ConnectivityClusterer") || 
          (clusterer_name == "LDDClusterer") || (clusterer_name == "ScanClusterer") || 
-         (clusterer_name == "LabelPropagationClusterer") || (clusterer_name == "SLPAClusterer") || 
-         (clusterer_name == "AffinityClusterer");
+         (clusterer_name == "LabelPropagationClusterer") || (clusterer_name == "SLPAClusterer");
 }
 
 std::string FormatClustererConfig(const std::string& clusterer_name, const std::string& clusterer_config){
