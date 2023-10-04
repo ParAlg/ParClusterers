@@ -93,8 +93,9 @@ template absl::StatusOr<std::size_t> WriteEdgeListAsGraph<int>(
 } // namespace internal
 
 // TODO(jeshi): This always assumes a symmetric graph
+template<class Graph>
 absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
-  InMemoryClusterer::Graph* graph, bool float_weighted) {
+  Graph* graph, bool float_weighted) {
   std::size_t n = 0;
   if (float_weighted){
     std::size_t m;
@@ -112,7 +113,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
           std::make_pair(std::get<0>(edges[offsets[i] + j]),
                          static_cast<double>(std::get<1>(edges[offsets[i] + j])));
       });
-      InMemoryClusterer::Graph::AdjacencyList adjacency_list{
+      typename Graph::AdjacencyList adjacency_list{
         static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
@@ -133,7 +134,7 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
       parlay::parallel_for(0, degree, [&](std::size_t j){
         outgoing_edges[j] = std::make_pair(edges[offsets[i] + j], 1);
       });
-      InMemoryClusterer::Graph::AdjacencyList adjacency_list{
+      typename Graph::AdjacencyList adjacency_list{
         static_cast<InMemoryClusterer::NodeId>(i), 1, std::move(outgoing_edges)};
       // TODO(jeshi): Ignoring error
       graph->Import(adjacency_list);
@@ -145,8 +146,9 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
   return n; 
 }
 
+template<class Graph>
 absl::StatusOr<std::size_t> ReadEdgeListGraphFormat(const std::string& input_file,
-  InMemoryClusterer::Graph* graph, bool float_weighted, bool is_symmetric_graph) {
+  Graph* graph, bool float_weighted, bool is_symmetric_graph) {
   std::size_t n = 0;
   if (float_weighted) {
     const auto edge_list{

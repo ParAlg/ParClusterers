@@ -16,7 +16,8 @@ cc_library(
         "//clusterers/scan_clusterer:scan-clusterer",
         "//clusterers/labelprop_clusterer:labelprop-clusterer",
         "//clusterers/slpa_clusterer:slpa-clusterer",
-        "@com_github_graph_mining//in_memory/clustering/affinity:affinity"
+        "@com_github_graph_mining//in_memory/clustering/affinity:affinity",
+        "@com_github_graph_mining//in_memory/clustering:config_cc_proto"
     ],
     alwayslink = 1,
 )
@@ -44,6 +45,7 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@parcluster//parcluster/api:in-memory-clusterer-base",
         "@parcluster//parcluster/api:gbbs-graph",
+        "@com_github_graph_mining//in_memory/clustering:in_memory_clusterer"
     ],
 )
 

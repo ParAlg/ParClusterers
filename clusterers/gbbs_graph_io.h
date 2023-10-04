@@ -14,6 +14,8 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
+#include "in_memory/clustering/in_memory_clusterer.h"
+
 namespace research_graph {
 namespace in_memory {
 
@@ -28,11 +30,13 @@ absl::StatusOr<std::size_t> WriteEdgeListAsGraph(
 } // namespace internal
 
 // TODO(jeshi): This always assumes a symmetric graph
+template<class Graph>
 absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
-  InMemoryClusterer::Graph* graph, bool float_weighted);
+  Graph* graph, bool float_weighted);
 
+template<class Graph>
 absl::StatusOr<std::size_t> ReadEdgeListGraphFormat(const std::string& input_file,
-  InMemoryClusterer::Graph* graph, bool float_weighted, bool is_symmetric_graph);
+  Graph* graph, bool float_weighted, bool is_symmetric_graph);
 
 template <class Graph>
 gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> CopyGraph(
@@ -60,6 +64,13 @@ gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> CopyGraph(
       });
   return g;
 }
+
+extern template absl::StatusOr<std::size_t> ReadGbbsGraphFormat<graph_mining::in_memory::InMemoryClusterer::Graph>(const std::string&, graph_mining::in_memory::InMemoryClusterer::Graph*, bool);
+extern template absl::StatusOr<std::size_t> ReadGbbsGraphFormat<InMemoryClusterer::Graph>(const std::string&, InMemoryClusterer::Graph*, bool);
+
+extern template absl::StatusOr<std::size_t> ReadEdgeListGraphFormat<graph_mining::in_memory::InMemoryClusterer::Graph>(const std::string&, graph_mining::in_memory::InMemoryClusterer::Graph*, bool, bool);
+extern template absl::StatusOr<std::size_t> ReadEdgeListGraphFormat<InMemoryClusterer::Graph>(const std::string&, InMemoryClusterer::Graph*, bool, bool);
+
 
 }  // namespace in_memory
 }  // namespace research_graph
