@@ -25,8 +25,8 @@ local_repository(
 
 git_repository(
     name = "com_github_graph_mining",
-    remote = "https://github.com/yushangdi/graph-mining.git",
-    commit = "6d82469ef805caf9b567592ea2af5a21bcb39645"
+    remote = "https://github.com/google/graph-mining.git",
+    commit = "3fbcb0af2352b459cde2ba104cddd5f07214c584"
 )
 
 
