@@ -8,19 +8,17 @@ local_repository(
     path = "external/InMemoryClusteringAPI/include",
 )
 
-local_repository(
+git_repository(
     name = "gbbs",
-    path = "external/gbbs",
+    remote = "https://github.com/ParAlg/gbbs.git",
+    branch = "union_find_sequence"
 )
 
-local_repository(
+git_repository(
     name = "parlaylib",
-    path = "external/gbbs/external/parlaylib/include",
-)
-
-local_repository(
-    name = "PAM",
-    path = "external/gbbs/external/PAM/include",
+    remote = "https://github.com/ParAlg/parlaylib.git",
+    commit = "6b4a4cdbfeb3c481608a42db0230eb6ebb87bf8d",
+    strip_prefix = "include/",
 )
 
 git_repository(
@@ -44,7 +42,7 @@ http_archive(
 git_repository(
     name = "com_github_gbbs",
     remote = "https://github.com/ParAlg/gbbs.git",
-    commit = "8d512cb62677fa3c878e8a0a0105bc2e38a8ce43",
+    branch = "union_find_sequence"
 )
 
 #http_archive(

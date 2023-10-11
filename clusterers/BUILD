@@ -17,6 +17,10 @@ cc_library(
         "//clusterers/labelprop_clusterer:labelprop-clusterer",
         "//clusterers/slpa_clusterer:slpa-clusterer",
         "@com_github_graph_mining//in_memory/clustering/affinity:affinity",
+        "@com_github_graph_mining//in_memory/clustering/affinity:parallel_affinity",
+        "@com_github_graph_mining//in_memory/clustering/hac:parhac",
+        "@com_github_graph_mining//in_memory/clustering/correlation:parallel_correlation",
+        "@com_github_graph_mining//in_memory/clustering/correlation:parallel_modularity",
         "@com_github_graph_mining//in_memory/clustering:config_cc_proto"
     ],
     alwayslink = 1,

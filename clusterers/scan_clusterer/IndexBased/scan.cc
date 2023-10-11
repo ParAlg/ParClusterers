@@ -4,9 +4,9 @@
 #include <tuple>
 #include <utility>
 
-#include "external/gbbs/benchmarks/Connectivity/UnionFind/union_find_rules.h"
-#include "external/gbbs/gbbs/bridge.h"
-#include "external/gbbs/gbbs/helpers/sparse_table.h"
+#include "benchmarks/Connectivity/UnionFind/union_find_rules.h"
+#include "gbbs/bridge.h"
+#include "gbbs/helpers/sparse_table.h"
 
 namespace gbbs {
 namespace indexed_scan {

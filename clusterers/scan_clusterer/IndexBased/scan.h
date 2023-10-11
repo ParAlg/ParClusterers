@@ -3,8 +3,8 @@
 #include "clusterers/scan_clusterer/IndexBased/scan_helpers.h"
 #include "clusterers/scan_clusterer/IndexBased/similarity_measure.h"
 #include "clusterers/scan_clusterer/IndexBased/utils.h"
-#include "external/gbbs/gbbs/graph.h"
-#include "external/gbbs/gbbs/macros.h"
+#include "gbbs/graph.h"
+#include "gbbs/macros.h"
 
 namespace gbbs {
 namespace indexed_scan {

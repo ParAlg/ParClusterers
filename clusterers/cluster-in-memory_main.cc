@@ -42,6 +42,7 @@
 #include "parcluster/api/status_macros.h"
 
 #include "in_memory/clustering/affinity/affinity.h"
+#include "in_memory/clustering/hac/parhac.h"
 #include "in_memory/clustering/config.pb.h"
 
 ABSL_FLAG(std::string, clusterer_name, "",

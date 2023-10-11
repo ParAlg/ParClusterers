@@ -7,7 +7,7 @@
 
 #include "absl/status/statusor.h"
 #include "clusterers/connectivity_clusterer/connectivity_config.pb.h"
-#include "external/gbbs/benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
+#include "benchmarks/Connectivity/SimpleUnionAsync/Connectivity.h"
 #include "parcluster/api/config.pb.h"
 #include "parcluster/api/gbbs-graph.h"
 #include "parcluster/api/in-memory-clusterer-base.h"

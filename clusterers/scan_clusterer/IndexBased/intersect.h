@@ -7,10 +7,10 @@
 #include <functional>
 #include <tuple>
 
-#include "external/gbbs/gbbs/bridge.h"
-#include "external/gbbs/gbbs/helpers/assert.h"
-#include "external/gbbs/gbbs/macros.h"
-#include "external/gbbs/gbbs/vertex.h"
+#include "gbbs/bridge.h"
+#include "gbbs/helpers/assert.h"
+#include "gbbs/macros.h"
+#include "gbbs/vertex.h"
 
 namespace gbbs {
 namespace scan {

@@ -378,7 +378,7 @@ parlay::sequence<uintE> KCore(Graph& G, CWP& connect_while_peeling, size_t num_b
   double tt2 = t2.stop();
   std::cout << "### Peel Running Time: " << tt2 << std::endl;
   std::cout << "### rho = " << rho << " k_{max} = " << k_max << "\n";
-  debug(bt.next("bucket time"););
+  // debug(bt.next("bucket time"););
 
   return D;
 }

@@ -14,9 +14,9 @@
 #include <type_traits>
 
 #include "clusterers/scan_clusterer/IndexBased/intersect.h"
-#include "external/gbbs/benchmarks/TriangleCounting/ShunTangwongsan15/Triangle.h"
-#include "external/gbbs/gbbs/bridge.h"
-#include "external/gbbs/gbbs/graph_mutation.h"
+#include "benchmarks/TriangleCounting/ShunTangwongsan15/Triangle.h"
+#include "gbbs/bridge.h"
+#include "gbbs/graph_mutation.h"
 
 namespace gbbs {
 

@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "clusterers/scan_clusterer/IndexBased/similarity_measure.h"
-#include "external/gbbs/gbbs/graph.h"
+#include "gbbs/graph.h"
 
 namespace gbbs {
 namespace indexed_scan {
