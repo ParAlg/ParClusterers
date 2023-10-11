@@ -41,8 +41,10 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
-#include "in_memory/clustering/affinity/affinity.h"
+#include "in_memory/clustering/affinity/parallel_affinity.h"
 #include "in_memory/clustering/hac/parhac.h"
+#include "in_memory/clustering/correlation/parallel_correlation.h"
+#include "in_memory/clustering/correlation/parallel_modularity.h"
 #include "in_memory/clustering/config.pb.h"
 
 ABSL_FLAG(std::string, clusterer_name, "",
@@ -84,8 +86,6 @@ ABSL_FLAG(bool, include_zero_deg_v, false,
 namespace research_graph {
 namespace in_memory {
 namespace {
-
-using graph_mining::in_memory::AffinityClusterer;
 
 void PrintTime(std::chrono::steady_clock::time_point begin,
                std::chrono::steady_clock::time_point end,
@@ -193,7 +193,8 @@ absl::Status Main() {
   bool using_google_clusterer = false;
   bool is_hierarchical = absl::GetFlag(FLAGS_is_hierarchical);
   if (clusterer_name == "ParallelAffinityClusterer") {
-    clusterer.reset(new ParallelAffinityClusterer);
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelAffinityClusterer);
   } else if (clusterer_name == "ExampleClusterer") {
     clusterer.reset(new ExampleClusterer);
   } else if (clusterer_name == "LDDClusterer") {
@@ -210,9 +211,15 @@ absl::Status Main() {
     clusterer.reset(new LabelPropagationClusterer);
   } else if (clusterer_name == "SLPAClusterer") {
     clusterer.reset(new SLPAClusterer);
-  } else if (clusterer_name == "AffinityClusterer") {
+  } else if (clusterer_name == "ParHacClusterer") {
     using_google_clusterer = true;
-    clusterer_google.reset(new AffinityClusterer);
+    clusterer_google.reset(new graph_mining::in_memory::ParHacClusterer);
+  } else if (clusterer_name == "ParallelCorrelationClusterer") {
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelCorrelationClusterer);
+  } else if (clusterer_name == "ParallelModularityClusterer") {
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelModularityClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
