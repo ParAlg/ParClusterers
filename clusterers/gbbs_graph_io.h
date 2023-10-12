@@ -14,6 +14,8 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
+#include "in_memory/clustering/in_memory_clusterer.h"
+
 namespace research_graph {
 namespace in_memory {
 
@@ -33,6 +35,12 @@ absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
 
 absl::StatusOr<std::size_t> ReadEdgeListGraphFormat(const std::string& input_file,
   InMemoryClusterer::Graph* graph, bool float_weighted, bool is_symmetric_graph);
+
+absl::StatusOr<std::size_t> ReadGbbsGraphFormat(const std::string& input_file,
+  graph_mining::in_memory::InMemoryClusterer::Graph* graph, bool float_weighted);
+
+absl::StatusOr<std::size_t> ReadEdgeListGraphFormat(const std::string& input_file,
+  graph_mining::in_memory::InMemoryClusterer::Graph* graph, bool float_weighted, bool is_symmetric_graph);
 
 template <class Graph>
 gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> CopyGraph(
@@ -60,6 +68,7 @@ gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> CopyGraph(
       });
   return g;
 }
+
 
 }  // namespace in_memory
 }  // namespace research_graph

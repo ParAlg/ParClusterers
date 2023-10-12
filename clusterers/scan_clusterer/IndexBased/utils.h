@@ -9,9 +9,9 @@
 #include <string>
 #include <utility>
 
-#include "external/gbbs/gbbs/bridge.h"
-#include "external/gbbs/gbbs/graph.h"
-#include "external/gbbs/gbbs/macros.h"
+#include "gbbs/bridge.h"
+#include "gbbs/graph.h"
+#include "gbbs/macros.h"
 
 namespace gbbs {
 namespace scan {

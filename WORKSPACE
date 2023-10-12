@@ -8,19 +8,41 @@ local_repository(
     path = "external/InMemoryClusteringAPI/include",
 )
 
-local_repository(
+git_repository(
     name = "gbbs",
-    path = "external/gbbs",
+    remote = "https://github.com/ParAlg/gbbs.git",
+    branch = "union_find_sequence"
 )
 
-local_repository(
+git_repository(
     name = "parlaylib",
-    path = "external/gbbs/external/parlaylib/include",
+    remote = "https://github.com/ParAlg/parlaylib.git",
+    commit = "6b4a4cdbfeb3c481608a42db0230eb6ebb87bf8d",
+    strip_prefix = "include/",
 )
 
-local_repository(
-    name = "PAM",
-    path = "external/gbbs/external/PAM/include",
+git_repository(
+    name = "com_github_graph_mining",
+    remote = "https://github.com/google/graph-mining.git",
+    commit = "3fbcb0af2352b459cde2ba104cddd5f07214c584"
+)
+
+
+FARMHASH_COMMIT = "0d859a811870d10f53a594927d0d0b97573ad06d"
+FARMHASH_SHA256 = "18392cf0736e1d62ecbb8d695c31496b6507859e8c75541d7ad0ba092dc52115"
+
+http_archive(
+    name = "farmhash_archive",
+    build_file = "@com_github_graph_mining//utils:farmhash.BUILD",
+    sha256 = FARMHASH_SHA256,
+    strip_prefix = "farmhash-{commit}".format(commit = FARMHASH_COMMIT),
+    urls = ["https://github.com/google/farmhash/archive/{commit}.tar.gz".format(commit = FARMHASH_COMMIT)],
+)
+
+git_repository(
+    name = "com_github_gbbs",
+    remote = "https://github.com/ParAlg/gbbs.git",
+    branch = "union_find_sequence"
 )
 
 #http_archive(

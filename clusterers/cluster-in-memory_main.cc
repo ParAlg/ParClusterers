@@ -41,6 +41,12 @@
 #include "parcluster/api/in-memory-clusterer-base.h"
 #include "parcluster/api/status_macros.h"
 
+#include "in_memory/clustering/affinity/parallel_affinity.h"
+#include "in_memory/clustering/hac/parhac.h"
+#include "in_memory/clustering/correlation/parallel_correlation.h"
+#include "in_memory/clustering/correlation/parallel_modularity.h"
+#include "in_memory/clustering/config.pb.h"
+
 ABSL_FLAG(std::string, clusterer_name, "",
           "Name of a clusterer (e.g., ParallelAffinityClusterer).");
 
@@ -92,8 +98,9 @@ void PrintTime(std::chrono::steady_clock::time_point begin,
             << std::endl;
 }
 
+template<class Clustering>
 absl::Status WriteClustering(const char* filename,
-                             const InMemoryClusterer::Clustering clustering) {
+                             const Clustering clustering) {
   std::ofstream file{filename};
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
@@ -107,9 +114,10 @@ absl::Status WriteClustering(const char* filename,
   return absl::OkStatus();
 }
 
+template<class Clustering, class Graph>
 absl::Status WriteClusteringNoZeroDegree(const char* filename,
-                             const InMemoryClusterer::Clustering clustering, 
-                             research_graph::in_memory::InMemoryClusterer::Graph* G) {
+                             const Clustering clustering, 
+                             Graph* G) {
   std::ofstream file{filename};
   if (!file.is_open()) {
     return absl::NotFoundError("Unable to open file.");
@@ -176,13 +184,17 @@ absl::Status Main() {
   std::string clusterer_name = absl::GetFlag(FLAGS_clusterer_name);
 
   ClustererConfig config;
+  graph_mining::in_memory::ClustererConfig config_google;
   // "any_config {[type.googleapis.com/research_graph.in_memory.ExampleClustererConfig] { ... }}"
   std::string clusterer_config = absl::GetFlag(FLAGS_clusterer_config);
 
   std::unique_ptr<InMemoryClusterer> clusterer;
+  std::unique_ptr<graph_mining::in_memory::InMemoryClusterer> clusterer_google;
+  bool using_google_clusterer = false;
   bool is_hierarchical = absl::GetFlag(FLAGS_is_hierarchical);
   if (clusterer_name == "ParallelAffinityClusterer") {
-    clusterer.reset(new ParallelAffinityClusterer);
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelAffinityClusterer);
   } else if (clusterer_name == "ExampleClusterer") {
     clusterer.reset(new ExampleClusterer);
   } else if (clusterer_name == "LDDClusterer") {
@@ -199,6 +211,15 @@ absl::Status Main() {
     clusterer.reset(new LabelPropagationClusterer);
   } else if (clusterer_name == "SLPAClusterer") {
     clusterer.reset(new SLPAClusterer);
+  } else if (clusterer_name == "ParHacClusterer") {
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParHacClusterer);
+  } else if (clusterer_name == "ParallelCorrelationClusterer") {
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelCorrelationClusterer);
+  } else if (clusterer_name == "ParallelModularityClusterer") {
+    using_google_clusterer = true;
+    clusterer_google.reset(new graph_mining::in_memory::ParallelModularityClusterer);
   }
   else {
     std::cerr << "Clusterer name = " << clusterer_name << std::endl;
@@ -206,12 +227,22 @@ absl::Status Main() {
   }
 
   std::string formatted_clusterer_config = FormatClustererConfig(clusterer_name, clusterer_config);
-  if (!google::protobuf::TextFormat::ParseFromString(formatted_clusterer_config,
-                                                     &config)) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("Cannot parse --clusterer_config as a text-format "
-                        "research_graph.in_memory.ClustererConfig proto: %s",
-                        formatted_clusterer_config));
+  if (using_google_clusterer){
+    if (!google::protobuf::TextFormat::ParseFromString(formatted_clusterer_config,
+                                                      &config_google)) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Cannot parse --clusterer_config as a text-format "
+                          "research_graph.in_memory.ClustererConfig proto: %s",
+                          formatted_clusterer_config));
+    }
+  }else{
+    if (!google::protobuf::TextFormat::ParseFromString(formatted_clusterer_config,
+                                                      &config)) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Cannot parse --clusterer_config as a text-format "
+                          "research_graph.in_memory.ClustererConfig proto: %s",
+                          formatted_clusterer_config));
+    }
   }
 
   auto begin_read = std::chrono::steady_clock::now();
@@ -222,12 +253,22 @@ absl::Status Main() {
   bool include_zero_degree_v = absl::GetFlag(FLAGS_include_zero_deg_v);
 
   std::size_t n = 0;
-  if (!is_gbbs_format) {
-    ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
-      input_file, clusterer->MutableGraph(), float_weighted, is_symmetric_graph));
+  if(using_google_clusterer){
+    if (!is_gbbs_format) {
+      ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
+        input_file, clusterer_google->MutableGraph(), float_weighted, is_symmetric_graph));
+    } else {
+      ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
+        input_file, clusterer_google->MutableGraph(), float_weighted));
+    }
   } else {
-    ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
-      input_file, clusterer->MutableGraph(), float_weighted));
+    if (!is_gbbs_format) {
+      ASSIGN_OR_RETURN(n, ReadEdgeListGraphFormat(
+        input_file, clusterer->MutableGraph(), float_weighted, is_symmetric_graph));
+    } else {
+      ASSIGN_OR_RETURN(n, ReadGbbsGraphFormat(
+        input_file, clusterer->MutableGraph(), float_weighted));
+    }
   }
 
   auto end_read = std::chrono::steady_clock::now();
@@ -236,9 +277,10 @@ absl::Status Main() {
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Graph: " << input_file << std::endl;
   std::cout << "Num vertices: " << n << std::endl;
-  std::cout << "Cluster include zero-deg vertices: " << (include_zero_degree_v ? "true" : "false") << std::endl;
+  std::cout << "Cluster include zero-deg vertices: " << ((using_google_clusterer || include_zero_degree_v) ? "true" : "false") << std::endl;
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
+  std::vector<graph_mining::in_memory::InMemoryClusterer::Clustering> clusterings_google;
 
   std::string output_file = absl::GetFlag(FLAGS_output_clustering);
 
@@ -253,9 +295,13 @@ absl::Status Main() {
     PrintTime(begin_cluster, end_cluster, "Cluster");
     return WriteClustering(output_file.c_str(), dendrogram);
   } else {
-    InMemoryClusterer::Clustering clustering;
-    ASSIGN_OR_RETURN(clustering, clusterer->Cluster(config));
-    clusterings.push_back(std::move(clustering));
+    if (using_google_clusterer){
+      ASSIGN_OR_RETURN(auto clustering, clusterer_google->Cluster(config_google));
+      clusterings_google.push_back(std::move(clustering));
+    }else{
+      ASSIGN_OR_RETURN(auto clustering, clusterer->Cluster(config));
+      clusterings.push_back(std::move(clustering));
+    }
   }
   auto end_cluster = std::chrono::steady_clock::now();
   PrintTime(begin_cluster, end_cluster, "Cluster");
@@ -263,9 +309,14 @@ absl::Status Main() {
   if(output_file == "") return absl::OkStatus();
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  if (include_zero_degree_v){
-    return WriteClustering(output_file.c_str(), clusterings[0]);
+  if (include_zero_degree_v || using_google_clusterer){
+    if (using_google_clusterer){
+      return WriteClustering(output_file.c_str(), clusterings_google[0]);
+    }else{
+      return WriteClustering(output_file.c_str(), clusterings[0]);
+    }
   }
+  // TODO: add support for google clusterer, need to add zero degree node detection.
   return WriteClusteringNoZeroDegree(output_file.c_str(), clusterings[0], clusterer->MutableGraph());
 }
 
