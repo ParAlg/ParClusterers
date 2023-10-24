@@ -31,6 +31,26 @@ def makeConfigCombos(current_configs):
     config_combos_formatted.append(",".join(config))
   return config_combos_formatted
 
+def makeConfigCombosModularity(current_configs):
+  config_combos = itertools.product(*current_configs)
+  config_combos_formatted = []
+  for config in config_combos:
+    config_txt = ""
+    other_configs = []
+    for config_item in config:
+      if (config_item.startswith("resolution")):
+        config_txt += config_item
+      else:
+        other_configs.append(config_item)
+    config_txt += ", correlation_config: {"
+    config_txt += ",".join(other_configs)
+    config_txt += "}"
+    config_combos_formatted.append(config_txt)
+  # for i in config_combos_formatted:
+  #   print(i)
+  # exit(1)
+  return config_combos_formatted
+
 def readSystemConfig(filename):
   global gplusplus_ver, python_ver
   with open(filename, "r") as in_file:
@@ -108,7 +128,10 @@ def readConfig(filename):
                   next_line = in_file.readline().strip()
                 except StopIteration as err:
                   break
-              clusterer_configs[index] = makeConfigCombos(current_configs)
+              if (clusterer_name == "ParallelModularityClusterer"):
+                clusterer_configs[index] = makeConfigCombosModularity(current_configs)
+              else:
+                clusterer_configs[index] = makeConfigCombos(current_configs)
               break
   num_threads = ["ALL"] if num_threads is None or not num_threads else num_threads
   timeout = "" if (timeout is None or timeout == "" or timeout == "NONE") else "timeout " + timeout
