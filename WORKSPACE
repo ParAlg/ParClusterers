@@ -103,12 +103,6 @@ rules_proto_dependencies()
 rules_proto_toolchains()
 
 #http_archive(
-#    name = "com_google_absl",
-#    strip_prefix = "abseil-cpp-master",
-#    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
-#)
-#
-#http_archive(
 #    name = "com_google_protobuf",
 #    strip_prefix = "protobuf-3.13.0",
 #    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.13.0.tar.gz"],
@@ -151,10 +145,10 @@ git_repository(
     tag = "v22.3",
 )
 
-http_archive(
+git_repository(
     name = "com_google_absl",
-    strip_prefix = "abseil-cpp-master",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
+    remote = "https://github.com/abseil/abseil-cpp.git",
+    tag = "20230125.2",
 )
 
 # Bazel platform rules.
@@ -164,12 +158,6 @@ http_archive(
     strip_prefix = "platforms-98939346da932eef0b54cf808622f5bb0928f00b",
     urls = ["https://github.com/bazelbuild/platforms/archive/98939346da932eef0b54cf808622f5bb0928f00b.zip"],
 )
-
-#http_archive(
-#  name = "com_google_absl",
-#  urls = ["https://github.com/abseil/abseil-cpp/archive/98eb410c93ad059f9bba1bf43f5bb916fc92a5ea.zip"],
-#  strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
-#)
 
 # git_repository(
 #     name = "com_google_googletest",

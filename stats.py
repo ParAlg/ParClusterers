@@ -9,6 +9,37 @@ import runner_utils
 import json
 import pandas as pd
 
+def getRunTime(clusterer, out_prefix):
+  cluster_time = -1
+  out_filename = out_prefix + ".out"
+
+  if clusterer.startswith("TigerGraph"):
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith('Total Time:'):
+          cluster_time = elem.split(' ')[-1].strip()
+  elif clusterer.startswith("Snap"):
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith('Wealy Connected Component Time:') or elem.startswith('KCore Time:') or elem.startswith('Cluster Time:'):
+          cluster_time = elem.split(' ')[-1].strip()
+  elif clusterer.startswith("Neo4j"):
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith("Time:"):
+          cluster_time = elem.split(' ')[-1].strip()
+  else: # our cluseterer and Networkit and Tectonic
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith('Cluster Time:'):
+          cluster_time = elem.split(' ')[-1].strip()
+
+  return cluster_time
+
 def runStats(out_prefix, graph, graph_idx, stats_dict):
   out_statistics = out_prefix + ".stats"
   in_clustering = out_prefix + ".cluster"
@@ -60,7 +91,9 @@ def runAll(config_filename, stats_config_filename):
           stats_dict["Threads"] = 1
           stats_dict["Config"] = None
           stats_dict["Round"] = i
+          stats_dict["Cluster Time"] = getRunTime(clusterer, out_prefix)
           runStats(out_prefix, graph, graph_idx, stats_dict)
+          stats_dict["Ground Truth"] = runner_utils.communities[graph_idx]
           stats.append(stats_dict)
         continue
       for thread_idx, thread in enumerate(runner_utils.num_threads):
@@ -80,6 +113,7 @@ def runAll(config_filename, stats_config_filename):
             stats_dict["Threads"] = thread
             stats_dict["Config"] = config
             stats_dict["Round"] = i
+            stats_dict["Cluster Time"] = getRunTime(clusterer, out_prefix)
             runStats(out_prefix, graph, graph_idx, stats_dict)
             stats_dict["Ground Truth"] = runner_utils.communities[graph_idx]
             stats.append(stats_dict)
