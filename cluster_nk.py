@@ -324,10 +324,13 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
       print("Wrote result in %f \n" % (end_time - start_time))
   
   print("postprocessing..." + out_filename)
-  with open(out_filename,'r') as f:
-    run_info = f.readlines()
-    for elem in run_info[1:]:
-      if elem.startswith('Cluster Time:'):
-        runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
-      if elem.startswith('Num iterations:'):
-        runtime_dict['Num Iterations'] = elem.split(' ')[-1].strip()
+  try:
+    with open(out_filename,'r') as f:
+      run_info = f.readlines()
+      for elem in run_info[1:]:
+        if elem.startswith('Cluster Time:'):
+          runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
+        if elem.startswith('Num iterations:'):
+          runtime_dict['Num Iterations'] = elem.split(' ')[-1].strip()
+  except Exception as e:
+    print(f"An error occurred: {e}")
