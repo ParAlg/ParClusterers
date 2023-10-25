@@ -1,4 +1,6 @@
-
+# modularity
+for i in range(1, 40, 4):
+  print(0.02 * (1.2 ** i))
 
 # ParHAC resolution parameters
 a = 0.5
