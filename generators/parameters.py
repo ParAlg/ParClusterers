@@ -3,6 +3,14 @@ import numpy as np
 # modularity
 for i in range(1, 40, 4):
   print(0.02 * (1.2 ** i))
+  
+
+# Par CC
+print("ParCC")
+sequence = [0.0001 * i for i in np.arange(1, 1000, 1000/5)]
+print('; '.join(map(str, sequence)))
+sequence = [0.1 * i for i in np.arange(1, 10, 10/5)]
+print('; '.join(map(str, sequence)))
 
 # ParHAC resolution parameters
 print("Parhac")
