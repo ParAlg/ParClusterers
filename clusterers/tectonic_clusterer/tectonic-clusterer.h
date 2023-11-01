@@ -227,15 +227,15 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
             fflush(stdout);
           }*/
       if (triangle_degrees[offset[i] + v_index] >= threshold * (G.get_vertex(u).out_degree() + G.get_vertex(v).out_degree())) {
-        gbbs::simple_union_find::unite_impl(u, v, clusters);
+        gbbs::simple_union_find::unite_impl(u, v, clusters.data());
       }
       v_index++;
     };
     DG.get_vertex(i).out_neighbors().map(map_f, false);
   });
 
-  parlay::parallel_for(0, G.n, [&] (size_t i) {
-    gbbs::simple_union_find::find_compress(i, clusters);
+  parlay::parallel_for(0, G.n, [&] (gbbs::uintE i) {
+    gbbs::simple_union_find::find_compress(i, clusters.data());
   });
 
   return clusters;
@@ -260,15 +260,15 @@ inline sequence<uintE> Triangle_union_find(Graph& G, DirectedGraph& DG,
             fflush(stdout);
           }*/
       if (triangle_degrees[offset[i] + v_index] >= threshold * std::max(vertex_triangle_degrees[u], vertex_triangle_degrees[v])) {
-        gbbs::simple_union_find::unite_impl(u, v, clusters);
+        gbbs::simple_union_find::unite_impl(u, v, clusters.data());
       }
       v_index++;
     };
     DG.get_vertex(i).out_neighbors().map(map_f, false);
   });
 
-  parlay::parallel_for(0, G.n, [&] (size_t i) {
-    gbbs::simple_union_find::find_compress(i, clusters);
+  parlay::parallel_for(0, G.n, [&] (gbbs::uintE i) {
+    gbbs::simple_union_find::find_compress(i, clusters.data());
   });
 
   return clusters;

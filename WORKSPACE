@@ -11,7 +11,7 @@ local_repository(
 git_repository(
     name = "gbbs",
     remote = "https://github.com/ParAlg/gbbs.git",
-    branch = "union_find_sequence"
+    branch = "master"
 )
 
 git_repository(
@@ -42,7 +42,7 @@ http_archive(
 git_repository(
     name = "com_github_gbbs",
     remote = "https://github.com/ParAlg/gbbs.git",
-    branch = "union_find_sequence"
+    branch = "master"
 )
 
 #http_archive(

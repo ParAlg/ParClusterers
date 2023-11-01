@@ -29,10 +29,12 @@ print('; '.join(map(str, exp_values )))
 
 
 #tectonic
+print("Tectonic")
 values = []
-for i in range(1, 300, 10):
+for i in np.arange(1, 40, 40/40):
   values.append(0.01* i)
-print('; '.join(map(str, values )))
+formatted_values = ['{:.2f}'.format(val) for val in values]
+print('; '.join(formatted_values))
 
 # parallel affinity
 # start = np.log10(0.9)

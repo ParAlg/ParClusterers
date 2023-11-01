@@ -44,14 +44,14 @@ ConnectivityClusterer::Cluster(const ClustererConfig& config) const {
   parlay::parallel_for(0, n, [&] (size_t i) {
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
       if ((upper_bound && wgh <= threshold) || ((!upper_bound) && wgh >= threshold)){
-        gbbs::simple_union_find::unite_impl(u, v, clusters);
+        gbbs::simple_union_find::unite_impl(u, v, clusters.data());
       }
     };
     graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
   });
 
-  parlay::parallel_for(0, n, [&] (size_t i) {
-    gbbs::simple_union_find::find_compress(i, clusters);
+  parlay::parallel_for(0, n, [&] (gbbs::uintE i) {
+    gbbs::simple_union_find::find_compress(i, clusters.data());
   });
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);

@@ -85,12 +85,12 @@ void EfficientConnectWhilePeeling::check_equal_for_merge(X a, Y b, F& cores) {
 
 template<class X, class Y, class F>
 void EfficientConnectWhilePeeling::link(X a, Y b, F& cores) {
-  a = simple_union_find::find_compress(a, this->uf.parents);
-  b = simple_union_find::find_compress(b, this->uf.parents);
+  a = simple_union_find::find_compress(a, this->uf.parents.data());
+  b = simple_union_find::find_compress(b, this->uf.parents.data());
 
   if (cores(a) == cores(b)) {
     this->uf.unite(a, b);
-    uintE parent = simple_union_find::find_compress(a, this->uf.parents);
+    uintE parent = simple_union_find::find_compress(a, this->uf.parents.data());
     auto link_a = links[a]; auto link_b = links[b];
     if (link_a != UINT_E_MAX && parent != a) this->link(link_a, parent, cores);
     if (link_b != UINT_E_MAX && parent != b) this->link(link_b, parent, cores);
@@ -103,7 +103,7 @@ void EfficientConnectWhilePeeling::link(X a, Y b, F& cores) {
           if (gbbs::atomic_compare_and_swap<uintE>(&(links[b]), UINT_E_MAX, a)) break;
         } else if (cores(c) < cores(a)) { // || (cores(c) == cores(a) && a < c)
           if (gbbs::atomic_compare_and_swap<uintE>(&(links[b]), c, a)) {
-            auto parent_b = simple_union_find::find_compress(b, this->uf.parents);
+            auto parent_b = simple_union_find::find_compress(b, this->uf.parents.data());
             if (b != parent_b) this->link(a, parent_b, cores);
             this->link(a, c, cores);
             break;
@@ -205,7 +205,7 @@ std::vector<uintE> construct_nd_connectivity_from_connect(uintE n, ConnectWhileP
   parallel_for(0, n, [&](std::size_t i){connectivity_tree[i] = UINT_E_MAX;});
   for (long idx = connect_with_peeling.set_uf.size() - 1; idx >= 0; idx--) {
     connectivity_tree.resize(prev_max_parent, UINT_E_MAX);
-    parallel_for(0, n, [&](size_t l) { gbbs::simple_union_find::find_compress(l, connect_with_peeling.set_uf[idx].parents); });
+    parallel_for(0, n, [&](uintE l) { gbbs::simple_union_find::find_compress(l, connect_with_peeling.set_uf[idx].parents.data()); });
 
     parallel_for(0, n, [&](size_t l){
       connectivity_tree[prev_parent[l]] = prev_max_parent + connect_with_peeling.set_uf[idx].parents[l];
@@ -289,7 +289,7 @@ std::vector<uintE> construct_nd_connectivity(Graph& GA, parlay::sequence<uintE>&
 
     connectivity_tree.resize(prev_max_parent, UINT_E_MAX);
 
-    parallel_for(0, n, [&](size_t l) { gbbs::simple_union_find::find_compress(l, uf.parents); });
+    parallel_for(0, n, [&](uintE l) { gbbs::simple_union_find::find_compress(l, uf.parents.data()); });
 
     parlay::sequence<uintE> map_parents = parlay::sequence<uintE>::from_function(n, [&](std::size_t l){return 0;});
     parallel_for(0, n, [&](size_t l){
@@ -439,13 +439,13 @@ KCoreClusterer::Cluster(const ClustererConfig& config) const {
   parlay::parallel_for(0, n, [&] (size_t i) {
     auto map_f = [&] (const auto& u, const auto& v, const auto& wgh) {
       if (cores[u] >= threshold && cores[v] >= threshold)
-        gbbs::simple_union_find::unite_impl(u, v, clusters);
+        gbbs::simple_union_find::unite_impl(u, v, clusters.data());
     };
     graph_.Graph()->get_vertex(i).out_neighbors().map(map_f);
   });
 
-  parlay::parallel_for(0, n, [&] (size_t i) {
-    gbbs::simple_union_find::find_compress(i, clusters);
+  parlay::parallel_for(0, n, [&] (gbbs::uintE i) {
+    gbbs::simple_union_find::find_compress(i, clusters.data());
   });
 
   auto ret = research_graph::DenseClusteringToNestedClustering<gbbs::uintE>(clusters);
