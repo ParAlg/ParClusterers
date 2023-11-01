@@ -21,11 +21,12 @@ print('; '.join(map(str, sequence)))
 
 
 # WCC
-start = np.log10(0.99)
-stop = np.log10(0.7)
-
-exp_values = np.logspace(start, stop, num=10)
-print('; '.join(map(str, exp_values )))
+print("WCC")
+values = []
+for i in np.arange(50, 99, 1):
+  values.append(0.01* i)
+formatted_values = ['{:.2f}'.format(val) for val in values]
+print('; '.join(formatted_values))
 
 
 #tectonic

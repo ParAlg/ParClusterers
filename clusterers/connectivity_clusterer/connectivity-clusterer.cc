@@ -24,21 +24,9 @@ ConnectivityClusterer::Cluster(const ClustererConfig& config) const {
   config.any_config().UnpackTo(&connectivity_config);
   double threshold = connectivity_config.threshold();
   bool upper_bound = connectivity_config.upper_bound();
-  double ratio = connectivity_config.ratio();
 
-  if (ratio != -1){
-    if(ratio < 0 || ratio > 1){
-      return absl::FailedPreconditionError("ratio should be between 0 and 1");
-    }
-    auto map_fn = [](const auto& u, const auto& v, const auto& w){ return w; };
-    auto reduce_fn = parlay::make_monoid([](const auto& a, const auto& b) { return std::max(a,b); }, 0);
-    auto max_weight = graph_.Graph()->reduceEdges(map_fn, reduce_fn);
-    threshold = ratio * max_weight;
-    std::cout << "max_weight = " << max_weight << std::endl;
-  }
   std::cout << "threshold = " << threshold << std::endl;
   std::cout << "upper_bound = " << (upper_bound ? "true" : "false") << std::endl;
-  std::cout << "ratio = " << ratio << std::endl;
 
   auto clusters = parlay::sequence<gbbs::uintE>::from_function(n, [&] (size_t i) { return i; });
   parlay::parallel_for(0, n, [&] (size_t i) {

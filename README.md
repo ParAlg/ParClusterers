@@ -48,7 +48,6 @@ Input: if .bin filename is used, will use NetworkitBinary file reader. Otherwise
 ## ConenctivityClusterer
 - `threshold`: edges with weight higher (or lower if `upper_bound` is set) than threshold are excluded.
 - `upper_bound`: A boolean variable. If true, the threshold is used as an upperbound instead of a lower bound.
-- `ratio`: edges with weight larger than `ratio`* heaviest edge are excluded. The other parameters are ignored. Should be between 0 and 1.
 
 ## KCoreClusterer
 - `threshold`: if (u,v) both have core number >= threshold, they are connected.
