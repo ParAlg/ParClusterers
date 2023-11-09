@@ -59,49 +59,21 @@ def convert_to_cmty_format(ground_truth_input, ground_truth_output):
 #           )
 # result = convert_to_cmty_format(ground_truth_input, ground_truth_output)
 
-# ########### KNN Graph for ImageNet ####################
-# input_file_path = "/home/sy/mount-data/imagenet/imagenet.npy"
-# data_name = "imagenet"
-# ground_truth_input = "/home/sy/mount-data/imagenet/imagenet_gt.npy"
-# ground_truth_output = "knn_graphs/%s.cmty" % (data_name)
-
-# data = np.load(input_file_path)
-# print("data loaded")
-# ks = [10, 50, 100, 500]
-# for k in ks:
-#   knn_graph_path = "knn_graphs/%s_k%s.graph.txt" % (data_name, k)
-#   params = {
-#             "max_degree": 256,
-#             "alpha": 1.1,
-#             "Lbuild": 256,
-#             "L": 256,
-#             "Lnn": 256,
-#           }
-#   dpc_ann.dpc_numpy(
-#             graph_type="Vamana",
-#             knn_graph_path=knn_graph_path,
-#             data=data,
-#             K=k,
-#             center_finder=dpc_ann.ProductCenterFinder(num_clusters=1),
-#             **params
-#         )
-
-# result = convert_to_cmty_format(ground_truth_input, ground_truth_output)
-
-########### KNN Graph for others ####################
-
+base_addr = "/home/sy/embeddings/"
 for data_name in ["amazon_polarity", "arxiv-clustering-p2p", 
-                  "arxiv-clustering-s2s", "reddit-clustering", 
+                  "arxiv-clustering-s2s", "imagenet", "reddit-clustering", 
                   "stackexchange-clustering", "wikipedia"]:
     
-    input_file_path = "/home/sy/embeddings/%s/%s.npy" % (data_name, data_name)
-    ground_truth_input = "/home/sy/embeddings/%s/%s.gt" % (data_name, data_name)
+    input_file_path = base_addr + "%s/%s.npy" % (data_name, data_name)
+    ground_truth_input = base_addr + "%s/%s.gt" % (data_name, data_name)
     ground_truth_output = "knn_graphs/%s.cmty" % (data_name)
     numpy_array = np.loadtxt(ground_truth_input)
-    print(numpy_array)
-
+    # print(numpy_array)
     data = np.load(input_file_path)
-    print("data loaded")
+    print(data_name, "data loaded")
+    print(data.shape)
+    print("Num. classes", len(np.unique(numpy_array)))
+
     ks = [10, 50, 100]
     for k in ks:
       knn_graph_path = "knn_graphs/%s_k%s.graph.txt" % (data_name, k)
