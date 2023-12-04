@@ -68,14 +68,13 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     auto cluster = clustering[i];
     std::sort(cluster.begin(), cluster.end());
   });*/
-  // auto begin_new = std::chrono::steady_clock::now();
   parlay::parallel_for(0, communities.size(), [&](std::size_t j) {
     auto community = communities[j];
     std::sort(community.begin(), community.end());
 
     std::size_t max_intersect = 0;
     std::size_t max_idx = 0;
-    if (communities.size() > sysconf(_SC_NPROCESSORS_ONLN)) {
+    if (communities.size() > 30) {
       std::vector<gbbs::uintE> intersect(community.size());
       // Find the community in communities that has the greatest intersection with cluster
       for (std::size_t i = 0; i < clustering.size(); i++) {
@@ -109,19 +108,12 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
           }
       }
     }
-
     precision_vec[j] = (double) max_intersect / (double) clustering[max_idx].size();
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
     f_score_vec[j] = (precision_vec[j] == 0 & recall_vec[j] == 0) ? 0:
       (1 + f_score * f_score) * precision_vec[j] * recall_vec[j] / ((f_score * f_score * precision_vec[j]) + recall_vec[j]);
   });
-  // auto end_new = std::chrono::steady_clock::now();
-  // auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end_new - begin_new);
-
-  // std::cout << "Time taken by new function: "
-  //           << duration2.count() << " microseconds" << std::endl;
-
 
   auto precision_func = [&](std::size_t i) {
     return precision_vec[i];
