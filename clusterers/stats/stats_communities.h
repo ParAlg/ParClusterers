@@ -68,30 +68,60 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
     auto cluster = clustering[i];
     std::sort(cluster.begin(), cluster.end());
   });*/
+  // auto begin_new = std::chrono::steady_clock::now();
   parlay::parallel_for(0, communities.size(), [&](std::size_t j) {
     auto community = communities[j];
     std::sort(community.begin(), community.end());
-    std::vector<gbbs::uintE> intersect(community.size());
+
     std::size_t max_intersect = 0;
     std::size_t max_idx = 0;
-    // Find the community in communities that has the greatest intersection with cluster
-    for (std::size_t i = 0; i < clustering.size(); i++) {
-      const auto& cluster = clustering[i];
-      // std::sort(cluster.begin(), cluster.end());
-      auto it = std::set_intersection(cluster.begin(), cluster.end(), 
-        community.begin(), community.end(), intersect.begin());
-      std::size_t it_size = it - intersect.begin();
-      if (it_size > max_intersect) {
-        max_intersect = it_size;
-        max_idx = i;
+    if (communities.size() > sysconf(_SC_NPROCESSORS_ONLN)) {
+      std::vector<gbbs::uintE> intersect(community.size());
+      // Find the community in communities that has the greatest intersection with cluster
+      for (std::size_t i = 0; i < clustering.size(); i++) {
+        const auto& cluster = clustering[i];
+        auto it = std::set_intersection(cluster.begin(), cluster.end(), 
+          community.begin(), community.end(), intersect.begin());
+        std::size_t it_size = it - intersect.begin();
+
+        if (it_size > max_intersect) {
+          max_intersect = it_size;
+          max_idx = i;
+        }
       }
     }
+    else{
+      std::vector<std::size_t> intersections(clustering.size());
+      parlay::parallel_for(0, clustering.size(), [&](std::size_t i) {
+        const auto& cluster = clustering[i];
+        std::vector<gbbs::uintE> intersect(std::min(cluster.size(), community.size()));
+        auto it = std::set_intersection(cluster.begin(), cluster.end(), 
+          community.begin(), community.end(), intersect.begin());
+        std::size_t it_size = it - intersect.begin();
+        intersections[i] = it_size;
+      });
+        
+      max_intersect = intersections[0];
+      for (std::size_t i = 1; i < clustering.size(); ++i) {
+          if (intersections[i] > max_intersect) {
+              max_intersect = intersections[i];
+              max_idx = i;
+          }
+      }
+    }
+
     precision_vec[j] = (double) max_intersect / (double) clustering[max_idx].size();
     recall_vec[j] = (communities[j].size() == 0) ? 0 : 
       (double) max_intersect / (double) communities[j].size();
     f_score_vec[j] = (precision_vec[j] == 0 & recall_vec[j] == 0) ? 0:
       (1 + f_score * f_score) * precision_vec[j] * recall_vec[j] / ((f_score * f_score * precision_vec[j]) + recall_vec[j]);
   });
+  // auto end_new = std::chrono::steady_clock::now();
+  // auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end_new - begin_new);
+
+  // std::cout << "Time taken by new function: "
+  //           << duration2.count() << " microseconds" << std::endl;
+
 
   auto precision_func = [&](std::size_t i) {
     return precision_vec[i];
