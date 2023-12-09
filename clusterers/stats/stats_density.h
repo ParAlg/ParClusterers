@@ -51,6 +51,8 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
         else{
           size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
           double m_total = clustering[i].size()*(clustering[i].size()-1);
+          // std::cout << "m_subgraph" << " " << m_subgraph << std::endl;
+          // std::cout <<  "m_total" << " " <<  m_total << std::endl;
           result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
         }
     });
@@ -58,7 +60,16 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   auto result_func = [&](std::size_t i) {
     return result[i];
   };
+  auto weighted_result_func = [&](std::size_t i) {
+    return result[i] * (clustering[i].size() * 1.0 / n);
+  };
+  double weighted_mean = 0;
+  for (int i=0;i<result.size();++i){
+    weighted_mean += weighted_result_func(i);
+    // std::cout << result[i] << " " << weighted_result_func(i) << std::endl;
+  }
   set_distribution_stats(result.size(), result_func, clustering_stats->mutable_edge_density());
+  clustering_stats->set_weighted_edge_density_mean(weighted_mean);
 
   return absl::OkStatus();
 }
@@ -74,6 +85,7 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
     return absl::OkStatus();
   }
 
+  std::size_t n = graph.Graph()->n;
   auto result = std::vector<double>(clustering.size());
   auto f = [&] (gbbs::uintE u, gbbs::uintE v, gbbs::uintE w) { };
 
@@ -93,6 +105,16 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
     return result[i];
   };
   set_distribution_stats(result.size(), result_func, clustering_stats->mutable_triangle_density());
+
+  auto weighted_result_func = [&](std::size_t i) {
+    return result[i] * (clustering[i].size() * 1.0 / n);
+  };
+  double weighted_mean = 0;
+  for (int i=0;i<result.size();++i){
+    weighted_mean += weighted_result_func(i);
+    // std::cout << result[i] << " " << weighted_result_func(i) << std::endl;
+  }
+  clustering_stats->set_weighted_triangle_density_mean(weighted_mean);
 
   return absl::OkStatus();
 }
