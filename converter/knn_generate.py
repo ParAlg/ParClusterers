@@ -4,9 +4,6 @@ from sklearn.neighbors import kneighbors_graph
 from sklearn import datasets, metrics, svm
 from sklearn.datasets import fetch_olivetti_faces
 from numpy.random import RandomState
-import os
-import glob
-import cv2
 
 def convert_to_weighted(input, config):
     config = open(config,'r')
@@ -61,6 +58,7 @@ def convert_to_weighted(input, config):
 
     res = kneighbors_graph(sub_data, 10, mode='distance', include_self='auto')
     max_similarity = res.max()
+    print(max_similarity)
     # Divide each non-zero similarity in the matrix by this maximum value.
     res /= max_similarity
 
