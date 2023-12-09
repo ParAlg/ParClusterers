@@ -71,19 +71,41 @@ inline absl::Status CompareCommunities(std::vector<std::vector<gbbs::uintE>>& co
   parlay::parallel_for(0, communities.size(), [&](std::size_t j) {
     auto community = communities[j];
     std::sort(community.begin(), community.end());
-    std::vector<gbbs::uintE> intersect(community.size());
+
     std::size_t max_intersect = 0;
     std::size_t max_idx = 0;
-    // Find the community in communities that has the greatest intersection with cluster
-    for (std::size_t i = 0; i < clustering.size(); i++) {
-      const auto& cluster = clustering[i];
-      // std::sort(cluster.begin(), cluster.end());
-      auto it = std::set_intersection(cluster.begin(), cluster.end(), 
-        community.begin(), community.end(), intersect.begin());
-      std::size_t it_size = it - intersect.begin();
-      if (it_size > max_intersect) {
-        max_intersect = it_size;
-        max_idx = i;
+    if (communities.size() > 30) {
+      std::vector<gbbs::uintE> intersect(community.size());
+      // Find the community in communities that has the greatest intersection with cluster
+      for (std::size_t i = 0; i < clustering.size(); i++) {
+        const auto& cluster = clustering[i];
+        auto it = std::set_intersection(cluster.begin(), cluster.end(), 
+          community.begin(), community.end(), intersect.begin());
+        std::size_t it_size = it - intersect.begin();
+
+        if (it_size > max_intersect) {
+          max_intersect = it_size;
+          max_idx = i;
+        }
+      }
+    }
+    else{
+      std::vector<std::size_t> intersections(clustering.size());
+      parlay::parallel_for(0, clustering.size(), [&](std::size_t i) {
+        const auto& cluster = clustering[i];
+        std::vector<gbbs::uintE> intersect(std::min(cluster.size(), community.size()));
+        auto it = std::set_intersection(cluster.begin(), cluster.end(), 
+          community.begin(), community.end(), intersect.begin());
+        std::size_t it_size = it - intersect.begin();
+        intersections[i] = it_size;
+      });
+        
+      max_intersect = intersections[0];
+      for (std::size_t i = 1; i < clustering.size(); ++i) {
+          if (intersections[i] > max_intersect) {
+              max_intersect = intersections[i];
+              max_idx = i;
+          }
       }
     }
     precision_vec[j] = (double) max_intersect / (double) clustering[max_idx].size();
