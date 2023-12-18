@@ -135,6 +135,25 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
   }
   clustering_stats->set_weighted_triangle_density_mean(weighted_mean);
 
+  // parlay::sequence<double> cluster_sum = parlay::sequence<double>(n, 0);
+  // parlay::sequence<gbbs::uintE> cluster_count = parlay::sequence<gbbs::uintE>(n, 0);
+  // parlay::parallel_for(0, clustering.size(), [&](size_t i){
+  //   const auto& cluster = clustering[i];
+  //   parlay::parallel_for(0, cluster.size(), [&](size_t j){
+  //     cluster_sum[cluster[j]] += result_func(i);
+  //     cluster_count[cluster[j]] += 1;
+  //   });
+  // });
+
+  // double weighted_mean_overlap = 0;
+  // // for (int i=0;i<cluster_sum.size();++i){
+  // //   if (cluster_count[i] != 0) {
+  // //     weighted_mean_overlap += cluster_sum[i] / cluster_count[i];
+  // //   }
+  // // }
+  // weighted_mean_overlap = weighted_mean_overlap / n;
+  // clustering_stats->set_weighted_triangle_density_overlap_mean(weighted_mean_overlap);
+
   return absl::OkStatus();
 }
 
