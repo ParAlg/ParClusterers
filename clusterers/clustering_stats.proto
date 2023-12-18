@@ -44,4 +44,5 @@ message ClusteringStatistics {
   optional double f_score_param = 31;
   optional double weighted_edge_density_mean = 32;
   optional double weighted_triangle_density_mean = 33;
+  optional double weighted_edge_density_overlap_mean = 34;
 }
