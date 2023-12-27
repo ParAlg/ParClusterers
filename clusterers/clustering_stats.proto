@@ -42,5 +42,6 @@ message ClusteringStatistics {
   optional double nmi = 29;
   optional DistributionStats f_score = 30;
   optional double f_score_param = 31;
-
+  optional double weighted_edge_density_mean = 32;
+  optional double weighted_triangle_density_mean = 33;
 }
