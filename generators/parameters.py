@@ -1,9 +1,15 @@
 import numpy as np
 
 # modularity
-for i in range(1, 40, 4):
-  print(0.02 * (1.2 ** i))
-  
+print("Modularity")
+sequence = [0.02 * (1.2 ** i) for i in range(1, 40, 4)]
+print('; '.join(map(str, sequence)))  
+sequence = [0.02 * (1.2 ** i) for i in range(40, 100, 10)]
+formatted_values = ['{:.2f}'.format(val) for val in sequence]
+print('; '.join(formatted_values))
+sequence = [0.0002, 0.002]
+formatted_values = ['{:.5f}'.format(val) for val in sequence]
+print('; '.join(formatted_values))
 
 # Par CC
 print("ParCC")
@@ -17,6 +23,11 @@ print("Parhac")
 a = 0.5
 end = 15 # adjust this as needed
 sequence = [a**i for i in np.arange(0, end, end/10)]
+print('; '.join(map(str, sequence)))
+
+print("Parhac large")
+a = 0.5
+sequence = [a**i for i in np.arange(end, end+15, 1.5)]
 print('; '.join(map(str, sequence)))
 
 
