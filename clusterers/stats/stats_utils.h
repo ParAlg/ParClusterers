@@ -53,6 +53,7 @@ inline void set_distribution_stats(std::size_t size, const T& data, Distribution
 // if keep_ids=false, the ids in subgraph do not neccessarily corresponds to the original graph's node id
 // the number of nodes in the new subgraph is V.size()
 // labels[i] is the cluster id of vertex i
+// Only works for NON-OVERLAPPING clusteters.
 template <class Wgh=float>
 inline gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh> get_subgraph(const GbbsGraph& graph_, const std::vector<InMemoryClusterer::NodeId>& V, const parlay::sequence<gbbs::uintE>& labels, bool keep_ids = false){
     // using Wgh = float;
