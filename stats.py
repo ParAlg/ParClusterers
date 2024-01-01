@@ -79,7 +79,11 @@ def runAll(config_filename, stats_config_filename):
   runner_utils.readStatsConfig(stats_config_filename)
   stats = []
   for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
+    if clusterer == "SKIP":
+      continue
     for graph_idx, graph in enumerate(runner_utils.graphs):
+      if graph == "SKIP":
+        continue
       if clusterer.startswith("Snap"):
         for i in range(runner_utils.num_rounds):
           if runner_utils.deterministic == "true" and i != 0:

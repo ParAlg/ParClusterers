@@ -186,10 +186,14 @@ def runAll(config_filename):
   
   runtimes = []
   for graph_idx, graph in enumerate(runner_utils.graphs):
+    if graph == "SKIP":
+      continue
     neo4j_graph_loaded = False
     tigergraph_loaded = False
     conn = None
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
+      if clusterer == "SKIP":
+        continue
       try:
         if clusterer.startswith("Snap"):
           if not os.path.exists(runner_utils.output_directory):
