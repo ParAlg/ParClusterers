@@ -48,7 +48,7 @@ def runNetworKitPLM(G, config):
     config_split = [x.strip() for x in config_item.split(':')]
     if config_split:
       if config_split[0].startswith("refine"):
-        use_refine = True if config_split[1].startswith("True") else False
+        use_refine = True if config_split[1].lower().startswith("true") else False
       elif config_split[0].startswith("gamma"):
         use_gamma = float(config_split[1])
       elif config_split[0].startswith("par"):
@@ -56,9 +56,9 @@ def runNetworKitPLM(G, config):
       elif config_split[0].startswith("maxIter"):
         use_maxIter = int(config_split[1])
       elif config_split[0].startswith("turbo"):
-        use_turbo = True if config_split[1].startswith("True") else False
+        use_turbo = True if config_split[1].lower().startswith("true") else False
       elif config_split[0].startswith("recurse"):
-        use_recurse = True if config_split[1].startswith("True") else False
+        use_recurse = True if config_split[1].lower().startswith("true") else False
   f = io.StringIO()
   with redirect_stdout(f):
     print(config)
@@ -130,11 +130,12 @@ def runNetworKitParallelLeiden(G, config):
     config_split = [x.strip() for x in config_item.split(':')]
     if config_split:
       if config_split[0].startswith("randomize"):
-        use_randomize = True if config_split[1].startswith("True") else False
+        use_randomize = True if config_split[1].lower().startswith("true") else False
       elif config_split[0].startswith("iterations"):
         use_iterations = int(config_split[1])
       elif config_split[0].startswith("gamma"):
         use_gamma = float(config_split[1])
+  print(use_randomize, use_iterations, use_gamma)
   f = io.StringIO()
   with redirect_stdout(f):
     print(config)

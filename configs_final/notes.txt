@@ -1,0 +1,1 @@
+For UCI datasets on ParallelLeiden, only used up to 29.40, because larger gamma values get stuck at first iteration.
