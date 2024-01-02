@@ -111,16 +111,19 @@ def runAll(config_filename, stats_config_filename):
             if runner_utils.deterministic == "true" and i != 0:
               continue
             out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
-            stats_dict = {}
-            stats_dict['Clusterer Name'] = clusterer
-            stats_dict["Input Graph"] = graph
-            stats_dict["Threads"] = thread
-            stats_dict["Config"] = config
-            stats_dict["Round"] = i
-            stats_dict["Cluster Time"] = getRunTime(clusterer, out_prefix)
-            runStats(out_prefix, graph, graph_idx, stats_dict)
-            stats_dict["Ground Truth"] = runner_utils.communities[graph_idx]
-            stats.append(stats_dict)
+            try:
+              stats_dict = {}
+              stats_dict['Clusterer Name'] = clusterer
+              stats_dict["Input Graph"] = graph
+              stats_dict["Threads"] = thread
+              stats_dict["Config"] = config
+              stats_dict["Round"] = i
+              stats_dict["Cluster Time"] = getRunTime(clusterer, out_prefix)
+              runStats(out_prefix, graph, graph_idx, stats_dict)
+              stats_dict["Ground Truth"] = runner_utils.communities[graph_idx]
+              stats.append(stats_dict)
+            except FileNotFoundError:
+              print("Failed because file not found, ", out_prefix)
   stats_dataframe = pd.DataFrame(stats)
   if not os.path.exists(runner_utils.csv_output_directory):
     os.makedirs(runner_utils.csv_output_directory)
