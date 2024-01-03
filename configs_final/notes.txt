@@ -1,1 +1,3 @@
 For UCI datasets on ParallelLeiden and Neo4jLeiden, only used up to 29.40, because larger gamma values get stuck at first iteration (networkit) or fail (Neo4jLeiden).
+
+ParallelCorrelation on gamma=0.95 OOM.
