@@ -96,7 +96,17 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
         if(num_wedges == 0){
           result[i] = 0;
         }else{
-          size_t num_tri = gbbs::Triangle_degree_ordering(G, f);
+          // std::cout << "start \n";
+          // std::cout << "clustering size " << clustering[i].size() << std::endl;
+          // std::cout << clustering[i][0] << std::endl;
+          // std::cout << "subgrpah num nodes " << G.n << std::endl;
+          // std::cout << "subgraph num edges " << G.num_edges() << std::endl;
+
+          size_t num_tri = 0;
+          if (G.num_edges() >= 3 && G.num_vertices() >= 3){
+            num_tri =  gbbs::Triangle_degree_ordering(G, f);
+          }
+          // std::cout << "end num_tri = " << num_tri << std::endl;
           result[i] = (static_cast<double>(num_tri)) / (static_cast<double>(num_wedges));
         }
     });
