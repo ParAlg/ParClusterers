@@ -71,14 +71,20 @@ absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph,
   ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   auto end_edge_density = std::chrono::steady_clock::now();
   PrintTime(end_diameter, end_edge_density, "Compute EdgeDensity");
+  ComputeEdgeDensityOverlap(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  auto end_edge_density_overlap = std::chrono::steady_clock::now();
+  PrintTime(end_edge_density, end_edge_density_overlap, "Compute EdgeDensityOverlap");
   ComputeTriangleDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
   auto end_triangle_density = std::chrono::steady_clock::now();
-  PrintTime(end_edge_density, end_triangle_density, "Compute Triangle Density");
+  PrintTime(end_edge_density_overlap, end_triangle_density, "Compute Triangle Density");
+  ComputeTriangleDensityOverlap(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  auto end_triangle_density_overlap = std::chrono::steady_clock::now();
+  PrintTime(end_triangle_density, end_triangle_density_overlap, "Compute Triangle Density");
 
   size_t n = graph.Graph()->n;
   ComputeARI(n, clustering, &clustering_stats, communities, clustering_stats_config);
   auto end_ari = std::chrono::steady_clock::now();
-  PrintTime(end_triangle_density, end_ari, "Compute ARI");
+  PrintTime(end_triangle_density_overlap, end_ari, "Compute ARI");
   ComputeNMI(n, clustering, &clustering_stats, communities, clustering_stats_config);
   auto end_nmi = std::chrono::steady_clock::now();
   PrintTime(end_ari, end_nmi, "Compute NMI");
