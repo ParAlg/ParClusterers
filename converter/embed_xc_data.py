@@ -2,15 +2,18 @@
 
 import pandas as pd
 import numpy as np
-from tenacity import retry, wait_random_exponential, stop_after_attempt
+# from tenacity import retry, wait_random_exponential, stop_after_attempt
 import gzip
 import json
-from collections import defaultdict 
+from collections import defaultdict
 import tqdm
 import openai
 from openai import OpenAI
 import os
+
 client = OpenAI()
+
+base_dir = "../xc_data"
 
 def read_corpus(fname):
     """
@@ -20,22 +23,27 @@ def read_corpus(fname):
     -------
     A generator with dictionary as values
     """
-    with gzip.open(fname, 'r') as fp:
+    with gzip.open(fname, "r") as fp:
         for line in fp:
             yield json.loads(line)
-            
-def read(fname, title_only=True):
+
+
+def read(fname, title_only):
+    """
+    if title_only is True, we only return the titles. Otherwise concat title and content.
+    """
     labels = []
     text = []
     fp = read_corpus(fname)
     for line in fp:
         # different dataset might use different fields
         if title_only:
-          text.append(line['title'])
+            text.append(line["title"])
         else:
-          text.append(line['title'] + line['content'])
-        labels.append(line['target_ind'])
+            text.append(line["title"] + line["content"])
+        labels.append(line["target_ind"])
     return text, labels
+
 
 def get_communities(labels):
     """
@@ -53,15 +61,16 @@ def get_communities(labels):
     unique_list = [list(inner_tuple) for inner_tuple in unique_set]
     return unique_list
 
-@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
+
+# @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
 def get_embeddings(texts, model="text-embedding-3-small"):
     """
     Fetches embeddings for a batch of texts using a specified OpenAI embedding model.
-    
+
     Args:
     - texts (list of str): The texts to encode.
     - model (str): The model to use for encoding.
-    
+
     Returns:
     - list of list: A list of embedding lists, each representing the embedding for a text.
     """
@@ -69,7 +78,8 @@ def get_embeddings(texts, model="text-embedding-3-small"):
     embeddings = [response.embedding for response in responses.data]
     return embeddings
 
-def embed_texts(text, batch_size = 2000):
+
+def embed_texts(text, batch_size=2000):
     """
     `text` is a list of strings, return the embeddings for each string in the list.
     """
@@ -79,9 +89,10 @@ def embed_texts(text, batch_size = 2000):
     for start in tqdm.tqdm(range(0, n, batch_size)):
         end = start + batch_size
         batch_texts = text[start:end]
-        batch_embeddings = get_embeddings(batch_texts, model='text-embedding-3-small')
+        batch_embeddings = get_embeddings(batch_texts, model="text-embedding-3-small")
         embeddings.extend(batch_embeddings)
     return embeddings
+
 
 def get_vectors_and_labels(train_dir, test_dir, title_only):
     all_labels = []
@@ -89,26 +100,29 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
     for data_dir in [train_dir, test_dir]:
         text, labels = read(data_dir, title_only)
         all_labels.extend(labels)
-        
+
         token_counts = [len(string.split()) for string in text]
-        print("price: ", np.sum(token_counts)/1000 * 0.00002)
-        print("Minute Limit:", np.sum(token_counts)/ 1e6)
+        print("price: ", np.sum(token_counts) / 1000 * 0.00002)
+        print("Minute Limit:", np.sum(token_counts) / 1e6)
         embeddings = embed_texts(text)
         all_embeddings.extend(embeddings)
-    communities =  get_communities(labels)
+    communities = get_communities(all_labels)
     print("num communities", len(communities))
-    return all_embeddings, all_labels
+    return all_embeddings, communities
 
 
-
-base_dir = "/Users/sy/Desktop/MIT/clusterer/data"
-#, "WikiSeeAlsoTItles-350K", "Amazon-670K.raw", "Wikipedia-500K.raw"
-datasets = ["AmazonTitles-670K"]
+# ,
+datasets = [
+    # "AmazonTitles-670K",
+    "WikiSeeAlsoTItles-350K",
+    "Amazon-670K.raw",
+    "Wikipedia-500K.raw",
+]
 title_only_dict = {
     "AmazonTitles-670K": True,
-    "WikiSeeAlsoTItles-350K": True, 
-    "Amazon-670K.raw":False, 
-    "Wikipedia-500K.raw": True
+    "WikiSeeAlsoTItles-350K": True,
+    "Amazon-670K.raw": False,
+    "Wikipedia-500K.raw": True,
 }
 for dataset in datasets:
     print(dataset)
@@ -117,23 +131,23 @@ for dataset in datasets:
     if ".raw" in dataset:
         train_dir = f"{base_dir}/{dataset}/trn.raw.json.gz"
         test_dir = f"{base_dir}/{dataset}/tst.raw.json.gz"
-        
-    all_embeddings, all_labels = get_vectors_and_labels(train_dir, test_dir, title_only_dict[dataset])
-    all_embeddings = np.array(all_embeddings)
 
+    all_embeddings, communities = get_vectors_and_labels(
+        train_dir, test_dir, title_only_dict[dataset]
+    )
+    all_embeddings = np.array(all_embeddings)
 
     dataset = dataset.split("-")[0]
     if dataset == "Wikipedia" and title_only_dict[dataset]:
         dataset = "WikiTitles"
-    print("saving to, ", f'{base_dir}/{dataset}.npy')
-    with open(f'{base_dir}/{dataset}.npy', 'wb') as f:
+    print("saving to, ", f"{base_dir}/{dataset}.npy")
+    with open(f"{base_dir}/{dataset}.npy", "wb") as f:
         np.save(f, all_embeddings)
-    
-    communities = get_communities(all_labels)
+
     lines_to_write = []
     for cluster_list in communities:
         lines_to_write.append("\t".join(str(x) for x in cluster_list))
-    
-    print("saving to, ", f'{base_dir}/{dataset}.cmty')
-    with open(f'{base_dir}/{dataset}.cmty', 'w') as f:
-        f.write('\n'.join(lines_to_write) + '\n')
+
+    print("saving to, ", f"{base_dir}/{dataset}.cmty")
+    with open(f"{base_dir}/{dataset}.cmty", "w") as f:
+        f.write("\n".join(lines_to_write) + "\n")
