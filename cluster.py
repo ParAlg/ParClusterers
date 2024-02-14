@@ -186,10 +186,14 @@ def runAll(config_filename):
   
   runtimes = []
   for graph_idx, graph in enumerate(runner_utils.graphs):
+    if graph == "SKIP":
+      continue
     neo4j_graph_loaded = False
     tigergraph_loaded = False
     conn = None
     for clusterer_idx, clusterer in enumerate(runner_utils.clusterers):
+      if clusterer == "SKIP":
+        continue
       try:
         if clusterer.startswith("Snap"):
           if not os.path.exists(runner_utils.output_directory):
@@ -259,7 +263,7 @@ def runAll(config_filename):
                 "input_graph=" + use_input_graph + " --is_gbbs_format=" + runner_utils.gbbs_format + " --float_weighted=" + runner_utils.weighted + " --clusterer_name=" + clusterer + " "
                 "--clusterer_config='" + config_prefix + config + config_postfix + "' "
                 "--output_clustering=" + out_clustering)
-                if runner_utils.postprocess_only != "true":
+                if runner_utils.postprocess_only.lower() != "true":
                   print(ss)
                   out = runner_utils.shellGetOutput(ss)
                   runner_utils.appendToFile(ss + "\n", out_filename)

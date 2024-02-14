@@ -40,30 +40,30 @@ def convert_to_cmty_format(ground_truth_input, ground_truth_output):
 # data = digits.images.reshape((n_samples, -1)).astype("float32")
 # knn_graph_path = "results/knn_graphs/digits.graph.txt"
 
-########### KNN Graph for MNIST ####################
-# input_file_path = "/home/sy/ParDPC/data/mnist/mnist.npy"
-# ground_truth_input = "/home/sy/ParDPC/data/mnist/mnist_gt.npy"
-# data_name = "mnist"
-# ground_truth_output = "knn_graphs/%s/%s.cmty" % (data_name, data_name)
-# data = np.load(input_file_path)
-# print("data loaded")
-# ks = [10, 50]
-# for k in ks:
-#   knn_graph_path = "knn_graphs/%s/%s_k%s.graph.txt" % (data_name, data_name, k)
-#   dpc_ann.dpc_numpy(
-#               graph_type="BruteForce",
-#               knn_graph_path=knn_graph_path,
-#               data=data,
-#               K=k,
-#               center_finder=dpc_ann.ProductCenterFinder(num_clusters=1),
-#           )
-# result = convert_to_cmty_format(ground_truth_input, ground_truth_output)
-
 base_addr = "/home/sy/embeddings/"
-for data_name in ["amazon_polarity", "arxiv-clustering-p2p", 
+data_sets = ["amazon_polarity", "arxiv-clustering-p2p", 
                   "arxiv-clustering-s2s", "imagenet", "reddit-clustering", 
-                  "stackexchange-clustering", "wikipedia"]:
-    
+                  "stackexchange-clustering", "wikipedia", "mnist"]
+ks = [10, 50, 100]
+for data_name in data_sets:
+    if data_name == "mnist":
+      input_file_path = "/home/sy/ParDPC/data/mnist/mnist.npy"
+      ground_truth_input = "/home/sy/ParDPC/data/mnist/mnist_gt.npy"
+      data_name = "mnist"
+      ground_truth_output = "knn_graphs/%s/%s.cmty" % (data_name, data_name)
+      data = np.load(input_file_path)
+      print("data loaded")
+      for k in ks:
+        knn_graph_path = "knn_graphs/%s/%s_k%s.graph.txt" % (data_name, data_name, k)
+        dpc_ann.dpc_numpy(
+                    graph_type="BruteForce",
+                    knn_graph_path=knn_graph_path,
+                    data=data,
+                    K=k,
+                    center_finder=dpc_ann.ProductCenterFinder(num_clusters=1),
+                )
+      result = convert_to_cmty_format(ground_truth_input, ground_truth_output)
+      continue
     input_file_path = base_addr + "%s/%s.npy" % (data_name, data_name)
     ground_truth_input = base_addr + "%s/%s.gt" % (data_name, data_name)
     ground_truth_output = "knn_graphs/%s.cmty" % (data_name)
@@ -74,7 +74,6 @@ for data_name in ["amazon_polarity", "arxiv-clustering-p2p",
     print(data.shape)
     print("Num. classes", len(np.unique(numpy_array)))
 
-    ks = [10, 50, 100]
     for k in ks:
       knn_graph_path = "knn_graphs/%s_k%s.graph.txt" % (data_name, k)
       params = {
@@ -94,11 +93,3 @@ for data_name in ["amazon_polarity", "arxiv-clustering-p2p",
             )
 
     result = convert_to_cmty_format_helper(numpy_array, ground_truth_output)
-
-
-# bazel run //utils:snap_converter -- -s -i /home/sy/ParClusterers/knn_graphs/mnist_k10.graph.txt -o /home/sy/ParClusterers/knn_graphs/mnist_k10.gbbs.txt
-# bazel run //utils:snap_converter -- -s -i /home/sy/ParClusterers/knn_graphs/mnist_k50.graph.txt -o /home/sy/ParClusterers/knn_graphs/mnist_k50.gbbs.txt
-
-# bazel run //utils:snap_converter -- -s -i /home/sy/ParClusterers/knn_graphs/imagenet_k10.graph.txt -o /home/sy/ParClusterers/knn_graphs/imagenet_k10.gbbs.txt
-# bazel run //utils:snap_converter -- -s -i /home/sy/ParClusterers/knn_graphs/imagenet_k50.graph.txt -o /home/sy/ParClusterers/knn_graphs/imagenet_k50.gbbs.txt
-# bazel run //utils:snap_converter -- -s -i /home/sy/ParClusterers/knn_graphs/imagenet_k100.graph.txt -o /home/sy/ParClusterers/knn_graphs/imagenet_k100.gbbs.txt

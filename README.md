@@ -61,6 +61,7 @@ TODO: delete par_threshold in the end if we actually don't use it.
 TODO: remove async? async seeems to be always better.
 
 #### Neo4j
+- run `python3 tests/test_neo4j_installation.py` to test if neo4j is successfully installed.
 - minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.
 
 #### NetWorkIt LPDegreeOrdered
