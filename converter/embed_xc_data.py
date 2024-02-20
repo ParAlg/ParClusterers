@@ -10,6 +10,7 @@ import tqdm
 import openai
 from openai import OpenAI
 import os
+import tiktoken
 
 client = OpenAI()
 
@@ -95,15 +96,25 @@ def embed_texts(text, batch_size=2000):
 
 
 def get_vectors_and_labels(train_dir, test_dir, title_only):
+    token_limit =  8192
+    encoding = tiktoken.encoding_for_model("text-embedding-3-small")
     all_labels = []
     all_embeddings = []
     for data_dir in [train_dir, test_dir]:
         text, labels = read(data_dir, title_only)
         all_labels.extend(labels)
 
-        token_counts = [len(string.split()) for string in text]
-        print("price: ", np.sum(token_counts) / 1000 * 0.00002)
-        print("Minute Limit:", np.sum(token_counts) / 1e6)
+        num_tokens = 0
+        for i in tqdm.tqdm(range(len(text)), "check_encoding_length"):
+            tokens = encoding.encode(text[i])
+            if len(tokens) > token_limit:
+                new_text =  encoding.decode(tokens[:token_limit])
+                text[i] = new_text
+            num_tokens += min(token_limit, len(tokens))
+                
+        print("price: ", num_tokens/1000 * 0.00002)
+        print("Minute Limit:", num_tokens/ 1e6)
+
         embeddings = embed_texts(text)
         all_embeddings.extend(embeddings)
     communities = get_communities(all_labels)
