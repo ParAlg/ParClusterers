@@ -119,10 +119,10 @@ datasets = [
     "Wikipedia-500K.raw",
 ]
 title_only_dict = {
-    "AmazonTitles-670K": True,
-    "WikiSeeAlsoTItles-350K": True,
-    "Amazon-670K.raw": False,
-    "Wikipedia-500K.raw": True,
+    "AmazonTitles": True,
+    "WikiSeeAlsoTItles": True,
+    "Amazon": False,
+    "Wikipedia": True,
 }
 for dataset in datasets:
     print(dataset)
