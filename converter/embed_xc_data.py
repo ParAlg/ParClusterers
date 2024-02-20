@@ -119,10 +119,10 @@ datasets = [
     "Wikipedia-500K.raw",
 ]
 title_only_dict = {
-    "AmazonTitles": True,
-    "WikiSeeAlsoTItles": True,
-    "Amazon": False,
-    "Wikipedia": True,
+    "AmazonTitles-670K": True,
+    "WikiSeeAlsoTItles-350K": True,
+    "Amazon-670K.raw": False,
+    "Wikipedia-500K.raw": True,
 }
 for dataset in datasets:
     print(dataset)
@@ -137,9 +137,9 @@ for dataset in datasets:
     )
     all_embeddings = np.array(all_embeddings)
 
-    dataset = dataset.split("-")[0]
-    if dataset == "Wikipedia" and title_only_dict[dataset]:
+    if dataset.startswith("Wikipedia") and title_only_dict[dataset]:
         dataset = "WikiTitles"
+    dataset = dataset.split("-")[0]
     print("saving to, ", f"{base_dir}/{dataset}.npy")
     with open(f"{base_dir}/{dataset}.npy", "wb") as f:
         np.save(f, all_embeddings)
