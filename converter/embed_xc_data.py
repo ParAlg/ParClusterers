@@ -2,7 +2,7 @@
 
 import pandas as pd
 import numpy as np
-# from tenacity import retry, wait_random_exponential, stop_after_attempt
+from tenacity import retry, wait_random_exponential, stop_after_attempt
 import gzip
 import json
 from collections import defaultdict
@@ -62,7 +62,7 @@ def get_communities(labels):
     return unique_list
 
 
-# @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
+@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
 def get_embeddings(texts, model="text-embedding-3-small"):
     """
     Fetches embeddings for a batch of texts using a specified OpenAI embedding model.
@@ -114,7 +114,7 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
 # ,
 datasets = [
     # "AmazonTitles-670K",
-    "WikiSeeAlsoTItles-350K",
+    # "WikiSeeAlsoTItles-350K",
     "Amazon-670K.raw",
     "Wikipedia-500K.raw",
 ]
