@@ -124,8 +124,8 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
 
 # ,
 datasets = [
-    # "AmazonTitles-670K",
-    # "WikiSeeAlsoTItles-350K",
+    "AmazonTitles-670K",
+    "WikiSeeAlsoTItles-350K",
     "Amazon-670K.raw",
     "Wikipedia-500K.raw",
 ]
