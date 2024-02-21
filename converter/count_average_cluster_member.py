@@ -19,9 +19,9 @@ def read_corpus(fname):
             yield json.loads(line)
 
 
-def read(fname, title_only):
+def read(fname):
     """
-    if title_only is True, we only return the titles. Otherwise concat title and content.
+    Return labels
     """
     labels = []
     fp = read_corpus(fname)
