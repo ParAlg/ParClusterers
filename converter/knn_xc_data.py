@@ -44,9 +44,9 @@ def get_edges(knns, dist, k):
 
 datasets = [
     "AmazonTitles",
-    # "WikiSeeAlsoTItles",
-    # "Amazon",
-    # "WikiTitles",
+    "WikiSeeAlsoTItles",
+    "Amazon",
+    "WikiTitles",
 ]
 
 plam_suffix="_palm"
@@ -57,4 +57,4 @@ for dataset in datasets:
   num_nodes = len(data)
   for k in [10, 50, 100]:
       edges = get_edges(knns, dist, k)
-      write_edges(edges, num_nodes, f'{base_dir}/{dataset}_k{k}{plam_suffix}.ungraph.txt', f"{dataset}_k{k}")
+      write_edges(edges, num_nodes, f'{base_dir}/{dataset}{plam_suffix}_k{k}.ungraph.txt', f"{dataset}_k{k}")
