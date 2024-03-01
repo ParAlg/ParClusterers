@@ -128,9 +128,9 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
 
 datasets = [
     "AmazonTitles-670K",
-#     "WikiSeeAlsoTItles-350K",
-#     "Amazon-670K.raw",
-#     "Wikipedia-500K.raw",
+    "WikiSeeAlsoTItles-350K",
+    "Amazon-670K.raw",
+    "Wikipedia-500K.raw",
 ]
 title_only_dict = {
     "AmazonTitles-670K": True,
