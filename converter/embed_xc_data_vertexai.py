@@ -12,7 +12,7 @@ import tqdm
 import os
 
 
-# need to run gcloud auth application-default login
+# need to run gcloud auth application-default login --no-launch-browser
 vertexai.init(project="julian-shun-3fef")
 
 base_dir = "../xc_data"
