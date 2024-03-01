@@ -65,7 +65,7 @@ def get_communities(labels):
 
 
 
-# @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
+@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(10))
 def get_embeddings(texts, model):
     """
     Fetches embeddings for a batch of texts using a specified OpenAI embedding model.
