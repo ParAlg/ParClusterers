@@ -118,12 +118,12 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
         for i in tqdm.tqdm(range(len(text)), "check_encoding_length"):
             tokens = encoding.encode(text[i])
             if len(tokens) > token_limit:
-                new_text =  encoding.decode(tokens[:token_limit])
+                new_text = encoding.decode(tokens[:token_limit])
                 text[i] = new_text
             num_tokens += min(token_limit, len(tokens))
                 
         print("price: ", num_tokens/1000 * 0.0002)
-
+        print("num text strings", len(text))
         embeddings = embed_texts(text, batch_size=250)
         all_embeddings.extend(embeddings)
     communities = get_communities(all_labels)
@@ -132,10 +132,10 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
 
 
 datasets = [
-    # "AmazonTitles-670K",
+    "AmazonTitles-670K",
     # "WikiSeeAlsoTItles-350K",
-    "Amazon-670K.raw",
-    "Wikipedia-500K.raw",
+    # "Amazon-670K.raw",
+    # "Wikipedia-500K.raw",
 ]
 title_only_dict = {
     "AmazonTitles-670K": True,
@@ -155,6 +155,7 @@ for dataset in datasets:
         train_dir, test_dir, title_only_dict[dataset]
     )
     all_embeddings = np.array(all_embeddings)
+    print(all_embeddings.shape)
 
     if dataset.startswith("Wikipedia") and title_only_dict[dataset]:
         dataset = "WikiTitles"
