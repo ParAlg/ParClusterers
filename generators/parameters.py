@@ -14,6 +14,11 @@ sequence = [0.0002, 0.002]
 formatted_values = ['{:.5f}'.format(val) for val in sequence]
 print('; '.join(formatted_values))
 
+## more for XC setting
+sequence = [0.02 * (1.2 ** i) for i in range(80, 90, 1)]
+formatted_values = ['{:.2f}'.format(val) for val in sequence]
+print('; '.join(formatted_values))
+
 # Par CC
 print("ParCC")
 sequence = [0.0001 * i for i in np.arange(1, 1000, 1000/5)]
@@ -26,6 +31,9 @@ print("Parhac")
 a = 0.5
 end = 15 # adjust this as needed
 sequence = [a**i for i in np.arange(0, end, end/10)]
+print('; '.join(map(str, sequence)))
+## more for XC setting
+sequence = [1-i for i in sequence]
 print('; '.join(map(str, sequence)))
 
 print("Parhac large")
@@ -41,7 +49,11 @@ for i in np.arange(50, 99, 1):
   values.append(0.01* i)
 formatted_values = ['{:.2f}'.format(val) for val in values]
 print('; '.join(formatted_values))
-
+values = []
+for i in np.arange(10, 50, 1):
+  values.append(0.01* i)
+formatted_values = ['{:.2f}'.format(val) for val in values]
+print('; '.join(formatted_values))
 
 #tectonic
 print("Tectonic")
