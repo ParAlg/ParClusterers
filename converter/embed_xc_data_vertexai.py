@@ -88,7 +88,7 @@ def get_embeddings(texts, model):
     for embedding in embeddings:
         vector = embedding.values
         all_vectors.append(vector)
-        return all_vectors
+    return all_vectors
 
 
 def embed_texts(text, batch_size=2000):
@@ -133,9 +133,9 @@ def get_vectors_and_labels(train_dir, test_dir, title_only):
 
 datasets = [
     "AmazonTitles-670K",
-    # "WikiSeeAlsoTItles-350K",
+    "WikiSeeAlsoTItles-350K",
     # "Amazon-670K.raw",
-    # "Wikipedia-500K.raw",
+    "Wikipedia-500K.raw",
 ]
 title_only_dict = {
     "AmazonTitles-670K": True,
@@ -164,13 +164,13 @@ for dataset in datasets:
     with open(f"{base_dir}/{dataset}_palm.npy", "wb") as f:
         np.save(f, all_embeddings)
 
-    lines_to_write = []
-    for cluster_list in communities:
-        lines_to_write.append("\t".join(str(x) for x in cluster_list))
+    # lines_to_write = []
+    # for cluster_list in communities:
+    #     lines_to_write.append("\t".join(str(x) for x in cluster_list))
 
-    print("saving to, ", f"{base_dir}/{dataset}_palm.cmty")
-    with open(f"{base_dir}/{dataset}_palm.cmty", "w") as f:
-        f.write("\n".join(lines_to_write) + "\n")
+    # print("saving to, ", f"{base_dir}/{dataset}_palm.cmty")
+    # with open(f"{base_dir}/{dataset}_palm.cmty", "w") as f:
+    #     f.write("\n".join(lines_to_write) + "\n")
 
 
 
