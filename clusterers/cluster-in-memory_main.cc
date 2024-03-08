@@ -277,6 +277,7 @@ absl::Status Main() {
   std::cout << "Num workers: " << parlay::num_workers() << std::endl;
   std::cout << "Graph: " << input_file << std::endl;
   std::cout << "Num vertices: " << n << std::endl;
+  std::cout << "Convert to symmetric Graph: " << (is_symmetric_graph ? "True": "False") << std::endl;
   std::cout << "Cluster include zero-deg vertices: " << ((using_google_clusterer || include_zero_degree_v) ? "true" : "false") << std::endl;
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
