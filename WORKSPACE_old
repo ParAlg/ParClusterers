@@ -62,6 +62,13 @@ bind(
     actual = "@com_github_gflags_gflags//:gflags",
 )
 
+git_repository(
+    name = "gflags",
+    commit = "f40e43a6288940efadd29c208085db05335a15d8",
+    remote = "https://github.com/gflags/gflags.git",
+)
+
+
 # rules_proto defines abstract rules for building Protocol Buffers.
 
 http_archive(
@@ -139,11 +146,11 @@ rules_proto_toolchains()
 #rules_proto_dependencies()
 #rules_proto_toolchains()
 #
-git_repository(
-    name = "com_google_protobuf",
-    remote = "https://github.com/protocolbuffers/protobuf.git",
-    tag = "v22.3",
-)
+# git_repository(
+#     name = "com_google_protobuf",
+#     remote = "https://github.com/protocolbuffers/protobuf.git",
+#     tag = "v22.3",
+# )
 
 git_repository(
     name = "com_google_absl",

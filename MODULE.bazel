@@ -1,0 +1,22 @@
+module(
+    name = "parclusterers",
+    repo_name = "ParClusterers",
+)
+
+bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
+bazel_dep(name = "protobuf", version = "23.1", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_cc", version = "0.0.9")
+# -- bazel_dep definitions -- #
+
+non_module_deps = use_extension("//:non_module_deps.bzl", "non_module_deps")
+use_repo(non_module_deps, "gbbs")
+use_repo(non_module_deps, "com_github_graph_mining")
+use_repo(non_module_deps, "parlaylib")
+use_repo(non_module_deps, "com_github_gflags_gflags")
+# End of extension `non_module_deps`
+
+bazel_dep(name = "parcluster")
+local_path_override(
+    module_name = "parcluster",
+    path = "external/InMemoryClusteringAPI/include",
+)

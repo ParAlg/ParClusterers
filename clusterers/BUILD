@@ -38,7 +38,7 @@ cc_library(
     srcs = ["gbbs_graph_io.cc"],
     hdrs = ["gbbs_graph_io.h"],
     deps = [
-        "//external:gflags",
+        "@com_github_gflags_gflags//:gflags",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
