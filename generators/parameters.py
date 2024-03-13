@@ -18,6 +18,9 @@ print('; '.join(formatted_values))
 sequence = [0.02 * (1.2 ** i) for i in range(80, 90, 1)]
 formatted_values = ['{:.2f}'.format(val) for val in sequence]
 print('; '.join(formatted_values))
+sequence = [0.02 * (1.2 ** i) for i in range(90, 100, 1)]
+formatted_values = ['{:.2f}'.format(val) for val in sequence]
+print('; '.join(formatted_values))
 
 # Par CC
 print("ParCC")
@@ -34,6 +37,8 @@ sequence = [a**i for i in np.arange(0, end, end/10)]
 print('; '.join(map(str, sequence)))
 ## more for XC setting
 sequence = [1-i for i in sequence]
+print('; '.join(map(str, sequence)))
+sequence = [1 - 0.5**i for i in np.arange(1, 4, 3/10)]
 print('; '.join(map(str, sequence)))
 
 print("Parhac large")
@@ -62,7 +67,11 @@ for i in np.arange(1, 40, 40/40):
   values.append(0.01* i)
 formatted_values = ['{:.2f}'.format(val) for val in values]
 print('; '.join(formatted_values))
-
+values = []
+for i in np.arange(40, 50, 1):
+  values.append(0.01* i)
+formatted_values = ['{:.2f}'.format(val) for val in values]
+print('; '.join(formatted_values))
 # parallel affinity
 # start = np.log10(0.9)
 # stop = np.log10(1e-5)
