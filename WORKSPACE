@@ -23,10 +23,8 @@ git_repository(
 
 git_repository(
     name = "com_github_graph_mining",
-    # remote = "https://github.com/google/graph-mining.git",
-    remote = "https://github.com/yushangdi/graph-mining.git",
-    # commit = "4048abf78811625a27bc244790c171cf8ce8d7fc"
-    commit = "e0d068b6eb12fc267704869cc6240d3ae10005ee"
+    remote = "https://github.com/google/graph-mining.git",
+    commit = "aaf5a5a1b84d35341776a8b1694640ea07c7c596"
 )
 
 
