@@ -14,6 +14,8 @@ message ClusteringStatsConfig {
   optional bool compute_precision_recall = 9;
   optional bool compute_nmi = 10;
   optional double f_score_param = 11;
+  optional bool compute_edge_density_overlap = 12;
+  optional bool compute_triangle_density_overlap = 13;
 }
 
 message DistributionStats {
@@ -44,4 +46,6 @@ message ClusteringStatistics {
   optional double f_score_param = 31;
   optional double weighted_edge_density_mean = 32;
   optional double weighted_triangle_density_mean = 33;
+  optional double weighted_edge_density_overlap_mean = 34;
+  optional double weighted_triangle_density_overlap_mean = 35;
 }
