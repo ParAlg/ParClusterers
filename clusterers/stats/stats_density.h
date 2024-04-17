@@ -28,39 +28,59 @@
 namespace research_graph::in_memory {
 
 
-// compute the edge density of each cluster
-// edge density is the number of edges divided by the number of possible edges
+// Compute the edge density of each cluster.
+// Edge density is the number of edges divided by the number of possible edges.
+// It assumes that all node ids in clustering and cluster_ids are in `graph`.
 inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
   const bool compute_edge_density = clustering_stats_config.compute_edge_density();
+  const bool include_zero_degree_nodes = clustering_stats_config.include_zero_degree_nodes();
   if (!compute_edge_density) {
     return absl::OkStatus();
   }
 
   std::size_t n = graph.Graph()->n;
-  auto result = std::vector<double>(clustering.size());
+  auto result = parlay::sequence<double>(clustering.size());
 
-  if(clustering.size()==1){
-    result[0] = (static_cast<double>(graph.Graph()->m)) / (static_cast<double>(n)*(n-1));
-  }else{
-    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-        if (clustering[i].size() == 1){
-          result[i] = 0;
-        }
-        else{
-          size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
-          double m_total = clustering[i].size()*(clustering[i].size()-1);
-          // std::cout << "m_subgraph" << " " << m_subgraph << std::endl;
-          // std::cout <<  "m_total" << " " <<  m_total << std::endl;
-          result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
-        }
+  parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+    const double cluster_size = clustering[i].size();
+    if (cluster_size == 1){ // A singleton cluster.
+      const auto singleton_node_id = clustering[i][0];
+      if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
+        result[i] = -1;
+      }else{
+        result[i] = 1;
+      }
+    }else{
+      double m_total = cluster_size * (cluster_size - 1);
+      // std::cout <<  "m_total" << " " <<  m_total << std::endl;
+      if(clustering.size()==1 && cluster_size == n){ // All nodes are in a cluster.
+        result[i] = (static_cast<double>(graph.Graph()->m)) / m_total;
+      }else{
+        size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
+        // std::cout << "m_subgraph" << " " << m_subgraph << std::endl;
+        result[i] = (static_cast<double>(m_subgraph)) / m_total;
+      }
+    }
+  });
+
+  // Remove singleton zero degree nodes.
+  // Recompute `n` for weighted_result_func to ignore singleton zero-degree nodes.
+  if (!include_zero_degree_nodes){
+    result = parlay::filter(result, [&](double i){return i != -1;});
+    auto nodes_flags = parlay::delayed_seq<size_t>(n, [&](size_t i){
+      return graph.Degree(i) == 0 ? 0 : 1;
     });
+    n = parlay::reduce(nodes_flags);
   }
+
   auto result_func = [&](std::size_t i) {
     return result[i];
   };
   auto weighted_result_func = [&](std::size_t i) {
+    // Divide result.size() instead of n because some singleton 
+    // zero degree nodes might be filtered out above.
     return result[i] * (clustering[i].size() * 1.0 / n);
   };
   double weighted_mean = 0;
@@ -74,9 +94,15 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   return absl::OkStatus();
 }
 
-// compute the triangle density of each cluster
-// triangle density is the number of triangles divided by the number of wedges
-// if no wedge, density is 0
+/**
+ * Compute the triangle density of each cluster. It is also called clustering coefficient.
+ *
+ * The triangle density is the number of triangles divided by the number of wedges.
+ * Each unique triangle is counted three times (one time for each node permutation).
+ * Each unique wedge is counted once. So each unique triangle correspondes to three unique wedges.
+ *
+ * If there are no wedges, the density is 0. However, if there's a single node, the density is 1.
+ */
 inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
@@ -84,16 +110,25 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
   if (!compute_triangle_density) {
     return absl::OkStatus();
   }
+  const bool include_zero_degree_nodes = clustering_stats_config.include_zero_degree_nodes();
 
   std::size_t n = graph.Graph()->n;
-  auto result = std::vector<double>(clustering.size());
+  auto result = parlay::sequence<double>(clustering.size());
   auto f = [&] (gbbs::uintE u, gbbs::uintE v, gbbs::uintE w) { };
 
   //even if clustering.size()==1, we need to get the subgraph because could not match 'symmetric_graph' against 'symmetric_ptr_graph'
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+      if (clustering[i].size() == 1){
+        const auto singleton_node_id = clustering[i][0];
+        if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
+          result[i] = -1;
+        }else{
+          result[i] = 1;
+        }
+      } else {
         auto G = get_subgraph<gbbs::empty>(graph, clustering[i], cluster_ids); //have to use unweighted graph, otherwise result is wrong
         size_t num_wedges = get_num_wedges(&G);
-        if(num_wedges == 0){
+        if(num_wedges < 3){
           result[i] = 0;
         }else{
           // std::cout << "start \n";
@@ -106,11 +141,22 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
           if (G.num_edges() >= 3 && G.num_vertices() >= 3){
             num_tri =  gbbs::Triangle_degree_ordering(G, f);
           }
-          // std::cout << "end num_tri = " << num_tri << std::endl;
-          result[i] = (static_cast<double>(num_tri)) / (static_cast<double>(num_wedges));
+          result[i] = 3 * (static_cast<double>(num_tri)) / (static_cast<double>(num_wedges));
         }
+      }
     });
   // for(double l:result) std::cout << l << std::endl;
+
+  // Remove singleton zero degree nodes.
+  // Recompute `n` for weighted_result_func to ignore singleton zero-degree nodes.
+  if (!include_zero_degree_nodes){
+    result = parlay::filter(result, [&](double i){return i != -1;});
+    auto nodes_flags = parlay::delayed_seq<size_t>(n, [&](size_t i){
+      return graph.Degree(i) == 0 ? 0 : 1;
+    });
+    n = parlay::reduce(nodes_flags);
+  }
+  
   auto result_func = [&](std::size_t i) {
     return result[i];
   };
