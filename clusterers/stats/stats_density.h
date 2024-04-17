@@ -28,29 +28,40 @@
 namespace research_graph::in_memory {
 
 
-// compute the edge density of each cluster
-// edge density is the number of edges divided by the number of possible edges
+// Compute the edge density of each cluster.
+// Edge density is the number of edges divided by the number of possible edges
 inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
   const bool compute_edge_density = clustering_stats_config.compute_edge_density();
+  const bool include_zero_degree_nodes = clustering_stats_config.include_zero_degree_nodes();
   if (!compute_edge_density) {
     return absl::OkStatus();
   }
 
   std::size_t n = graph.Graph()->n;
-  auto result = std::vector<double>(clustering.size());
+  auto result = parlay::sequence<double>(clustering.size());
 
-  if(clustering.size()==1){
-    if (clustering[0].size() == 1){
-      result[0] = 1;
+  if(clustering.size()==1){ // There's a single cluster.
+    if (clustering[0].size() == 1){ // A singleton cluster.
+      const auto singleton_node_id = clustering[0][0];
+      if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
+        result[0] = -1;
+      }else{
+        result[0] = 1;
+      }
     } else {
       result[0] = (static_cast<double>(graph.Graph()->m)) / (static_cast<double>(n)*(n-1));
     }
   }else{
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-        if (clustering[i].size() == 1){
-          result[i] = 1;
+        if (clustering[i].size() == 1){ // A singleton cluster.
+          const auto singleton_node_id = clustering[0][0];
+          if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
+            result[0] = -1;
+          }else{
+            result[0] = 1;
+          }
         }
         else{
           size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
@@ -61,6 +72,12 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
         }
     });
   }
+
+  // Remove singleton zero degree nodes.
+  if (!include_zero_degree_nodes){
+    result = parlay::filter(result, [&](double i){return i != -1;});
+  }
+
   auto result_func = [&](std::size_t i) {
     return result[i];
   };
