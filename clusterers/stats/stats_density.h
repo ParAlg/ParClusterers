@@ -29,7 +29,8 @@ namespace research_graph::in_memory {
 
 
 // Compute the edge density of each cluster.
-// Edge density is the number of edges divided by the number of possible edges
+// Edge density is the number of edges divided by the number of possible edges.
+// It assumes that all node ids in clustering and cluster_ids are in `graph`.
 inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph, 
   const InMemoryClusterer::Clustering& clustering, ClusteringStatistics* clustering_stats,
   const parlay::sequence<gbbs::uintE>& cluster_ids, const ClusteringStatsConfig& clustering_stats_config) {
@@ -65,14 +66,21 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   });
 
   // Remove singleton zero degree nodes.
+  // Recompute `n` for weighted_result_func to ignore singleton zero-degree nodes.
   if (!include_zero_degree_nodes){
     result = parlay::filter(result, [&](double i){return i != -1;});
+    auto nodes_flags = parlay::delayed_seq<size_t>(n, [&](size_t i){
+      return graph.Degree(i) == 0 ? 0 : 1;
+    });
+    n = parlay::reduce(nodes_flags);
   }
 
   auto result_func = [&](std::size_t i) {
     return result[i];
   };
   auto weighted_result_func = [&](std::size_t i) {
+    // Divide result.size() instead of n because some singleton 
+    // zero degree nodes might be filtered out above.
     return result[i] * (clustering[i].size() * 1.0 / n);
   };
   double weighted_mean = 0;

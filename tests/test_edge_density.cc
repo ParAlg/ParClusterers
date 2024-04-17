@@ -41,9 +41,8 @@ TEST(TestEdgeDensity, TestSimple) {
   clustering_stats_config.set_compute_edge_density(true);
   clustering_stats_config.set_include_zero_degree_nodes(true);
 
-  auto status = ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+  ASSERT_OK(ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config));
 
-  ASSERT_TRUE(status.ok());
   EXPECT_EQ(1, clustering_stats.weighted_edge_density_mean());
   EXPECT_EQ(1, clustering_stats.edge_density().mean());
 }
@@ -53,8 +52,10 @@ TEST(TestEdgeDensity, TestSingletonClusters) {
   std::vector<std::vector<gbbs::uintE>> clustering = {
     { 0 }, 
     { 1 }, 
+    { 2 },
+    { 3 }
   };
-  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1, 0.5}};
+  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1, 0.5}, {0, 3, 1}};
 
   parlay::sequence<gbbs::uintE> cluster_ids = GetClusteringIds(n, clustering);
 
@@ -64,11 +65,14 @@ TEST(TestEdgeDensity, TestSingletonClusters) {
   ClusteringStatistics clustering_stats;
   ClusteringStatsConfig clustering_stats_config;
   clustering_stats_config.set_compute_edge_density(true);
+
   clustering_stats_config.set_include_zero_degree_nodes(true);
+  ASSERT_OK(ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config));
+  EXPECT_EQ(1, clustering_stats.weighted_edge_density_mean());
+  EXPECT_EQ(1, clustering_stats.edge_density().mean());
 
-  auto status = ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
-
-  ASSERT_TRUE(status.ok());
+  clustering_stats_config.set_include_zero_degree_nodes(false);
+  ASSERT_OK(ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config));
   EXPECT_EQ(1, clustering_stats.weighted_edge_density_mean());
   EXPECT_EQ(1, clustering_stats.edge_density().mean());
 }
