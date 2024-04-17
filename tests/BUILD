@@ -139,3 +139,28 @@ cc_test(
             "@com_github_graph_mining//in_memory:status_macros"
     ],
 )
+
+cc_test(
+    name = "triangle_density_test",
+    size = "small",
+    srcs = ["test_triangle_density.cc"],
+    deps = ["@com_google_googletest//:gtest_main",     
+            "@com_google_googletest//:gtest",     
+            "//clusterers/stats:stats_density",
+            "//clusterers:gbbs_graph_io",
+            "@com_google_protobuf//:protobuf",
+            "//clusterers/stats:stats_utils",
+            "//external:gflags",
+            "//clusterers:clustering_stats_cc_proto",
+            "//clusterers/labelprop_clusterer:labelprop_config_cc_proto",
+            "@com_google_absl//absl/base",
+            "@com_google_absl//absl/flags:flag",
+            "@com_google_absl//absl/flags:parse",
+            "@com_google_absl//absl/status",
+            "@com_google_absl//absl/status:statusor",
+            "@com_google_absl//absl/strings",
+            "@com_google_absl//absl/strings:str_format",
+            "@gbbs//gbbs:graph_io",
+            "@com_github_graph_mining//in_memory:status_macros"
+    ],
+)
