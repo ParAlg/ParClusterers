@@ -112,7 +112,7 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
   //even if clustering.size()==1, we need to get the subgraph because could not match 'symmetric_graph' against 'symmetric_ptr_graph'
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
       if (clustering[i].size() == 1){
-        result[0] = 1;
+        result[i] = 1;
       } else {
         auto G = get_subgraph<gbbs::empty>(graph, clustering[i], cluster_ids); //have to use unweighted graph, otherwise result is wrong
         size_t num_wedges = get_num_wedges(&G);
