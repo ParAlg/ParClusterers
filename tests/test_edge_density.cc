@@ -22,7 +22,7 @@ parlay::sequence<gbbs::uintE> GetClusteringIds(const std::size_t n,
     });
   });
   return cluster_ids;
-  }
+}
 
 TEST(TestEdgeDensity, TestSimple) {
   size_t n = 9;
@@ -41,12 +41,36 @@ TEST(TestEdgeDensity, TestSimple) {
   clustering_stats_config.set_compute_edge_density(true);
   clustering_stats_config.set_include_zero_degree_nodes(true);
 
-  std::cout << "start computing" << std::endl;
+  auto status = ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
+
+  ASSERT_TRUE(status.ok());
+  EXPECT_EQ(1, clustering_stats.weighted_edge_density_mean());
+  EXPECT_EQ(1, clustering_stats.edge_density().mean());
+}
+
+TEST(TestEdgeDensity, TestSingletonClusters) {
+  size_t n = 9;
+  std::vector<std::vector<gbbs::uintE>> clustering = {
+    { 0 }, 
+    { 1 }, 
+  };
+  const std::vector<gbbs::gbbs_io::Edge<double>> edge_list = {{0, 1, 0.5}};
+
+  parlay::sequence<gbbs::uintE> cluster_ids = GetClusteringIds(n, clustering);
+
+  GbbsGraph graph;
+  ASSERT_OK_AND_ASSIGN(n, internal::WriteEdgeListAsGraph(&graph, edge_list, true));
+  
+  ClusteringStatistics clustering_stats;
+  ClusteringStatsConfig clustering_stats_config;
+  clustering_stats_config.set_compute_edge_density(true);
+  clustering_stats_config.set_include_zero_degree_nodes(true);
 
   auto status = ComputeEdgeDensity(graph, clustering, &clustering_stats, cluster_ids, clustering_stats_config);
 
   ASSERT_TRUE(status.ok());
   EXPECT_EQ(1, clustering_stats.weighted_edge_density_mean());
+  EXPECT_EQ(1, clustering_stats.edge_density().mean());
 }
 
 }

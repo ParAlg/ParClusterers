@@ -42,36 +42,27 @@ inline absl::Status ComputeEdgeDensity(const GbbsGraph& graph,
   std::size_t n = graph.Graph()->n;
   auto result = parlay::sequence<double>(clustering.size());
 
-  if(clustering.size()==1){ // There's a single cluster.
-    if (clustering[0].size() == 1){ // A singleton cluster.
-      const auto singleton_node_id = clustering[0][0];
+  parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
+    const double cluster_size = clustering[i].size();
+    if (cluster_size == 1){ // A singleton cluster.
+      const auto singleton_node_id = clustering[i][0];
       if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
-        result[0] = -1;
+        result[i] = -1;
       }else{
-        result[0] = 1;
+        result[i] = 1;
       }
-    } else {
-      result[0] = (static_cast<double>(graph.Graph()->m)) / (static_cast<double>(n)*(n-1));
+    }else{
+      double m_total = cluster_size * (cluster_size - 1);
+      // std::cout <<  "m_total" << " " <<  m_total << std::endl;
+      if(clustering.size()==1 && cluster_size == n){ // All nodes are in a cluster.
+        result[i] = (static_cast<double>(graph.Graph()->m)) / m_total;
+      }else{
+        size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
+        // std::cout << "m_subgraph" << " " << m_subgraph << std::endl;
+        result[i] = (static_cast<double>(m_subgraph)) / m_total;
+      }
     }
-  }else{
-    parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-        if (clustering[i].size() == 1){ // A singleton cluster.
-          const auto singleton_node_id = clustering[0][0];
-          if ((!include_zero_degree_nodes) && graph.Degree(singleton_node_id) == 0){
-            result[0] = -1;
-          }else{
-            result[0] = 1;
-          }
-        }
-        else{
-          size_t m_subgraph = get_subgraph_num_edges(graph, clustering[i], cluster_ids);
-          double m_total = clustering[i].size()*(clustering[i].size()-1);
-          // std::cout << "m_subgraph" << " " << m_subgraph << std::endl;
-          // std::cout <<  "m_total" << " " <<  m_total << std::endl;
-          result[i] = (static_cast<double>(m_subgraph)) / (static_cast<double>(m_total));
-        }
-    });
-  }
+  });
 
   // Remove singleton zero degree nodes.
   if (!include_zero_degree_nodes){
@@ -112,7 +103,7 @@ inline absl::Status ComputeTriangleDensity(const GbbsGraph& graph,
 
   //even if clustering.size()==1, we need to get the subgraph because could not match 'symmetric_graph' against 'symmetric_ptr_graph'
     parlay::parallel_for(0, clustering.size(), [&] (size_t i) {
-      if (clustering[0].size() == 1){
+      if (clustering[i].size() == 1){
         result[0] = 1;
       } else {
         auto G = get_subgraph<gbbs::empty>(graph, clustering[i], cluster_ids); //have to use unweighted graph, otherwise result is wrong
