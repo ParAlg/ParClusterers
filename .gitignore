@@ -14,3 +14,5 @@ out_lp/
 out_scan/
 test_nk_read.py
 results/
+MODULE.bazel
+MODULE.bazel.lock

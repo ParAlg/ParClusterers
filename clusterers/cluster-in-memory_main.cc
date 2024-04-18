@@ -79,10 +79,6 @@ ABSL_FLAG(bool, is_hierarchical, false,
           "Use this flag if a hierarchical clustering is desired. Not all "
           "clusterers suppoort a hierarchical clustering.");
 
-ABSL_FLAG(bool, include_zero_deg_v, false,
-          "Use this flag if zero degree vertices should be included in the  "
-          "output flat clustering.");
-
 namespace research_graph {
 namespace in_memory {
 namespace {
@@ -250,7 +246,6 @@ absl::Status Main() {
   bool is_symmetric_graph = absl::GetFlag(FLAGS_is_symmetric_graph);
   bool float_weighted = absl::GetFlag(FLAGS_float_weighted);
   bool is_gbbs_format = absl::GetFlag(FLAGS_is_gbbs_format);
-  bool include_zero_degree_v = absl::GetFlag(FLAGS_include_zero_deg_v);
 
   std::size_t n = 0;
   if(using_google_clusterer){
@@ -278,7 +273,6 @@ absl::Status Main() {
   std::cout << "Graph: " << input_file << std::endl;
   std::cout << "Num vertices: " << n << std::endl;
   std::cout << "Convert to symmetric Graph: " << (is_symmetric_graph ? "True": "False") << std::endl;
-  std::cout << "Cluster include zero-deg vertices: " << ((using_google_clusterer || include_zero_degree_v) ? "true" : "false") << std::endl;
 
   std::vector<InMemoryClusterer::Clustering> clusterings;
   std::vector<graph_mining::in_memory::InMemoryClusterer::Clustering> clusterings_google;
@@ -310,15 +304,11 @@ absl::Status Main() {
   if(output_file == "") return absl::OkStatus();
   // TODO(laxmand): Fix status warnings here (and potentially elsewhere).
   // TODO(jeshi): Support writing entire dendrogram to output file
-  if (include_zero_degree_v || using_google_clusterer){
-    if (using_google_clusterer){
-      return WriteClustering(output_file.c_str(), clusterings_google[0]);
-    }else{
-      return WriteClustering(output_file.c_str(), clusterings[0]);
-    }
+  if (using_google_clusterer){
+    return WriteClustering(output_file.c_str(), clusterings_google[0]);
+  }else{
+    return WriteClustering(output_file.c_str(), clusterings[0]);
   }
-  // TODO: add support for google clusterer, need to add zero degree node detection.
-  return WriteClusteringNoZeroDegree(output_file.c_str(), clusterings[0], clusterer->MutableGraph());
 }
 
 }  // namespace

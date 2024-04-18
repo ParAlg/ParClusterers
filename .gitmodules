@@ -1,6 +1,3 @@
-[submodule "InMemoryClusteringAPI"]
-	path = external/InMemoryClusteringAPI
-	url = git@github.com:ParAlg/InMemoryClusteringAPI.git
 [submodule "external/Tectonic"]
 	path = external/Tectonic
 	url = https://github.com/jeshi96/Tectonic.git

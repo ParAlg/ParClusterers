@@ -3,9 +3,11 @@ workspace(name = "ParClusterers")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-local_repository(
+git_repository(
     name = "parcluster",
-    path = "external/InMemoryClusteringAPI/include",
+    remote = "git@github.com:ParAlg/InMemoryClusteringAPI.git",
+    commit = "ccf763ad6dcf0e36c3b0b212d429ef19c2cbf837",
+    strip_prefix = "include/",
 )
 
 git_repository(
