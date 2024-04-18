@@ -14,9 +14,8 @@ message ClusteringStatsConfig {
   optional bool compute_precision_recall = 9;
   optional bool compute_nmi = 10;
   optional double f_score_param = 11;
-  // If false, edge density will ignore zero degree nodes that are in their singleton clusters
-  // when computing the density. 
-  // TODO: add it for triangle density. 
+  // If false, edge and triangle density computation will ignore zero degree 
+  // nodes that are in their singleton clusters when computing the density. 
   optional bool include_zero_degree_nodes = 12; 
 }
 

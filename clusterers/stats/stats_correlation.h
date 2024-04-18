@@ -42,6 +42,12 @@ inline absl::Status ComputeCorrelationObjective(const GbbsGraph& graph,
 
       auto intra_cluster_sum_map_f = [&](gbbs::uintE u, gbbs::uintE v,
                                          float weight) -> double {
+        // Since the graph is undirected, each undirected edge is represented by
+        // two directed edges, with the exception of self-loops, which are
+        // represented as one edge. Hence, the weight of each intra-cluster edge
+        // must be divided by 2, unless it's a self-loop.
+        if (u == v)
+          return weight;
         // This assumes that the graph is undirected, and self-loops are counted
         // as half of the weight.
         if (cluster_id_i == cluster_ids[v])
