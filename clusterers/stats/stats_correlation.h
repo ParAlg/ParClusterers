@@ -60,8 +60,9 @@ inline absl::Status ComputeCorrelationObjective(const GbbsGraph& graph,
     double objective = parlay::reduce(shifted_edge_weight);
   
     auto resolution_seq = parlay::delayed_seq<double>(n, [&](std::size_t i) {
-      return clustering[cluster_ids[i]].size(); // cluster_weight
-      //return node_weights_[i] * (cluster_weight - node_weights_[i]);
+      auto cluster_weight = clustering[cluster_ids[i]].size(); // cluster_weight
+      const double node_weight = 1.0;
+      return node_weight * (cluster_weight - node_weight);
     });
     objective -= resolution[k] * parlay::reduce(resolution_seq) / 2;
   
