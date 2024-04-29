@@ -13,14 +13,6 @@ bazel build //clusterers:cluster-in-memory_main
 bazel build //clusterers:stats-in-memory_main
 ```
 
-<!-- # Flags
-
-`include_zero_deg_v`: default to false. Use this flag if zero degree vertices should be included in the *output flat clustering*.
-
-# Output
-Num clusters: the number of clusters. Note that this number also includes singleton zero-degree node clusters, even if `include_zero_deg_v` is set to true. -->
-
-
 # Input
 
 Input can be in either edge list format or GBBS (CSR) format. SNAP edge list format can be converted to GBBS format using [GBBS](https://github.com/ParAlg/gbbs).
@@ -99,48 +91,6 @@ statistics_config:
   compute_precision_recall: true
   f_score_param: 0.5
 ```
-
-
-
-
-<!-- The parameters for each Clusterers
-
-
-# networkit
-
-(TODO): networkit output currently uses `https://github.com/yushangdi/networkit/tree/master`. the output is much faster. We should add a flag that also supports normal networkit outputting.
-
-Input: if .bin filename is used, will use NetworkitBinary file reader. Otherwise use EdgeListReader.
-
-## ConenctivityClusterer
-- `threshold`: edges with weight higher (or lower if `upper_bound` is set) than threshold are excluded.
-- `upper_bound`: A boolean variable. If true, the threshold is used as an upperbound instead of a lower bound.
-
-## KCoreClusterer
-- `threshold`: if (u,v) both have core number >= threshold, they are connected.
-
-## Label Propagation
-
-- max_iteration: maximum iteration to run. If labels converges, can also stop early.
-- update_threshold: stop if less than update_threshold number of nodes need to be updated.
-
-TODO: delete par_threshold in the end if we actually don't use it.
-TODO: remove async? async seeems to be always better.
-
-#### Neo4j
-- run `python3 tests/test_neo4j_installation.py` to test if neo4j is successfully installed.
-- minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.
-
-#### NetWorkIt LPDegreeOrdered
- Stop when < n/1e5 nodes need to be upadted.
-
-
- ## SLLP
-
- `remove_nested` is slow. Will be automatically skipped if `prune_threshold` > 0.5 -->
-
-
-
 
 # Additional
 
