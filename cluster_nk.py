@@ -5,7 +5,6 @@ import io
 from contextlib import redirect_stdout
 import os
 import sys
-from tqdm import tqdm
 
 def capture_output(func, *args, **kwargs):
     # Backup the original stdout
@@ -29,11 +28,6 @@ def capture_output(func, *args, **kwargs):
         captured = pipe.read()
 
     return captured, result
-
-# pip3 install --upgrade pip
-# pip3 install cmake cython
-# pip3 install networkit
-# pip3 install tabulate
 
 # Parallel Louvain
 def runNetworKitPLM(G, config):
@@ -88,14 +82,6 @@ def runNetworKitPLP(G, config):
     kwargs["updateThreshold"] = use_updateThreshold
   if use_maxIterations:
     kwargs["maxIterations"] = use_maxIterations
-  # f = io.StringIO()
-  # with redirect_stdout(f):
-  #   print(config)
-  #   start_time = time.time()
-  #   communities = nk.community.detectCommunities(G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
-  #   end_time = time.time()
-  #   print("Communities detected in %f \n" % (end_time - start_time))
-  # out = f.getvalue()
   print("running NetworKitPLP...")
   start_time = time.time()
   out, communities = capture_output(nk.community.detectCommunities, G, algo=nk.community.PLP(G, baseClustering=None, **kwargs))
@@ -105,14 +91,6 @@ def runNetworKitPLP(G, config):
 
 
 def runNetworKitLPDegreeOrdered(G, config):
-  # f = io.StringIO()
-  # with redirect_stdout(f):
-  #   print(config)
-  #   start_time = time.time()
-  #   communities = nk.community.detectCommunities(G, algo=nk.community.LPDegreeOrdered(G))
-  #   end_time = time.time()
-  #   print("Communities detected in %f \n" % (end_time - start_time))
-  # out = f.getvalue()
   print("running NetworKitLPDegreeOrdered...")
   start_time = time.time()
   out, communities = capture_output(nk.community.detectCommunities, G, algo=nk.community.LPDegreeOrdered(G))
@@ -181,9 +159,6 @@ def runNetworKitKCore(G, config):
     start_time = time.time()
     coreDec = nk.centrality.CoreDecomposition(G)
     coreDec.run()
-    # max_core_number = coreDec.maxCoreNumber()
-    # for i in range(max_core_number+1):
-    #   cores.append(list(coreDec.getCover().getMembers(i)))
     if run_connectivity:
       cores = coreDec.scores()
       kCore = []
@@ -194,10 +169,6 @@ def runNetworKitKCore(G, config):
             kCore.append(index)
           else:
             other_nodes.append(index)
-          # kCore = [index for index, score in enumerate(cores) if score >= k]  
-        # partition = coreDec.getPartition()
-        # for i in range(k, partition.numberOfSubsets() + 1):
-        #   kCore.extend(partition.getMembers(i))
       except IndexError:
           raise RuntimeError("There is no core for the specified k")
 
@@ -273,19 +244,7 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
     runner_utils.appendToFile('Config: ' + config + '\n', out_filename)
     runner_utils.appendToFile(print_time, out_filename)
     runner_utils.appendToFile("Cluster Time: " + extractNetworKitTime(print_time) + "\n", out_filename)
-    # if (clusterer == "NetworKitKCore"): # does not produce clustering, can only run k-core decomposition
-    #   return
-    # if not cluster_flag:
-    #   communities.compact()
-    #   cluster_index = 0
-    #   cluster_list = communities.getMembers(cluster_index)
-    #   while (cluster_list):
-    #     runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
-    #     cluster_index += 1
-    #     cluster_list = communities.getMembers(cluster_index)
-    # else:
-    #   for cluster_list in clusters:
-    #     runner_utils.appendToFile("\t".join(str(x) for x in cluster_list) + "\n", out_clustering)
+
     # Create an empty list to hold all the lines you want to write to the file
     if runner_utils.write_clustering != "false":
       print("writing results...")
@@ -309,18 +268,17 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
             with open(out_clustering, 'a+') as file:
                 file.write('\n'.join(lines_to_write) + '\n')
           else:
-            # cluster_lists = communities.getSubsets()
-            # for cluster_list in cluster_lists:
-            #   cluster_index += 1
-            #   lines_to_write.append("\t".join(str(x) for x in cluster_list))
-            nk.community.writeCommunitiesNestedFormat(communities, out_clustering)
+            cluster_lists = communities.getSubsets()
+            for cluster_list in cluster_lists:
+              lines_to_write.append("\t".join(str(x) for x in cluster_list))
+            # nk.community.writeCommunitiesNestedFormat(communities, out_clustering)
       else:
           for cluster_list in clusters:
               lines_to_write.append("\t".join(str(x) for x in cluster_list))
 
-          # Write all lines to the file at once
-          with open(out_clustering, 'a+') as file:
-              file.write('\n'.join(lines_to_write) + '\n')
+      # Write all lines to the file at once
+      with open(out_clustering, 'a+') as file:
+          file.write('\n'.join(lines_to_write) + '\n')
       end_time = time.time()
       print("Wrote result in %f \n" % (end_time - start_time))
   

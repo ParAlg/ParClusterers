@@ -11,3 +11,6 @@ pyTigerGraph
 
 # the following are only required if benchmarking NetworKit methods
 networkit
+cmake 
+cython
+tabulate

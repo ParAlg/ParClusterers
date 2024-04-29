@@ -44,11 +44,11 @@ python3 stats.py cluster.config stats.config
 ### cluster.config
 This config specifies what clustering algorithms to run, along with the corresponding config proto for each algorithm. The script will run all combinations of the specified config protos, on all given graphs. 
 
-`Iutput directory`: the directory where `Graphs` files are located.
+`Iutput directory`: the directory where `Graphs` files are located. The directory path must be an absolute path.
 
-`Output directory`: where the clustering files and log fiels will be stored.
+`Output directory`: where the clustering files and log fiels will be stored. The directory path must be an absolute path.
 
-`CSV output directory` after cluster.py and stats.py are run, a `runtime.csv` and `stats.csv` file will be automatically generated into this directory.
+`CSV output directory` after cluster.py and stats.py are run, a `runtime.csv` and `stats.csv` file will be automatically generated into this directory. The directory path must be an absolute path.
 
 `postprocess only`: If it is set to true, when cluster.py or stats.py are run, thhey only generate the csv files from the output files, but do not re-compute the clustering/stats again.
 
