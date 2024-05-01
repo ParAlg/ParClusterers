@@ -56,11 +56,21 @@ Please follow instructions from [NetworKit](https://github.com/networkit/network
 
 ## Install Neo4j
 
-Download Neo4j community version https://neo4j.com/download-center/#community and follow instruction to install. For Google Cloud, use Linux / Mac Executable version. We used version 4.4.13 in experiments.
-Download graph data science jar file from https://github.com/neo4j/graph-data-science/releases. You need at least version 2.4.3.
+The following instructions are written for Neo4j version 5.8.0, which we used in experiments. If version 5.8.0 is not available, please use the latest version and follow instructions from official Neo4j website.
+
+Download Neo4j community version https://neo4j.com/download-center/#community and follow instruction to install. For Google Cloud, use Linux / Mac Executable version. 
+- You need Java17 installed for Neo4j version 5.x.
+- Extract the contents of the archive, using:
+tar -xf <filecode>.
+For example,
+tar -xf neo4j-community-5.8.0-unix.tar.gz
+
+Download graph data science jar file from [here](https://github.com/neo4j/graph-data-science/releases/). We used version 2.4.3 in our expeirments. **You need a version that's compatible with the Neo4j version you installed**.
+
 Follow the instruction [here](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-server/) to setup the server for graph data science.
-In neo4j-community-…/conf/neo4j.conf, also uncomment `dbms.security.auth_enabled=false`
-and add `dbms.security.procedures.unrestricted=gds.*`.
+- move the neo4j-graph-data-science-[version].jar file into the $NEO4J_HOME/plugins directory
+- In neo4j-community-…/conf/neo4j.conf, uncomment `dbms.security.auth_enabled=false`
+and add `dbms.security.procedures.unrestricted=gds.*` and `dbms.security.procedures.allowlist=gds.*`.
 
 In neo4j-community-…/, run `./bin/neo4j console` (in background) or `./bin/neo4j start` to start Neo4j. You need to start Neo4j before benchmarking Neo4j methods using PCBS.
 

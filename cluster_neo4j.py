@@ -120,7 +120,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     # if graph_exists[1]: 
     #   gds.graph.drop(gds.graph.get(graph_name))
     graph_exists = gds.graph.exists(graph_name=graph_name)
-    if not graph_exists[1]:
+    if not graph_exists.iloc[1]:
       print("error, graph does not exist")
       return "error, graph does not exist"
 
@@ -280,7 +280,7 @@ def clearDB(graph_name):
   gds = GraphDataScience("bolt://localhost:7687", auth=None)
   _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
   graph_exists = gds.graph.exists(graph_name=graph_name)
-  if graph_exists[1]: 
+  if graph_exists.iloc[1]: 
     gds.graph.drop(gds.graph.get(graph_name))
   gds.close()
   print("Neo4j graph removed", graph_name)
@@ -292,7 +292,7 @@ def projectGraph(graph_name, graph_path):
   neo4j_client = GraphDatabase.driver(neo4j_url, auth=None, max_connection_lifetime=7200)
   gds = GraphDataScience(neo4j_client, auth=None) #"bolt://localhost:7687"
   graph_exists = gds.graph.exists(graph_name=graph_name)
-  if not graph_exists[1]:
+  if not graph_exists.iloc[1]:
     # cypher_commands_list, cypher_node_commands_list = getLoadGraphCommand(graph_path)
     # print("Finished loading in memory")
     # sys.stdout.flush()

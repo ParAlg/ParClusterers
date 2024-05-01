@@ -49,6 +49,8 @@ This config specifies what clustering algorithms to run, along with the correspo
 
 `postprocess only`: If it is set to true, when cluster.py or stats.py are run, thhey only generate the csv files from the output files, but do not re-compute the clustering/stats again.
 
+`GBBS format`: Whether the input graphs are in edge list format or gbbs format. Only native PBCS methods can read GBBS format. Implementations from other libraries can only read edge list format in our benchmarking suite.
+
 Note that the lines in configurations files should not have dangling `;` at the end.
 
 For example:
@@ -96,6 +98,11 @@ statistics_config:
   compute_precision_recall: true
   f_score_param: 0.5
 ```
+
+
+# Compatibility with other libraries
+
+PCBS supports benchmarking methods from Neo4j, NetworKit, and TigerGraph. Current implementations are tested with networkit version 11.0, Neo4j community version 5.8.0 with graph data science library version 2.4.3 and TigerGraph version 3.9.2.
 
 # Additional
 

@@ -252,7 +252,7 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
       lines_to_write = []
 
       if not cluster_flag:
-          use_original_networkit = False
+          use_original_networkit = True
           if use_original_networkit:
             communities.compact() # Change subset IDs to be consecutive, starting at 0.
             num_clusters = communities.numberOfSubsets()
@@ -268,10 +268,10 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
             with open(out_clustering, 'a+') as file:
                 file.write('\n'.join(lines_to_write) + '\n')
           else:
-            cluster_lists = communities.getSubsets()
-            for cluster_list in cluster_lists:
-              lines_to_write.append("\t".join(str(x) for x in cluster_list))
-            # nk.community.writeCommunitiesNestedFormat(communities, out_clustering)
+            # cluster_lists = communities.getSubsets()
+            # for cluster_list in cluster_lists:
+            #   lines_to_write.append("\t".join(str(x) for x in cluster_list))
+            nk.community.writeCommunitiesNestedFormat(communities, out_clustering)
       else:
           for cluster_list in clusters:
               lines_to_write.append("\t".join(str(x) for x in cluster_list))
