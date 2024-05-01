@@ -7,7 +7,7 @@ def replace_string_in_files(directory, string_to_replace, new_string, current_di
             if filename.startswith("cluster_") and filename.endswith(".config"):
                 print("fixing ", filename)
                 file_path = os.path.join(root, filename)
-                with fileinput.FileInput(file_path, inplace=True, backup='.bak') as file:
+                with fileinput.FileInput(file_path, inplace=True) as file:
                     for line in file:
                         print(line.replace(string_to_replace, new_string), end='')
 
@@ -15,7 +15,7 @@ def replace_string_in_files(directory, string_to_replace, new_string, current_di
 current_directory = os.path.abspath(os.getcwd())
 
 # Define the string to replace and its replacement
-string_to_replace = "/home/sy/Parclusterers"
+string_to_replace = "/home/ubuntu/ParClusterers"
 new_string = current_directory
 
 # Replace the string in all matching files

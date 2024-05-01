@@ -1,6 +1,8 @@
 pandas
 numpy
 matplotlib
+seaborn
+Jinja2
 
 # the following are only required if benchmarking Neo4j methods
 # neo4j

@@ -11,20 +11,20 @@ Files ends with ".cmty" or ".cmty.txt" are ground truth labels. Files ends with 
 Certain graph files can be large in size. For instance, the largest graph is the Friendster graph, which is around 30GB, so we recommend reviewing the list of available files and download the ones you require.
 
 
+## Prepare data and config files for experiment.
+Create a folder `ParClusterers/pcbs_vldb_2025` and put data into it.
+Run `python3 configs_experiments/fix-path.py` in the root folder `ParClusterers/` to change the input graph path in config files to the absolute path of `ParClusterers/pcbs_vldb_2025`. 
+
+
 ## Experiments for small UCI datasets
-
-<!-- Change the absolute path to `UCIknnGraphs/` folder in the config files in `configs_experiments/`. 
-
-Change the absolute path to the resulting csv folder. -->
-
-Run `python3 prepare_uci_experiments.py [path to graphs]` in the root folder `ParClusterers/` to change the input graph path in all relevant config files. `[path to graphs]` is the path to graphs in `UCIknnGraphs/` folder. For example, `python3 prepare_uci_experiments.py /home/ubuntu/pcbs_vldb_2025/UCIknnGraphs/`.
-
 The outputs will be in `ParClusterers/results/`.
 
 Obtain clustering results
 ```bash
 python3 cluster.py configs_experiments/uci/cluster_uci_pcbs.config
 python3 cluster.py configs_experiments/uci/cluster_uci_snap.config
+# need to install networkit first
+python3 cluster.py configs_experiments/uci/cluster_uci_nk.config
 # need to install and start Neo4j server first
 python3 cluster.py configs_experiments/uci/cluster_uci_neo4j.config
 # need to install and start TigerGraph server first
@@ -33,12 +33,22 @@ python3 cluster.py configs_experiments/uci/cluster_uci_tg.config
 
 Obtain stats
 ```bash
-python3 stats.py configs_experiments/uci/cluster_uci_pcbs.config configs_experiments/uci/stats.config
-python3 stats.py configs_experiments/uci/cluster_uci_snap.config configs_experiments/uci/stats.config
-python3 stats.py configs_experiments/uci/cluster_uci_neo4j.config configs_experiments/uci/stats.config
-python3 stats.py configs_experiments/uci/cluster_uci_tg.config configs_experiments/uci/stats.config
+python3 stats.py configs_experiments/uci/cluster_uci_pcbs.config configs_experiments/uci/stats_uci.config
+python3 stats.py configs_experiments/uci/cluster_uci_snap.config configs_experiments/uci/stats_uci.config
+python3 stats.py configs_experiments/uci/cluster_uci_nk.config configs_experiments/uci/stats_uci.config
+python3 stats.py configs_experiments/uci/cluster_uci_neo4j.config configs_experiments/uci/stats_uci.config
+python3 stats.py configs_experiments/uci/cluster_uci_tg.config configs_experiments/uci/stats_uci.config
 ```
 
+
+
+## Plotting
+```bash
+# Please install latex, which is used for plotting.
+sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+sudo apt-get install dvipng
+python3 plotting/plot_pareto.py 
+```
 
 ## Install NetworKit
 Please follow instructions from [NetworKit](https://github.com/networkit/networkit).

@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import re
 import numpy as np
-# sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+
 fontsize=25
 
 def replace_graph_names(df):
@@ -14,6 +14,14 @@ def replace_graph_names(df):
                                     .str.replace(".bin", "", regex=True)\
                                     .str.replace(".ungraph.txt", "", regex=True)\
                                     .str.replace(".graph.txt", "", regex=True)
+    
+    df["Input Graph"] = df["Input Graph"].str.replace("amazon", "AM", regex=True)\
+                                    .str.replace("youtube", "YT", regex=True)\
+                                    .str.replace("dblp", "DB", regex=True)\
+                                    .str.replace("lj", "LJ", regex=True)\
+                                    .str.replace("orkut", "OK", regex=True)\
+                                    .str.replace("friendster", "FS", regex=True)
+
     df["Clusterer Name"] = df["Clusterer Name"].str.replace("Scan", "SCAN", regex=True)\
                                     .str.replace("Tectonic", "TECTONIC", regex=True)\
                                     .str.replace("Hac", "HAC", regex=True)

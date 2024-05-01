@@ -30,6 +30,7 @@ bazel run //utils:snap_converter -- -s -i com-friendster.ungraph.txt -o com-frie
 The commands below runs clustering algorithms on the two graphs in `data/` and compute stats on the resulting clusterings.
 
 ```bash
+pip3 install -r requirements.txt
 python3 cluster.py cluster.config
 python3 stats.py cluster.config stats.config
 ```

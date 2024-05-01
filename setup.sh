@@ -1,3 +1,5 @@
+## Setup instructions for running on Google Cloud Compute Machines.
+
 sudo apt-get update
 
 # install git
@@ -25,6 +27,9 @@ bazel build //clusterers:stats-in-memory_main
 # install python packages
 pip3 install -r requirements.txt --break-system-packages
 
+# install latex for plotting
+sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+sudo apt-get install dvipng
 
 # Now, create a folder ParClusterers/pcbs_vldb_2025 and put data into it.
 # The command here assumes that you have data in `pcbs_vldb_2025` google storage bucket.
