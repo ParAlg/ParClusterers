@@ -102,7 +102,7 @@ statistics_config:
 
 # Compatibility with other libraries
 
-PCBS supports benchmarking methods from Neo4j, NetworKit, and TigerGraph. Current implementations are tested with networkit version 11.0, Neo4j community version 5.8.0 with graph data science library version 2.4.3 and TigerGraph version 3.9.2.
+PCBS supports benchmarking methods from Neo4j, NetworKit, and TigerGraph. Current implementations are tested with networkit version 11.0, Neo4j community version 5.19.0 with graph data science library version 2.6.5 and TigerGraph version 3.9.2.
 
 # Additional
 

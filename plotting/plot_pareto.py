@@ -420,10 +420,10 @@ base_addr = "./results/"
 def plot_uci():
     df_pcbs = pd.read_csv(base_addr + "out_uci_pcbs_csv/stats.csv")
     df_nk = pd.read_csv(base_addr + "out_uci_nk_csv/stats.csv")
-    # df_neo4j = pd.read_csv(base_addr + "out_uci_neo4j_csv/stats.csv")
+    df_neo4j = pd.read_csv(base_addr + "out_uci_neo4j_csv/stats.csv")
     df_snap = pd.read_csv(base_addr + "out_uci_snap_csv/stats.csv")
     # df_tg = pd.read_csv(base_addr + "out_uci_tg_csv/stats.csv")
-    df = pd.concat([df_pcbs, df_snap, df_nk])  # ,  df_neo4j, df_tg
+    df = pd.concat([df_pcbs, df_snap, df_nk, df_neo4j])  # , df_tg
 
     df = df.dropna(how="all")
     replace_graph_names(df)
