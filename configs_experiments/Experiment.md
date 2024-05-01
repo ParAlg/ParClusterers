@@ -78,7 +78,7 @@ You can run `python3 tests/test_neo4j_installation.py` to check if Neo4j is inst
 
 
 ## Install TigerGraph
-Download TigerGraph DB [here](https://dl.tigergraph.com/). We used version 3.9.2.
+Download TigerGraph DB [here](https://dl.tigergraph.com/). We used version 3.9.2. Note that you need to either pay or request a free dev license from TigerGraph.
 Follow instruction for install: https://docs.tigergraph.com/tigergraph-server/current/getting-started/linux.
 
 Once installed, wwitch to tigergraph user (`su tigergraph`), default password is tigergraph.
@@ -87,7 +87,7 @@ Run the following
 gadmin start infra
 gadmin start gsql
 ```
-Tigergraph can now be accessed using tigergraph user credentials for connection/
+Tigergraph can now be accessed using tigergraph user credentials for connection.
 
 Instructions for adding Speaker-Listener Label Propagation method:
 - Download gsql file from [here](https://raw.githubusercontent.com/tigergraph/gsql-graph-algorithms/master/algorithms/Community/speaker-listener_label_propagation/tg_slpa.gsql).

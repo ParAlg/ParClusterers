@@ -15,7 +15,7 @@ def replace_string_in_files(directory, string_to_replace, new_string, current_di
 current_directory = os.path.abspath(os.getcwd())
 
 # Define the string to replace and its replacement
-string_to_replace = "/home/ubuntu/ParClusterers"
+string_to_replace = "/home/sy/ParClusterers"
 new_string = current_directory
 
 # Replace the string in all matching files
