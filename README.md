@@ -112,3 +112,12 @@ If your clustering config file includes the original Tectonic, you also need the
 ```bash
 python3 cluster.py cluster.config system.config
 ```
+
+
+# Experiments
+
+This repo contains the artifacts for the following paper:
+
+Shangdi Yu, Jessica Shi, Jamison Meindl, Laxman Dhulipala, Sasan Tavakkol, Xiaoen Ju, Jakub Łącki, Vahab Mirrokni, and Julian Shun, *The ParClusterers Benchmark Suite (PCBS): A Fine-Grained Analysis of Scalable Graph Clustering*.
+
+Please find instructions to download data and run experiments in `configs_experiments/Experiment.md`. 
