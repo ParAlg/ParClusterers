@@ -16,3 +16,5 @@ test_nk_read.py
 results/
 MODULE.bazel
 MODULE.bazel.lock
+*.bak
+pcbs_vldb_2025/

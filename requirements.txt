@@ -3,14 +3,14 @@ numpy
 matplotlib
 
 # the following are only required if benchmarking Neo4j methods
-neo4j
-graphdatascience
+# neo4j
+# graphdatascience
 
 # the following are only required if benchmarking TigerGraph methods
-pyTigerGraph
+# pyTigerGraph
 
 # the following are only required if benchmarking NetworKit methods
-networkit
-cmake 
-cython
-tabulate
+# networkit
+# cmake 
+# cython
+# tabulate
