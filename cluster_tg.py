@@ -8,6 +8,8 @@ from contextlib import redirect_stdout
 import runner_utils
 import load_tg
 
+SLPA_QUERY_FILE_PATH='../tigergraph-3.9.2-offline/query/tg_slpa.gsql'
+
 def load_tigergraph(conn, filename, input_dir, output_dir, tigergraph_nodes, tigergraph_edges, weighted):
 
   conn.graphname = 'current_graph'
@@ -107,7 +109,7 @@ def run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted):
         "print_limit": -1,
         "threshold": threshold
       }
-      print(feat.installAlgorithm('tg_slpa', query_path='../tigergraph-3.9.2-offline/query/tg_slpa.gsql'))
+      print(feat.installAlgorithm('tg_slpa', query_path=SLPA_QUERY_FILE_PATH))
       res = feat.runAlgorithm("tg_slpa", params=params, threadLimit = thread, custom_query=True, feat_type = 'INT', schema_name = ["Node"], feat_name= 'cluster', timeout = 10000000)
 
     end_time = time.time()

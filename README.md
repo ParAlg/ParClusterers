@@ -13,6 +13,10 @@ bazel build //clusterers:cluster-in-memory_main
 bazel build //clusterers:stats-in-memory_main
 ```
 
+We use the `bazel` build system. Installation instructions can be foun [here](https://bazel.build/install/ubuntu#install-on-ubuntu). We recommend bazel version >= 6.2.1.
+
+Required python packages are listed in `requirements.txt`. Some packages are only required for benchmarking implementations from other libraries, such as NetworKit, Neo4j, and TigerGraph.
+
 # Input
 
 Input can be in either edge list format or GBBS (CSR) format. SNAP edge list format can be converted to GBBS format using [GBBS](https://github.com/ParAlg/gbbs).

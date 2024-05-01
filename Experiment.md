@@ -6,4 +6,47 @@ python3 data/files.py
 ```
 Then, each file can be downloaded from "https://storage.googleapis.com/pcbs_vldb_2025/[file_name]". For example, the labels for iris dataset can be downloaded from "https://storage.googleapis.com/pcbs_vldb_2025/UCIknnGraphs/iris.cmty.txt".
 
-The largeset graph is the friendster graph, which is ~30GB.
+Files ends with ".cmty" or ".cmty.txt" are ground truth labels. Files ends with ".ungraph.txt" or ".graph.txt" are in edge list format. Files ends with ".gbbs.txt" are in [GBBS format](https://github.com/ParAlg/gbbs).  
+
+Certain graph files can be large in size. For instance, the largest graph is the Friendster graph, which is around 30GB, so we recommend reviewing the list of available files and download the ones you require.
+
+
+
+
+
+
+
+## Install NetworKit
+Please follow instructions from [NetworKit](https://github.com/networkit/networkit).
+
+
+## Install Neo4j
+
+Download Neo4j community version https://neo4j.com/download-center/#community and follow instruction to install. For Google Cloud, use Linux / Mac Executable version. We used version 4.4.13 in experiments.
+Download graph data science jar file from https://github.com/neo4j/graph-data-science/releases. You need at least version 2.4.3.
+Follow the instruction [here](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-server/) to setup the server for graph data science.
+In neo4j-community-…/conf/neo4j.conf, also uncomment `dbms.security.auth_enabled=false`
+and add `dbms.security.procedures.unrestricted=gds.*`.
+
+In neo4j-community-…/, run `./bin/neo4j console` (in background) or `./bin/neo4j start` to start Neo4j. You need to start Neo4j before benchmarking Neo4j methods using PCBS.
+
+You can run `python3 tests/test_neo4j_installation.py` to check if Neo4j is installed successfully and is running. 
+
+
+## Install TigerGraph
+Download TigerGraph DB [here](https://dl.tigergraph.com/). We used version 3.9.2.
+Follow instruction for install: https://docs.tigergraph.com/tigergraph-server/current/getting-started/linux.
+
+Once installed, wwitch to tigergraph user (`su tigergraph`), default password is tigergraph.
+Run the following
+```bash
+gadmin start infra
+gadmin start gsql
+```
+Tigergraph can now be accessed using tigergraph user credentials for connection/
+
+Instructions for adding Speaker-Listener Label Propagation method:
+- Download gsql file from [here](https://raw.githubusercontent.com/tigergraph/gsql-graph-algorithms/master/algorithms/Community/speaker-listener_label_propagation/tg_slpa.gsql).
+- Create query folder in tigergraph and add gsql file. Change `SLPA_QUERY_FILE_PATH` in `cluster_tg.py` to the gsql file location.
+
+You can run `python3 tests/test_tigergraph_installation.py` to check if TigerGraph is installed successfully and is running. 
