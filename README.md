@@ -13,13 +13,9 @@ bazel build //clusterers:cluster-in-memory_main
 bazel build //clusterers:stats-in-memory_main
 ```
 
-<!-- # Flags
+We use the `bazel` build system. Installation instructions can be foun [here](https://bazel.build/install/ubuntu#install-on-ubuntu). We recommend bazel version >= 6.2.1.
 
-`include_zero_deg_v`: default to false. Use this flag if zero degree vertices should be included in the *output flat clustering*.
-
-# Output
-Num clusters: the number of clusters. Note that this number also includes singleton zero-degree node clusters, even if `include_zero_deg_v` is set to true. -->
-
+Required python packages are listed in `requirements.txt`. Some packages are only required for benchmarking implementations from other libraries, such as NetworKit, Neo4j, and TigerGraph.
 
 # Input
 
@@ -34,6 +30,7 @@ bazel run //utils:snap_converter -- -s -i com-friendster.ungraph.txt -o com-frie
 The commands below runs clustering algorithms on the two graphs in `data/` and compute stats on the resulting clusterings.
 
 ```bash
+pip3 install -r requirements.txt
 python3 cluster.py cluster.config
 python3 stats.py cluster.config stats.config
 ```
@@ -44,13 +41,15 @@ python3 stats.py cluster.config stats.config
 ### cluster.config
 This config specifies what clustering algorithms to run, along with the corresponding config proto for each algorithm. The script will run all combinations of the specified config protos, on all given graphs. 
 
-`Iutput directory`: the directory where `Graphs` files are located.
+`Iutput directory`: the directory where `Graphs` files are located. The directory path must be an absolute path.
 
-`Output directory`: where the clustering files and log fiels will be stored.
+`Output directory`: where the clustering files and log fiels will be stored. The directory path must be an absolute path.
 
-`CSV output directory` after cluster.py and stats.py are run, a `runtime.csv` and `stats.csv` file will be automatically generated into this directory.
+`CSV output directory` after cluster.py and stats.py are run, a `runtime.csv` and `stats.csv` file will be automatically generated into this directory. The directory path must be an absolute path.
 
 `postprocess only`: If it is set to true, when cluster.py or stats.py are run, thhey only generate the csv files from the output files, but do not re-compute the clustering/stats again.
+
+`GBBS format`: Whether the input graphs are in edge list format or gbbs format. Only native PBCS methods can read GBBS format. Implementations from other libraries can only read edge list format in our benchmarking suite.
 
 Note that the lines in configurations files should not have dangling `;` at the end.
 
@@ -101,46 +100,9 @@ statistics_config:
 ```
 
 
+# Compatibility with other libraries
 
-
-<!-- The parameters for each Clusterers
-
-
-# networkit
-
-(TODO): networkit output currently uses `https://github.com/yushangdi/networkit/tree/master`. the output is much faster. We should add a flag that also supports normal networkit outputting.
-
-Input: if .bin filename is used, will use NetworkitBinary file reader. Otherwise use EdgeListReader.
-
-## ConenctivityClusterer
-- `threshold`: edges with weight higher (or lower if `upper_bound` is set) than threshold are excluded.
-- `upper_bound`: A boolean variable. If true, the threshold is used as an upperbound instead of a lower bound.
-
-## KCoreClusterer
-- `threshold`: if (u,v) both have core number >= threshold, they are connected.
-
-## Label Propagation
-
-- max_iteration: maximum iteration to run. If labels converges, can also stop early.
-- update_threshold: stop if less than update_threshold number of nodes need to be updated.
-
-TODO: delete par_threshold in the end if we actually don't use it.
-TODO: remove async? async seeems to be always better.
-
-#### Neo4j
-- run `python3 tests/test_neo4j_installation.py` to test if neo4j is successfully installed.
-- minCommunitySize: Only nodes inside communities larger or equal the given value are returned. We set it to 2, so singleton communities are not returned.
-
-#### NetWorkIt LPDegreeOrdered
- Stop when < n/1e5 nodes need to be upadted.
-
-
- ## SLLP
-
- `remove_nested` is slow. Will be automatically skipped if `prune_threshold` > 0.5 -->
-
-
-
+PCBS supports benchmarking methods from Neo4j, NetworKit, and TigerGraph. Current implementations are tested with networkit version 11.0, Neo4j community version 5.19.0 with graph data science library version 2.6.5 and TigerGraph version 3.9.2.
 
 # Additional
 

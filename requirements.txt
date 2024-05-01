@@ -1,0 +1,18 @@
+pandas
+numpy
+matplotlib
+seaborn
+Jinja2
+
+# the following are only required if benchmarking Neo4j methods
+neo4j
+graphdatascience
+
+# the following are only required if benchmarking TigerGraph methods
+pyTigerGraph
+
+# the following are only required if benchmarking NetworKit methods
+networkit
+cmake 
+cython
+tabulate

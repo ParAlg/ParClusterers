@@ -120,7 +120,7 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
     # if graph_exists[1]: 
     #   gds.graph.drop(gds.graph.get(graph_name))
     graph_exists = gds.graph.exists(graph_name=graph_name)
-    if not graph_exists[1]:
+    if not graph_exists.iloc[1]:
       print("error, graph does not exist")
       return "error, graph does not exist"
 
@@ -165,11 +165,11 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       mutate_kwargs = stream_kwargs.copy()
 
       if stream_flag:
-        res = gds.beta.leiden.stream(G, **stream_kwargs)
+        res = gds.leiden.stream(G, **stream_kwargs)
       else:
         mutateProperty = "leidencommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
-        res = gds.beta.leiden.mutate(G, **mutate_kwargs)
+        res = gds.leiden.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("Connectivity"):
       component_flag = True
       stream_kwargs["threshold"] = threshold
@@ -193,11 +193,11 @@ def runNeo4j(graph_path, graph_name, algorithm_name, thread, config, weighted, o
       stream_kwargs["maxIterations"]=maxIterations
       mutate_kwargs = stream_kwargs.copy()
       if stream_flag:
-        res = gds.beta.modularityOptimization.stream(G, **stream_kwargs)
+        res = gds.modularityOptimization.stream(G, **stream_kwargs)
       else:
         mutateProperty = "modularityOptimizationcommunity" + config + str(thread)
         mutate_kwargs["mutateProperty"] = mutateProperty
-        res = gds.beta.modularityOptimization.mutate(G, **mutate_kwargs)
+        res = gds.modularityOptimization.mutate(G, **mutate_kwargs)
     elif algorithm_name.startswith("LabelPropagation"):
       community_flag = True
       stream_kwargs["maxIterations"]=maxIterations
@@ -280,7 +280,7 @@ def clearDB(graph_name):
   gds = GraphDataScience("bolt://localhost:7687", auth=None)
   _ = gds.run_cypher("MATCH (n) DETACH DELETE n")
   graph_exists = gds.graph.exists(graph_name=graph_name)
-  if graph_exists[1]: 
+  if graph_exists.iloc[1]: 
     gds.graph.drop(gds.graph.get(graph_name))
   gds.close()
   print("Neo4j graph removed", graph_name)
@@ -292,7 +292,7 @@ def projectGraph(graph_name, graph_path):
   neo4j_client = GraphDatabase.driver(neo4j_url, auth=None, max_connection_lifetime=7200)
   gds = GraphDataScience(neo4j_client, auth=None) #"bolt://localhost:7687"
   graph_exists = gds.graph.exists(graph_name=graph_name)
-  if not graph_exists[1]:
+  if not graph_exists.iloc[1]:
     # cypher_commands_list, cypher_node_commands_list = getLoadGraphCommand(graph_path)
     # print("Finished loading in memory")
     # sys.stdout.flush()

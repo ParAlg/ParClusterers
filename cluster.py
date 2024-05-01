@@ -1,18 +1,27 @@
 import os
 import sys
-import signal
 import time
-import subprocess
-import re
-import itertools
-import cluster_nk
-import cluster_tg
 import runner_utils
-import cluster_neo4j
 import traceback
-import postprocess_clustering
-from pyTigerGraph import TigerGraphConnection
 import pandas as pd
+
+def write_snap_connectivity(file_path, output_path=None, num_lines=3):
+    # Open the file for reading
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    # Remove the first 'num_lines' lines
+    remaining_lines = lines[num_lines:]
+
+    # Remove the first number before tab for each line
+    remaining_lines = [line.split('\t', 1)[1] for line in remaining_lines]
+
+    # Write the remaining lines to the same file or a new file
+    if output_path is None:
+        output_path = file_path
+
+    with open(output_path, 'w') as file:
+        file.writelines(remaining_lines)
 
 # Graph must be in edge format
 def runSnap(clusterer, graph, graph_idx, round, runtime_dict):
@@ -60,7 +69,7 @@ def runSnap(clusterer, graph, graph_idx, round, runtime_dict):
     # postprocess to match our clustering format
     if (clusterer == "SnapConnectivity"):
       os.rename(out_clustering + output_postfix, out_clustering)
-      postprocess_clustering.snap_connectivity(out_clustering)
+      write_snap_connectivity(out_clustering)
   print("postprocessing..." + out_filename)
   with open(out_filename,'r') as f:
     run_info = f.readlines()
@@ -79,6 +88,7 @@ def runNeo4j(clusterer, graph, thread, config, weighted, out_prefix, runtime_dic
   alg_name = clusterer[5:]
   thread = int(thread)
   if runner_utils.postprocess_only != "true":
+    import cluster_neo4j
     out_time = cluster_neo4j.runNeo4j(use_input_graph, graph, alg_name, thread, config, weighted, out_clustering)
     runner_utils.appendToFile(out_time, out_filename)
   print("postprocessing..." + out_filename)
@@ -167,6 +177,7 @@ def run_tigergraph(conn, clusterer, graph, thread, config, weighted, out_prefix,
   out_clustering = out_prefix + ".cluster"
   out_filename = out_prefix + ".out"
   if runner_utils.postprocess_only != "true":
+    import cluster_tg
     out_time = cluster_tg.run_tigergraph(conn, clusterer, out_clustering, thread, config, weighted)
     runner_utils.appendToFile("Tigergraph: \n", out_filename)
     runner_utils.appendToFile("Clusterer: " + clusterer + "\n", out_filename)
@@ -205,7 +216,6 @@ def runAll(config_filename):
             runtime_dict["Threads"] = 1
             runtime_dict["Config"] = ""
             runtime_dict["Round"] = i
-            runtime_dict['Num Iterations'] = -1
             runSnap(clusterer, graph, graph_idx, i, runtime_dict)
             runtimes.append(runtime_dict)
           continue
@@ -221,11 +231,11 @@ def runAll(config_filename):
               runtime_dict["Threads"] = thread
               runtime_dict["Config"] = config
               runtime_dict["Round"] = i
-              runtime_dict['Num Iterations'] = -1
               out_prefix = runner_utils.output_directory + clusterer + "_" + str(graph_idx) + "_" + thread + "_" + str(config_idx) + "_" + str(i)
               if not os.path.exists(runner_utils.output_directory):
                 os.makedirs(runner_utils.output_directory)
               if clusterer.startswith("NetworKit"):
+                import cluster_nk
                 cluster_nk.runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict)
               elif clusterer == "Tectonic":
                 runTectonic(clusterer, graph, thread, config, out_prefix, runtime_dict)
@@ -235,6 +245,7 @@ def runAll(config_filename):
                   continue
                 if (not neo4j_graph_loaded) and (runner_utils.postprocess_only != "true"):
                   use_input_graph = runner_utils.input_directory + graph
+                  import cluster_neo4j
                   cluster_neo4j.projectGraph(graph, use_input_graph)
                   neo4j_graph_loaded = True
                 weighted = runner_utils.weighted == "true"
@@ -242,6 +253,8 @@ def runAll(config_filename):
               elif clusterer.startswith("TigerGraph"):
                 weighted = runner_utils.weighted == "true"
                 if (not tigergraph_loaded) and (runner_utils.postprocess_only != "true"):
+                  from pyTigerGraph import TigerGraphConnection
+                  import cluster_tg
                   conn = TigerGraphConnection(
                       host='http://127.0.0.1',
                       username='tigergraph',
@@ -274,8 +287,6 @@ def runAll(config_filename):
                   for elem in run_info[1:]:
                     if elem.startswith('Cluster Time:'):
                       runtime_dict['Cluster Time'] = elem.split(' ')[-1].strip()
-                    if elem.startswith('Num iterations:'):
-                      runtime_dict['Num Iterations'] = elem.split(' ')[-1].strip()
               runtimes.append(runtime_dict)
       except Exception as e:
           # Print the stack trace
@@ -289,7 +300,7 @@ def runAll(config_filename):
     if not os.path.exists(runner_utils.csv_output_directory):
       os.makedirs(runner_utils.csv_output_directory)
   runtime_dataframe.to_csv(runner_utils.csv_output_directory + '/runtimes.csv', mode='a',
-                             columns=["Clusterer Name","Input Graph","Threads","Config","Round","Cluster Time","Num Iterations"])
+                             columns=["Clusterer Name","Input Graph","Threads","Config","Round","Cluster Time"])
 
 
 
