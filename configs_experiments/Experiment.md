@@ -40,6 +40,15 @@ python3 stats.py configs_experiments/uci/cluster_uci_neo4j.config configs_experi
 python3 stats.py configs_experiments/uci/cluster_uci_tg.config configs_experiments/uci/stats_uci.config
 ```
 
+## Experiments for running time
+```bash
+python3 cluster.py configs_experiments/time/cluster_pcbs.config
+python3 cluster.py configs_experiments/time/cluster_nk.config
+python3 cluster.py configs_experiments/time/cluster_snap.config
+python3 cluster.py configs_experiments/time/cluster_neo4j.config
+python3 cluster.py configs_experiments/time/cluster_tg.config
+```
+
 
 
 ## Plotting
