@@ -265,8 +265,8 @@ def runNetworKit(clusterer, graph, thread, config, out_prefix, runtime_dict):
                   # print(f"Processing: {progress_percentage:.2f}% done")
                 cluster_index += 1
             # Write all lines to the file at once
-            with open(out_clustering, 'a+') as file:
-                file.write('\n'.join(lines_to_write) + '\n')
+            # with open(out_clustering, 'a+') as file:
+            #     file.write('\n'.join(lines_to_write) + '\n')
           else:
             # cluster_lists = communities.getSubsets()
             # for cluster_list in cluster_lists:
