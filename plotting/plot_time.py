@@ -90,7 +90,7 @@ def plot_runtime_compare(df, base, filename, title, ncol=5, height=5, p=False):
 if __name__ == "__main__":
     base_addr = "results/"
     our_name = "PCBS"
-    directories = ["nk", "pcbs"]
+    directories = ["nk", "pcbs", "snap", "nk_fs", "neo4j", "tg"]
     df = pd.concat([pd.read_csv(base_addr + f"out_time_{f}_csv/runtimes.csv") for f in directories])
     replace_graph_names(df)
 
@@ -113,7 +113,6 @@ if __name__ == "__main__":
     df_lp.loc[:, "Clusterer Name"] = df_lp["Clusterer Name"].str.replace("LabelPropagation", "")
     df_lp.loc[:, "Clusterer Name"] = df_lp["Clusterer Name"].str.replace("PLP", "")
     df_lp.loc[:, "Clusterer Name"] = df_lp["Clusterer Name"].str.replace("LabelProp", "")
-
     plot_runtime_compare(df_lp, our_name, base_addr + "out_lp_slowdown.pdf", "Label Propagation", p=True)
 
     ## SLPA
@@ -121,7 +120,6 @@ if __name__ == "__main__":
     df_slpa.loc[:, "Clusterer Name"] = df_slpa["Clusterer Name"].str.replace("SLPAClusterer", our_name)
     df_slpa.loc[:, "Clusterer Name"] = df_slpa["Clusterer Name"].str.replace("SLPA", "")
     df_slpa.loc[:, "Clusterer Name"] = df_slpa["Clusterer Name"].str.replace("SLLabelProp", "")
-
     plot_runtime_compare(df_slpa, our_name, base_addr + "out_slpa_slowdown.pdf", "Speaker-Listern Label Propagation")
 
     ## Modularity
@@ -137,5 +135,4 @@ if __name__ == "__main__":
     df_md.loc[:, "Clusterer Name"] = df_md["Clusterer Name"].str.replace("PLM", "Louvain")
     df_md.loc[:, "Clusterer Name"] = df_md["Clusterer Name"].str.replace("Louvain", "LV")
     df_md.loc[:, "Clusterer Name"] = df_md["Clusterer Name"].str.replace("Leiden", "LD")
-
     plot_runtime_compare(df_md, our_name, base_addr + "out_md_slowdown.pdf", "Modularity Clustering", 4, 6)
