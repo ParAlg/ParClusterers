@@ -9,20 +9,20 @@ import numpy as np
 fontsize=25
 
 def replace_graph_names(df):
-    df["Input Graph"] = df["Input Graph"].str.replace("com-", "", regex=True)\
+    df.loc[:, "Input Graph"] = df["Input Graph"].str.replace("com-", "", regex=True)\
                                     .str.replace(".gbbs.txt", "", regex=True)\
                                     .str.replace(".bin", "", regex=True)\
                                     .str.replace(".ungraph.txt", "", regex=True)\
                                     .str.replace(".graph.txt", "", regex=True)
     
-    df["Input Graph"] = df["Input Graph"].str.replace("amazon", "AM", regex=True)\
+    df.loc[:, "Input Graph"] = df["Input Graph"].str.replace("amazon", "AM", regex=True)\
                                     .str.replace("youtube", "YT", regex=True)\
                                     .str.replace("dblp", "DB", regex=True)\
                                     .str.replace("lj", "LJ", regex=True)\
                                     .str.replace("orkut", "OK", regex=True)\
                                     .str.replace("friendster", "FS", regex=True)
 
-    df["Clusterer Name"] = df["Clusterer Name"].str.replace("Scan", "SCAN", regex=True)\
+    df.loc[:, "Clusterer Name"] = df["Clusterer Name"].str.replace("Scan", "SCAN", regex=True)\
                                     .str.replace("Tectonic", "TECTONIC", regex=True)\
                                     .str.replace("Hac", "HAC", regex=True)
 

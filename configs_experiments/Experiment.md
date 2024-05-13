@@ -44,6 +44,7 @@ python3 stats.py configs_experiments/uci/cluster_uci_tg.config configs_experimen
 ```bash
 python3 cluster.py configs_experiments/time/cluster_pcbs.config
 python3 cluster.py configs_experiments/time/cluster_nk.config
+python3 cluster.py configs_experiments/time/cluster_nk_fs.config
 python3 cluster.py configs_experiments/time/cluster_snap.config
 python3 cluster.py configs_experiments/time/cluster_neo4j.config
 python3 cluster.py configs_experiments/time/cluster_tg.config
@@ -57,6 +58,7 @@ python3 cluster.py configs_experiments/time/cluster_tg.config
 sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
 sudo apt-get install dvipng
 python3 plotting/plot_pareto.py 
+python3 plotting/plot_time.py 
 ```
 
 ## Install NetworKit
