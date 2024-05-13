@@ -113,7 +113,7 @@ def runNetworKitParallelLeiden(G, config):
         use_iterations = int(config_split[1])
       elif config_split[0].startswith("gamma"):
         use_gamma = float(config_split[1])
-  print(use_randomize, use_iterations, use_gamma)
+  # print(use_randomize, use_iterations, use_gamma)
   f = io.StringIO()
   with redirect_stdout(f):
     print(config)
