@@ -50,10 +50,6 @@ def common_ax_style(ax):
         
     ax.set_xlabel("Threads", fontsize = fontsize)
 
-def plot_data(df, ax):
-    sns.lineplot(data=df, x="Threads", y="Cluster Time", hue="Clusterer Name", linewidth = 3, ax = ax)
-    sns.scatterplot(data=df, x="Threads", y="Cluster Time", hue="Clusterer Name", s = 30, ax = ax, legend=False)
-
 def get_larger_handles(g, marker_size, ncol):
     g.add_legend(loc='upper center', ncol=ncol, bbox_to_anchor=(0.5, 1.15), fontsize=fontsize)
     if g._legend:

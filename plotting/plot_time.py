@@ -95,7 +95,7 @@ if __name__ == "__main__":
     replace_graph_names(df)
 
     ##  "Connectivity"
-    df_wcc = df[df["Clusterer Name"].str.contains("Connectivity")]
+    df_wcc = df[(df["Clusterer Name"].str.contains("Connectivity")) | (df["Clusterer Name"].str.contains("WCC"))]
     df_wcc.loc[:, "Clusterer Name"] = df_wcc["Clusterer Name"].str.replace("ConnectivityClusterer", our_name)
     df_wcc.loc[:, "Clusterer Name"] = df_wcc["Clusterer Name"].str.replace("Connectivity", "")
     plot_runtime_compare(df_wcc, our_name, base_addr + "out_wcc_slowdown.pdf", "Connectivity", 5)
