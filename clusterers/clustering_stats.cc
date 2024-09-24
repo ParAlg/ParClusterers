@@ -41,7 +41,10 @@ absl::StatusOr<ClusteringStatistics> GetStats(const GbbsGraph& graph,
       return absl::InvalidArgumentError(
         absl::StrFormat("input_communities is not provided."));
     }
-    ReadCommunities(input_communities.c_str(), communities);
+    auto status = ReadCommunities(input_communities.c_str(), communities);
+    if (!status.ok()){
+      return status;
+    }
   }
   auto end_read = std::chrono::steady_clock::now();
   PrintTime(begin_read, end_read, "Read Commmunities");
