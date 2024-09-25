@@ -132,7 +132,6 @@ def plotParetoAxis(ax, dfs, graph, lines, labels, clusterers):
         # Extract the pareto_df for the current graph and clusterer combination
         _, pareto_df = dfs[(graph, clusterer)]
         if pareto_df.empty:
-            #                         print(graph, clusterer)
             continue
 
         # Plot the pareto_df with the appropriate marker
@@ -159,72 +158,35 @@ def plotParetoAxis(ax, dfs, graph, lines, labels, clusterers):
 
 
 def plotPareto(dfs, graphs, clusterers, draw_legend=True, ncol=6):
+    assert len(graphs)==1
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
+    plt.rcParams.update({"font.size": 20})
 
-    if len(graphs) > 4:
-        plt.rcParams.update({"font.size": 25})
+    lines = []  # To store the Line2D objects for the legend
+    labels = []  # To store the corresponding labels for the Line2D objects
 
-        # Create subplots in a 2x3 grid
-        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(22, 15))
-        graph_idx = 0
+    graph = graphs[0]
+    plotParetoAxis(ax, dfs, graph, lines, labels, clusterers)
 
-        lines = []  # To store the Line2D objects for the legend
-        labels = []  # To store the corresponding labels for the Line2D objects
-
-        for i in range(2):
-            for j in range(3):
-                if graph_idx < len(graphs):  # Ensure we have a graph to process
-                    graph = graphs[graph_idx]
-                    ax = axes[i][j]
-                    plotParetoAxis(ax, dfs, graph, lines, labels, clusterers)
-                    graph_idx += 1
-                else:
-                    axes[i][j].axis("off")  # Turn off axes without data
+    if draw_legend:
         # Create a single legend for the entire figure, at the top
         fig.legend(
             lines,
             labels,
             loc="upper center",
             ncol=ncol,
-            bbox_to_anchor=(0.5, 1.1),
+            bbox_to_anchor=(0.5, 1.15),
             frameon=False,
         )
-    else:
-        # Create subplots in a 2x3 grid
-        plt.rcParams.update({"font.size": 20})
 
-        fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(25, 5))
-        graph_idx = 0
-
-        lines = []  # To store the Line2D objects for the legend
-        labels = []  # To store the corresponding labels for the Line2D objects
-
-        for graph_idx in range(4):
-            if graph_idx < len(graphs):  # Ensure we have a graph to process
-                graph = graphs[graph_idx]
-                ax = axes[graph_idx]
-                plotParetoAxis(ax, dfs, graph, lines, labels, clusterers)
-                graph_idx += 1
-            else:
-                axes[graph_idx].axis("off")  # Turn off axes without data
-        if draw_legend:
-            # Create a single legend for the entire figure, at the top
-            fig.legend(
-                lines,
-                labels,
-                loc="upper center",
-                ncol=6,
-                bbox_to_anchor=(0.5, 1.15),
-                frameon=False,
-            )
-
-    return fig
+    return ax
 
 
 def plotPRParetoAX(ax, graph, df, clusterers, lines, labels, only_high_p=False):
     for clusterer in clusterers:
         # Extract the pareto_df for the current graph and clusterer combination
         pareto_df = df[
-            (df["Clusterer Name"] == clusterer) & (df["Input Graph"] == graph)
+            (df["Clusterer Name"] == clusterer) #& (df["Input Graph"] == graph)
         ]
         if pareto_df.empty:
             continue
@@ -253,50 +215,31 @@ def plotPRParetoAX(ax, graph, df, clusterers, lines, labels, only_high_p=False):
         ax.set_xlim((0.5, 1))
 
 
-def plotPRPareto(df, only_high_p=False, ncol=6):
-    graphs = df["Input Graph"].unique()
-    clusterers = df["Clusterer Name"].unique()
+def plotPRPareto(dfs, only_high_p=False, ncol=6):
 
     graph_idx = 0
 
     lines = []  # To store the Line2D objects for the legend
     labels = []  # To store the corresponding labels for the Line2D objects
 
-    if len(graphs) > 4:
-        plt.rcParams.update({"font.size": 25})
-        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(30, 16))
-        for i in range(2):
-            for j in range(3):
-                if graph_idx < len(graphs):  # Ensure we have a graph to process
-                    graph = graphs[graph_idx]
-                    ax = axes[i][j]
+    
+    num_params = len(dfs)
 
-                    plotPRParetoAX(
-                        ax, graph, df, clusterers, lines, labels, only_high_p
-                    )
+    plt.rcParams.update({"font.size": 20})
 
-                    graph_idx += 1
-                else:
-                    axes[i][j].axis("off")  # Turn off axes without data
+    if num_params > 1:
+        fig, axes = plt.subplots(nrows=1, ncols=num_params, figsize=(25, 5))
+        for param_idx, param in enumerate(dfs.keys()):
+            df = dfs[param]
+            graphs = df["Input Graph"].unique()
+            clusterers = df["Clusterer Name"].unique()
+            assert len(graphs)==1
+            graph = graphs[0]
 
-        fig.legend(
-            lines,
-            labels,
-            loc="upper center",
-            ncol=ncol,
-            bbox_to_anchor=(0.5, 1),
-            frameon=False,
-        )
-    else:
-        plt.rcParams.update({"font.size": 20})
-        fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(25, 5))
-        for graph_idx in range(len(graphs)):
-            graph = graphs[graph_idx]
-            ax = axes[graph_idx]
+            ax = axes[param_idx]
 
-            plotPRParetoAX(ax, graph, df, clusterers, lines, labels, only_high_p)
+            plotPRParetoAX(ax, f"{graph}_{param}", df, clusterers, lines, labels, only_high_p)
 
-            graph_idx += 1
 
         fig.legend(
             lines,
@@ -306,7 +249,27 @@ def plotPRPareto(df, only_high_p=False, ncol=6):
             bbox_to_anchor=(0.5, 1.15),
             frameon=False,
         )
-    return axes
+        return axes
+    
+    else:
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
+        param = [k for k in dfs.keys()][0]
+        df = dfs[param]
+        graphs = df["Input Graph"].unique()
+        clusterers = df["Clusterer Name"].unique()
+        assert len(graphs)==1
+        graph = graphs[0]
+        plotPRParetoAX(ax, f"{graph}_{param}", df, clusterers, lines, labels, only_high_p)
+
+        fig.legend(
+            lines,
+            labels,
+            loc="upper center",
+            ncol=ncol,
+            bbox_to_anchor=(0.5, 1.15),
+            frameon=False,
+        )        
+        return ax
 
 
 def plotPRParetoSingle(df, graph):
@@ -420,9 +383,9 @@ base_addr = "./results/"
 
 
 def plot_ngrams():
-    # df_pcbs = pd.read_csv(base_addr + f"out_ngrams_pcbs_csv/stats.csv")
+    df_pcbs = pd.read_csv(base_addr + f"out_ngrams_pcbs_csv/stats.csv")
     df_pcbs_high_res = pd.read_csv(base_addr + f"out_ngrams_high_res_pcbs_csv/stats.csv")
-    df = pd.concat([df_pcbs_high_res]) #df_pcbs, 
+    df = pd.concat([df_pcbs, df_pcbs_high_res])
 
     df = df.dropna(how="all")
     replace_graph_names(df)
@@ -447,32 +410,46 @@ def plot_ngrams():
         "ParHACClusterer_1",
     ]
 
-
-    thresholds = [0.86, 0.88, 0.90, 0.92, 0.94]
-
-    for threshold in thresholds:
+    def get_threshold_df(threshold):
         df_pcbs = df[df["Clusterer Name"].isin(our_methods)]
         
         df_pcbs["fScore_mean"] = df["fScore_mean"].apply(lambda k: k[threshold])
         df_pcbs["communityPrecision_mean"] = df["communityPrecision_mean"].apply(lambda k: k[threshold])
         df_pcbs["communityRecall_mean"] = df["communityRecall_mean"].apply(lambda k: k[threshold])
+        return df_pcbs
 
-        # Get AUC table
+    thresholds = [0.88, 0.90, 0.92, 0.94]
+    df_pr_paretos = {}
+
+    for threshold in thresholds:
+        df_pcbs = get_threshold_df(threshold)
+
         df_pr_pareto = FilterParetoPRMethod(df_pcbs)
-        getAUCTable(df_pcbs, df_pr_pareto)
+        df_pr_paretos[threshold] = df_pr_pareto
 
-        # Plot Precision Recall Pareto frontier for PCBS methods
-        axes = plotPRPareto(df_pr_pareto, only_high_p=True) #
-        plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
-        print("plotted pr_uci.pdf")
+    # Plot Precision Recall Pareto frontier for PCBS methods
+    plotPRPareto(df_pr_paretos, only_high_p=True) #
+    plt.savefig(base_addr + f"pr_uci.pdf", bbox_inches="tight")
+    print("plotted pr_uci.pdf")
 
-        # Plot F_0.5 runtime Pareto frontier for PCBS methods
-        clusterers = df_pcbs["Clusterer Name"].unique()
-        dfs, graphs = GetParetoDfs(df_pcbs)
-        plotPareto(dfs, graphs, clusterers)
-        plt.tight_layout()
-        plt.savefig(base_addr + f"time_f1_uci_{threshold}.pdf", bbox_inches="tight")
-        print("plotted time_f1_uci.pdf")
+    # plot single example
+    threshold = 0.92
+    df_pcbs = get_threshold_df(threshold)
+    df_pr_pareto = FilterParetoPRMethod(df_pcbs)
+    getAUCTable(df_pcbs, df_pr_pareto)
+    ax = plotPRPareto({threshold:df_pr_pareto}, only_high_p=True, ncol=3)
+    ax.set_title("")
+    plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
+    print(f"plotted pr_uci_{threshold}.pdf")
+
+    # Plot F_0.5 runtime Pareto frontier for PCBS methods
+    clusterers = df_pcbs["Clusterer Name"].unique()
+    dfs, graphs = GetParetoDfs(df_pcbs)
+    ax = plotPareto(dfs, graphs, clusterers, draw_legend=False)
+    ax.set_title("")
+    plt.tight_layout()
+    plt.savefig(base_addr + f"time_f1_uci_{threshold}.pdf", bbox_inches="tight")
+    print(f"plotted time_f1_uci_{threshold}.pdf")
 
 if __name__ == "__main__":
     base_addr = "results/"
