@@ -272,28 +272,6 @@ def plotPRPareto(dfs, only_high_p=False, ncol=6):
         return ax
 
 
-def plotPRParetoSingle(df, graph):
-    plt.rcParams.update({"font.size": 20})
-    clusterers = df["Clusterer Name"].unique()
-
-    lines = []  # To store the Line2D objects for the legend
-    labels = []  # To store the corresponding labels for the Line2D objects
-
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
-
-    plotPRParetoAX(ax, graph, df, clusterers, lines, labels)
-
-    fig.subplots_adjust(hspace=0.4)
-    fig.legend(
-        lines,
-        labels,
-        loc="upper left",
-        ncol=1,
-        bbox_to_anchor=(0.9, 0.8),
-        frameon=False,
-    )
-
-
 # compute the area under the precision recall pareto curve, for precision >= 0.5.
 def computeAUC(df_pr_pareto, clusterer, graph):
     df = df_pr_pareto[
@@ -380,6 +358,46 @@ def getAUCTable(df, df_pr_pareto, print_table=False):
     print(latex_table)
 
 
+def plot_single_threshold(threshold, df_pcbs):
+    graphs = df_pcbs["Input Graph"].unique()
+    assert len(graphs)==1
+    graph = graphs[0]
+
+    
+    clusterers = df_pcbs["Clusterer Name"].unique()
+    df_pr_pareto = FilterParetoPRMethod(df_pcbs)
+    getAUCTable(df_pcbs, df_pr_pareto)
+
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16, 8))
+    plt.rcParams.update({"font.size": 25})
+
+    lines = []  # To store the Line2D objects for the legend
+    labels = []  # To store the corresponding labels for the Line2D objects
+    plotPRParetoAX(axs[0], graph, df_pr_pareto, clusterers, lines, labels, only_high_p=True)
+
+    # Plot F_0.5 runtime Pareto frontier for PCBS methods
+    dfs, graphs = GetParetoDfs(df_pcbs)
+    plotParetoAxis(axs[1], dfs, graph, [], [], clusterers)
+
+    for ax in axs:
+        ax.set_title("")
+        ax.set_xlabel(ax.get_xlabel(), fontsize=25)
+        ax.set_ylabel(ax.get_ylabel(), fontsize=25)
+        ax.tick_params(axis='both', which='major', labelsize=25)
+
+    plt.tight_layout()
+    fig.subplots_adjust(hspace=0.4)
+    fig.legend(
+        lines,
+        labels,
+        loc="upper center",
+        ncol=4,
+        bbox_to_anchor=(0.5, 1.2),
+        frameon=False,
+    )
+    plt.savefig(base_addr + f"ngrams_{threshold}.pdf", bbox_inches="tight")
+    print(f"plotted ngrams_{threshold}.pdf")
+
 base_addr = "./results/"
 
 
@@ -436,21 +454,8 @@ def plot_ngrams():
     # plot single example
     threshold = 0.92
     df_pcbs = get_threshold_df(threshold)
-    df_pr_pareto = FilterParetoPRMethod(df_pcbs)
-    getAUCTable(df_pcbs, df_pr_pareto)
-    ax = plotPRPareto({threshold:df_pr_pareto}, only_high_p=True, ncol=3)
-    ax.set_title("")
-    plt.savefig(base_addr + f"pr_ngrams_{threshold}.pdf", bbox_inches="tight")
-    print(f"plotted pr_ngrams_{threshold}.pdf")
+    plot_single_threshold(threshold, df_pcbs)
 
-    # Plot F_0.5 runtime Pareto frontier for PCBS methods
-    clusterers = df_pcbs["Clusterer Name"].unique()
-    dfs, graphs = GetParetoDfs(df_pcbs)
-    ax = plotPareto(dfs, graphs, clusterers, draw_legend=False)
-    ax.set_title("")
-    plt.tight_layout()
-    plt.savefig(base_addr + f"time_f1_ngrams_{threshold}.pdf", bbox_inches="tight")
-    print(f"plotted time_f1_ngrams_{threshold}.pdf")
 
 if __name__ == "__main__":
     base_addr = "results/"
