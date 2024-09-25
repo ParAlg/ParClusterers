@@ -358,6 +358,7 @@ def getAUCTable(df, df_pr_pareto, print_table=False):
     df_auc.set_index("method", inplace=True)
     df_auc["avg"] = df_auc.mean(axis=1)
     df_auc = df_auc.sort_values(by="avg", ascending=False)
+    df_auc.drop(["avg"], axis=1, inplace=True)
 
     bold_df = df_auc.apply(
         lambda x: [
@@ -429,8 +430,8 @@ def plot_ngrams():
 
     # Plot Precision Recall Pareto frontier for PCBS methods
     plotPRPareto(df_pr_paretos, only_high_p=True) #
-    plt.savefig(base_addr + f"pr_uci.pdf", bbox_inches="tight")
-    print("plotted pr_uci.pdf")
+    plt.savefig(base_addr + f"pr_ngrams.pdf", bbox_inches="tight")
+    print("plotted pr_ngrams.pdf")
 
     # plot single example
     threshold = 0.92
@@ -439,8 +440,8 @@ def plot_ngrams():
     getAUCTable(df_pcbs, df_pr_pareto)
     ax = plotPRPareto({threshold:df_pr_pareto}, only_high_p=True, ncol=3)
     ax.set_title("")
-    plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
-    print(f"plotted pr_uci_{threshold}.pdf")
+    plt.savefig(base_addr + f"pr_ngrams_{threshold}.pdf", bbox_inches="tight")
+    print(f"plotted pr_ngrams_{threshold}.pdf")
 
     # Plot F_0.5 runtime Pareto frontier for PCBS methods
     clusterers = df_pcbs["Clusterer Name"].unique()
@@ -448,8 +449,8 @@ def plot_ngrams():
     ax = plotPareto(dfs, graphs, clusterers, draw_legend=False)
     ax.set_title("")
     plt.tight_layout()
-    plt.savefig(base_addr + f"time_f1_uci_{threshold}.pdf", bbox_inches="tight")
-    print(f"plotted time_f1_uci_{threshold}.pdf")
+    plt.savefig(base_addr + f"time_f1_ngrams_{threshold}.pdf", bbox_inches="tight")
+    print(f"plotted time_f1_ngrams_{threshold}.pdf")
 
 if __name__ == "__main__":
     base_addr = "results/"
