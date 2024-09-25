@@ -420,7 +420,8 @@ base_addr = "./results/"
 def plot_ngrams():
     threshold = 0.92
     df_pcbs = pd.read_csv(base_addr + f"out_ngrams_{threshold}_pcbs_csv/stats.csv")
-    df = df_pcbs
+    df_pcbs_high_res = pd.read_csv(base_addr + f"out_ngrams_high_res_{threshold}_pcbs_csv/stats.csv")
+    df = pd.concat([df_pcbs, df_pcbs_high_res])
 
     df = df.dropna(how="all")
     replace_graph_names(df)
@@ -449,7 +450,8 @@ def plot_ngrams():
     getAUCTable(df_pcbs, df_pr_pareto)
 
     # Plot Precision Recall Pareto frontier for PCBS methods
-    plotPRPareto(df_pr_pareto)
+    axes = plotPRPareto(df_pr_pareto, only_high_p=True)
+    axes[0].set_ylim((0.5, 0.8))
     plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
     print("plotted pr_uci.pdf")
 
