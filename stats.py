@@ -9,6 +9,8 @@ import runner_utils
 import json
 import pandas as pd
 
+from stats_precision_recall_pair import compute_precision_recall_pair
+
 def getRunTime(clusterer, out_prefix):
   cluster_time = -1
   out_filename = out_prefix + ".out"
@@ -42,13 +44,18 @@ def getRunTime(clusterer, out_prefix):
 
 def runStats(out_prefix, graph, graph_idx, stats_dict):
   out_statistics = out_prefix + ".stats"
+  out_statistics_pair = out_prefix + ".pair.stats"
   in_clustering = out_prefix + ".cluster"
   if not os.path.exists(in_clustering) or not os.path.getsize(in_clustering) > 0:
     # Either an error or a timeout happened
     runner_utils.appendToFile("ERROR", out_statistics)
     return
   use_input_graph = runner_utils.input_directory + graph
-  use_input_communities = "" if not runner_utils.communities else "--input_communities=" + runner_utils.input_directory + runner_utils.communities[graph_idx]
+  input_communities = runner_utils.input_directory + runner_utils.communities[graph_idx]
+  if "precision_recall_pair_threshold" in runner_utils.stats_config:
+    compute_precision_recall_pair(in_clustering, input_communities, out_statistics_pair, runner_utils.stats_config, stats_dict)
+    return
+  use_input_communities = "" if not runner_utils.communities else "--input_communities=" + input_communities
   ss = ("bazel run //clusterers:stats-in-memory_main -- "
   "--input_graph=" + use_input_graph + " "
   "--is_gbbs_format=" + runner_utils.gbbs_format + " "
