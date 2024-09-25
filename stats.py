@@ -52,7 +52,7 @@ def runStats(out_prefix, graph, graph_idx, stats_dict):
     return
   use_input_graph = runner_utils.input_directory + graph
   input_communities = runner_utils.input_directory + runner_utils.communities[graph_idx]
-  if "precision_recall_pair_threshold" in runner_utils.stats_config:
+  if "precision_recall_pair_thresholds" in runner_utils.stats_config:
     compute_precision_recall_pair(in_clustering, input_communities, out_statistics_pair, runner_utils.stats_config, stats_dict)
     return
   use_input_communities = "" if not runner_utils.communities else "--input_communities=" + input_communities

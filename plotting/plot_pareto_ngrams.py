@@ -7,6 +7,8 @@ import re
 import numpy as np
 from plotting_utils import *
 
+import ast
+
 plt.rcParams["ps.useafm"] = True
 plt.rcParams["pdf.use14corefonts"] = True
 # plt.rcParams["text.usetex"] = True
@@ -418,14 +420,16 @@ base_addr = "./results/"
 
 
 def plot_ngrams():
-    threshold = 0.92
-    df_pcbs = pd.read_csv(base_addr + f"out_ngrams_{threshold}_pcbs_csv/stats.csv")
-    df_pcbs_high_res = pd.read_csv(base_addr + f"out_ngrams_high_res_{threshold}_pcbs_csv/stats.csv")
-    df = pd.concat([df_pcbs, df_pcbs_high_res])
+    # df_pcbs = pd.read_csv(base_addr + f"out_ngrams_pcbs_csv/stats.csv")
+    df_pcbs_high_res = pd.read_csv(base_addr + f"out_ngrams_high_res_pcbs_csv/stats.csv")
+    df = pd.concat([df_pcbs_high_res]) #df_pcbs, 
 
     df = df.dropna(how="all")
     replace_graph_names(df)
     df = add_epsilon_to_hac(df)
+    df["fScore_mean"] = df["fScore_mean"].apply(ast.literal_eval)
+    df["communityPrecision_mean"] = df["communityPrecision_mean"].apply(ast.literal_eval)
+    df["communityRecall_mean"] = df["communityRecall_mean"].apply(ast.literal_eval)
 
     our_methods = [
         "KCoreClusterer",
@@ -443,25 +447,32 @@ def plot_ngrams():
         "ParHACClusterer_1",
     ]
 
-    df_pcbs = df[df["Clusterer Name"].isin(our_methods)]
 
-    # Get AUC table
-    df_pr_pareto = FilterParetoPRMethod(df_pcbs)
-    getAUCTable(df_pcbs, df_pr_pareto)
+    thresholds = [0.86, 0.88, 0.90, 0.92, 0.94]
 
-    # Plot Precision Recall Pareto frontier for PCBS methods
-    axes = plotPRPareto(df_pr_pareto, only_high_p=True)
-    axes[0].set_ylim((0.5, 0.8))
-    plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
-    print("plotted pr_uci.pdf")
+    for threshold in thresholds:
+        df_pcbs = df[df["Clusterer Name"].isin(our_methods)]
+        
+        df_pcbs["fScore_mean"] = df["fScore_mean"].apply(lambda k: k[threshold])
+        df_pcbs["communityPrecision_mean"] = df["communityPrecision_mean"].apply(lambda k: k[threshold])
+        df_pcbs["communityRecall_mean"] = df["communityRecall_mean"].apply(lambda k: k[threshold])
 
-    # Plot F_0.5 runtime Pareto frontier for PCBS methods
-    clusterers = df_pcbs["Clusterer Name"].unique()
-    dfs, graphs = GetParetoDfs(df_pcbs)
-    plotPareto(dfs, graphs, clusterers)
-    plt.tight_layout()
-    plt.savefig(base_addr + f"time_f1_uci_{threshold}.pdf", bbox_inches="tight")
-    print("plotted time_f1_uci.pdf")
+        # Get AUC table
+        df_pr_pareto = FilterParetoPRMethod(df_pcbs)
+        getAUCTable(df_pcbs, df_pr_pareto)
+
+        # Plot Precision Recall Pareto frontier for PCBS methods
+        axes = plotPRPareto(df_pr_pareto, only_high_p=True) #
+        plt.savefig(base_addr + f"pr_uci_{threshold}.pdf", bbox_inches="tight")
+        print("plotted pr_uci.pdf")
+
+        # Plot F_0.5 runtime Pareto frontier for PCBS methods
+        clusterers = df_pcbs["Clusterer Name"].unique()
+        dfs, graphs = GetParetoDfs(df_pcbs)
+        plotPareto(dfs, graphs, clusterers)
+        plt.tight_layout()
+        plt.savefig(base_addr + f"time_f1_uci_{threshold}.pdf", bbox_inches="tight")
+        print("plotted time_f1_uci.pdf")
 
 if __name__ == "__main__":
     base_addr = "results/"

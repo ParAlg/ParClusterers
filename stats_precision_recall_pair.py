@@ -5,8 +5,8 @@ import json
 
 def _config_str_to_dict(input_str):
   # e.g. 
-  # input_str = "precision_recall_pair_threshold: 0.92,f_score_param: 0.5"
-  # result_dict = {'precision_recall_pair_threshold': 0.92, 'f_score_param': 0.5}
+  # input_str = "precision_recall_pair_thresholds: 0.86;0.88;0.90;0.92;0.94,f_score_param: 0.5"
+  # result_dict = {'precision_recall_pair_thresholds': [0.86;0.88;0.90;0.92;0.94], 'f_score_param': 0.5}
 
 
   # Split the string into key-value pairs
@@ -24,12 +24,15 @@ def _config_str_to_dict(input_str):
       value = value.strip()
       # Convert the value to float if possible
       try:
-          value = float(value)
+          if key == "precision_recall_pair_thresholds":
+            # Split the value by semicolons and convert each to float
+            value = [float(v.strip()) for v in value.split(';')]
+          else:
+            value = float(value)
       except ValueError:
           pass  # Keep the value as a string if it cannot be converted
       # Add the key-value pair to the dictionary
       result_dict[key] = value
-
   return result_dict
 
 
@@ -70,7 +73,7 @@ def read_ground_truth_pairs(ground_truth_file):
                 print(f"Ignoring invalid line: {line.strip()}")
     return pairs
 
-def compute_precision_recall(node_to_clusters, pairs, threshold):
+def compute_precision_recall(node_to_clusters, pairs, thresholds, f_score_param):
     """
     Computes precision and recall based on the clusters and ground truth pairs.
     Handles overlapping clusters where a node can belong to multiple clusters.
@@ -83,36 +86,48 @@ def compute_precision_recall(node_to_clusters, pairs, threshold):
     FP = 0  # False Positive
     FN = 0  # False Negative
 
-    for node1, node2, weight in pairs:
-        # Determine if the pair is positive or negative
-        is_positive = weight > threshold
+    precisions = {}
+    recalls = {}    
+    f_scores = {}
 
-        # Determine if the nodes are in the same cluster (overlapping clusters)
-        if node1 in node_to_clusters and node2 in node_to_clusters:
-            clusters1 = node_to_clusters[node1]
-            clusters2 = node_to_clusters[node2]
-            in_same_cluster = bool(clusters1 & clusters2)  # Check for non-empty intersection
-        else:
-            logging.warning("skipping nodes %s, %s", node1, node2)
-            # Nodes not found in clusters; skip this pair
-            continue
+    for threshold in thresholds:
+      for node1, node2, weight in pairs:
+          # Determine if the pair is positive or negative
+          is_positive = weight > threshold
 
-        if is_positive:
-            if in_same_cluster:
-                TP += 1
-            else:
-                FN += 1
-        else:
-            if not in_same_cluster:
-                TN += 1
-            else:
-                FP += 1
+          # Determine if the nodes are in the same cluster (overlapping clusters)
+          if node1 in node_to_clusters and node2 in node_to_clusters:
+              clusters1 = node_to_clusters[node1]
+              clusters2 = node_to_clusters[node2]
+              in_same_cluster = bool(clusters1 & clusters2)  # Check for non-empty intersection
+          else:
+              logging.warning("skipping nodes %s, %s", node1, node2)
+              # Nodes not found in clusters; skip this pair
+              continue
 
-    # Calculate precision and recall
-    precision = TP / (TP + FP) if (TP + FP) > 0 else 0
-    recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+          if is_positive:
+              if in_same_cluster:
+                  TP += 1
+              else:
+                  FN += 1
+          else:
+              if not in_same_cluster:
+                  TN += 1
+              else:
+                  FP += 1
 
-    return precision, recall, TP, FP, TN, FN
+      # Calculate precision and recall
+      precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+      recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+      f_score = 0
+      if precision !=0 and recall != 0:
+        f_score = (1 + f_score_param * f_score_param) * precision * recall / ((f_score_param * f_score_param * precision) + recall)
+
+      precisions[threshold] = precision
+      recalls[threshold] = recall
+      f_scores[threshold] = f_score
+
+    return precisions, recalls, f_scores
 
 
 def compute_precision_recall_pair(in_clustering, input_communities, out_statistics, stats_config, stats_dict):
@@ -120,29 +135,25 @@ def compute_precision_recall_pair(in_clustering, input_communities, out_statisti
   Compute pair precision and recall, and record result into stats_dict
   """
   stats_config = _config_str_to_dict(stats_config)
-  precision_recall_pair_threshold = stats_config["precision_recall_pair_threshold"]
+  precision_recall_pair_thresholds = stats_config["precision_recall_pair_thresholds"]
   f_score_param = stats_config.get("f_score_param", 1)
   print()
   print("clustering file", in_clustering)
   print("community file", input_communities)
   print("stats file", out_statistics)
-  print("parameters, ", precision_recall_pair_threshold, f_score_param)
+  print("parameters, ", precision_recall_pair_thresholds, f_score_param)
 
   # Read clusters and ground truth pairs
   clusters = read_clusters(in_clustering)
   pairs = read_ground_truth_pairs(input_communities)
 
   # Compute precision and recall
-  precision, recall, TP, FP, TN, FN = compute_precision_recall(clusters, pairs, precision_recall_pair_threshold)
+  precisions, recalls, f_scores = compute_precision_recall(clusters, pairs, precision_recall_pair_thresholds, f_score_param)
 
-  f_score = 0
-  if precision !=0 and recall != 0:
-    f_score = (1 + f_score_param * f_score_param) * precision * recall / ((f_score_param * f_score_param * precision) + recall)
-
-  stats_dict["fScore_mean"] = f_score
-  stats_dict["communityPrecision_mean"] = precision
-  stats_dict["communityRecall_mean"] = recall
-  stats_dict["PrecisionRecallPairThreshold"] = precision_recall_pair_threshold
+  stats_dict["fScore_mean"] = f_scores
+  stats_dict["communityPrecision_mean"] = precisions
+  stats_dict["communityRecall_mean"] = recalls
+  stats_dict["PrecisionRecallPairThresholds"] = precision_recall_pair_thresholds
   stats_dict["fScoreParam"] = f_score_param
 
   with open(out_statistics, 'w', encoding='utf-8') as f:
