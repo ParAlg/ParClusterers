@@ -178,3 +178,226 @@ style_map = {'LDDClusterer': 'o',
  'ParHACClusterer_0.01': '*',
  'ParHACClusterer_0.1': '*',
  'ParHACClusterer_1': '*'}
+
+
+def get_our_methods():
+    return [
+        "KCoreClusterer",
+        "LDDClusterer",
+        "SCANClusterer",
+        "LabelPropagationClusterer",
+        "SLPAClusterer",
+        "TECTONICClusterer",
+        "ParallelAffinityClusterer",
+        "ConnectivityClusterer",
+        "ParallelModularityClusterer",
+        "ParallelCorrelationClusterer",
+        "ParHACClusterer_0.01",
+        "ParHACClusterer_0.1",
+        "ParHACClusterer_1",
+    ]
+
+def get_baseline_methods():
+    return ["NetworKitPLM", 
+            "NetworKitParallelLeiden", 
+            "Neo4jLouvain",
+            "Neo4jLeiden",
+            "Neo4jModularityOptimization",
+        'SnapCNM','SnapGirvanNewman', 'SnapInfomap', "TigerGraphLouvain"]
+
+
+def GetParetoDfs(df):
+    dfs = {}
+    clusterers = df["Clusterer Name"].unique()
+
+    graphs = df["Input Graph"].unique()
+    for graph in graphs:
+        for clusterer in clusterers:
+            filtered_df = df[df["Input Graph"] == graph]
+            filtered_df = filtered_df[filtered_df["Clusterer Name"] == clusterer]
+
+            filtered_df = filtered_df.sort_values(by=["Cluster Time"])
+            pareto_frontier = []
+            max_score = float("-inf")
+
+            for _, row in filtered_df.iterrows():
+                score = row["fScore_mean"]
+                if score > max_score:
+                    max_score = score
+                    pareto_frontier.append(row)
+
+            pareto_df = pd.DataFrame(pareto_frontier)
+
+            dfs[(graph, clusterer)] = (filtered_df, pareto_df)
+    return dfs, graphs
+
+
+
+
+## only leave methods that's on the overall pareto frontier
+def filterMethodsOnOverallPareto(df):
+    graphs = df["Input Graph"].unique()
+    dfs = []
+    for graph in graphs:
+        filtered_df = df[df["Input Graph"] == graph]
+
+        filtered_df = filtered_df.sort_values(by=["Cluster Time"])
+        pareto_frontier = []
+        max_score = float("-inf")
+
+        for _, row in filtered_df.iterrows():
+            score = row["fScore_mean"]
+            if score > max_score:
+                max_score = score
+                pareto_frontier.append(row)
+
+        pareto_df = pd.DataFrame(pareto_frontier)
+        methods = pareto_df["Clusterer Name"].unique()
+        df_graph = filtered_df[filtered_df["Clusterer Name"].isin(methods)]
+        dfs.append(df_graph)
+    df = pd.concat(dfs)
+    return df
+
+
+# filter out methods on the overrall Pareto frontier of all methods
+def FilterParetoPR(df, by_method=False):
+    graphs = df["Input Graph"].unique()
+    dfs = []
+    for graph in graphs:
+        filtered_df = df[df["Input Graph"] == graph]
+
+        filtered_df = filtered_df.sort_values(
+            by=["communityPrecision_mean"], ascending=False
+        )
+        pareto_frontier = []
+        max_score = float("-inf")
+
+        for _, row in filtered_df.iterrows():
+            score = row["communityRecall_mean"]
+            if score > max_score:
+                max_score = score
+                pareto_frontier.append(row)
+
+        pareto_df = pd.DataFrame(pareto_frontier)
+        methods = pareto_df["Clusterer Name"].unique()
+        df_graph = filtered_df[filtered_df["Clusterer Name"].isin(methods)]
+        if by_method:
+            dfs.append(df_graph)
+        else:
+            dfs.append(pareto_df)
+    dfnew = pd.concat(dfs)
+    return dfnew
+
+
+## for each method, find the pareto frontier of precision-recall line
+def FilterParetoPRMethod(df):
+    graphs = df["Input Graph"].unique()
+    dfs = []
+    for graph in graphs:
+        methods = df["Clusterer Name"].unique()
+        for method in methods:
+            filtered_df = df[
+                (df["Input Graph"] == graph) & (df["Clusterer Name"] == method)
+            ]
+            filtered_df = filtered_df.sort_values(
+                by=["communityPrecision_mean"], ascending=False
+            )
+            pareto_frontier = []
+            max_score = float("-inf")
+
+            for _, row in filtered_df.iterrows():
+                score = row["communityRecall_mean"]
+                if score > max_score:
+                    max_score = score
+                    pareto_frontier.append(row)
+
+            pareto_df = pd.DataFrame(pareto_frontier)
+            #             methods = pareto_df["Clusterer Name"].unique()
+            #             df_graph = filtered_df[filtered_df["Clusterer Name"].isin(methods)]
+            dfs.append(pareto_df)
+    dfnew = pd.concat(dfs)
+    return dfnew
+
+
+# compute the area under the precision recall pareto curve, for precision >= 0.5.
+def computeAUC(df_pr_pareto, clusterer, graph):
+    df = df_pr_pareto[
+        (df_pr_pareto["Clusterer Name"] == clusterer)
+        & (df_pr_pareto["Input Graph"] == graph)
+    ][["communityPrecision_mean", "communityRecall_mean"]]
+
+    # Filter the DataFrame to include only precision values in the range [0.5, 1]
+    filtered_df = df[df["communityPrecision_mean"] >= 0.5]
+
+    if len(filtered_df) == 0:
+        return 0
+
+    # Find the row with the smallest precision in the filtered DataFrame
+    min_precision_row = filtered_df[
+        filtered_df["communityPrecision_mean"]
+        == filtered_df["communityPrecision_mean"].min()
+    ]
+
+    # Extract the recall value corresponding to the smallest precision
+    recall_value = min_precision_row["communityRecall_mean"].values[0]
+
+    # Create a new row with precision = 0.5 and recall = recall_value
+    new_row = pd.DataFrame(
+        {"communityPrecision_mean": [0.5, 1], "communityRecall_mean": [recall_value, 0]}
+    )
+
+    # Concatenate the new row to the DataFrame
+    filtered_df = pd.concat([filtered_df, new_row], ignore_index=True)
+
+    # Sort the filtered DataFrame by 'communityPrecision_mean'
+    filtered_df.sort_values(by="communityPrecision_mean", inplace=True)
+
+    # Calculate the area under the curve using the trapezoidal rule
+    area = np.trapz(
+        filtered_df["communityRecall_mean"], filtered_df["communityPrecision_mean"]
+    )
+
+    return area
+
+def getAUCTable(df, df_pr_pareto, print_table=False):
+    graphs = df["Input Graph"].unique()
+    methods = df["Clusterer Name"].unique()
+    data = {}
+    for graph in graphs:
+        aucs = []
+        for method in methods:
+            auc = computeAUC(df_pr_pareto, method, graph)
+            aucs.append(2 * auc)  ## times 2 to make the score between 0 and 1
+        data[graph] = aucs
+    data["method"] = [
+        method.replace("Clusterer", "")
+        .replace("_", "-")
+        .replace("Parallel", "")
+        .replace("LabelPropagation", "LP")
+        for method in methods
+    ]
+    df_auc = pd.DataFrame(data)
+
+    # Set the 'method' column as the index
+    df_auc.set_index("method", inplace=True)
+    df_auc["avg"] = df_auc.mean(axis=1)
+    df_auc = df_auc.sort_values(by="avg", ascending=False)
+
+    bold_df = df_auc.apply(
+        lambda x: [
+            (
+                "\\textbf{{ {:.2f} }}".format(val)
+                if val == x.max()
+                else "{:.2f}".format(val)
+            )
+            for val in x
+        ]
+    )
+
+    # Convert the DataFrame with bold formatting to LaTeX
+    latex_table = bold_df.to_latex(escape=False)
+    if print_table:
+        print(bold_df)
+
+    # Print the LaTeX table
+    print(latex_table)
