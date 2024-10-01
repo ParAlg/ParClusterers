@@ -1,6 +1,8 @@
 ## Data
 
-The data file names used in the experiment can be obtained from 
+The NGrams dataset can be downloaded from https://storage.googleapis.com/ngrams-similarity-ds/index.html.
+
+For other datasets used in the paper, the data file names used in the experiment can be obtained from 
 ```python
 python3 data/files.py 
 ```
