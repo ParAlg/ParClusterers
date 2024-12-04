@@ -46,9 +46,9 @@ template <class Graph>
 gbbs::symmetric_ptr_graph<gbbs::symmetric_vertex, float> CopyGraph(
     Graph& graph) {
   using vertex_data = gbbs::symmetric_vertex<float>;
-  using edge_type = std::tuple<gbbs::uintE, float>;
+  using neighbor_type = std::tuple<gbbs::uintE, float>;
   auto vd = gbbs::new_array_no_init<vertex_data>(graph.n);
-  auto ed = gbbs::new_array_no_init<edge_type>(graph.m);
+  auto ed = gbbs::new_array_no_init<neighbor_type>(graph.m);
   parlay::parallel_for(0, graph.n, [&](size_t i) {
     vd[i].degree = graph.v_data[i].degree;
     vd[i].neighbors = ed + graph.v_data[i].offset;
