@@ -1,0 +1,43 @@
+name: Bazel Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04  # amd64
+          - ubuntu-24.04-arm  # arm64
+      fail-fast: false
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Bazelisk
+      run: |
+        ARCH=$([[ "${{ matrix.runner }}" == "ubuntu-24.04" ]] && echo "amd64" || echo "arm64")
+        curl -LO "https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-${ARCH}"
+        chmod +x bazelisk-linux-*
+        sudo mv bazelisk-linux-* /usr/local/bin/bazel
+
+    - name: Cache Bazel
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/bazel
+          ~/.cache/bazelisk
+        key: bazel-${{ matrix.runner }}-${{ hashFiles('WORKSPACE', '**/BUILD', '**/*.bzl') }}
+        restore-keys: |
+          bazel-${{ matrix.runner }}-
+
+    - name: Run Bazel Build
+      run: |
+        ARCH=$([[ "${{ matrix.runner }}" == "ubuntu-24.04" ]] && echo "amd64" || echo "arm64")
+        bazel build  //clusterers:cluster-in-memory_main
