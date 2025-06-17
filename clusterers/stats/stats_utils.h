@@ -97,12 +97,11 @@ inline gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh> get_subgraph(const Gbb
 
     auto subgraph_edges = parlay::pack(edges, flags);
 
+    auto num = n;
     if(keep_ids){
-        return gbbs::sym_graph_from_edges(subgraph_edges, graph_.Graph()->n);
-    }else{
-        return gbbs::sym_graph_from_edges(subgraph_edges, n);
+        num = graph_.Graph()->n;
     }
-
+    return gbbs::symmetric_graph<gbbs::symmetric_vertex, Wgh>::from_edges(subgraph_edges, num);
 }
 
 // return the number of edges in a subgraph that has the vertices in V
