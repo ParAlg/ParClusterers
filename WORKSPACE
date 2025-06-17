@@ -5,7 +5,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 git_repository(
     name = "parcluster",
-    remote = "git@github.com:ParAlg/InMemoryClusteringAPI.git",
+    remote = "https://github.com/ParAlg/InMemoryClusteringAPI.git",
     commit = "ccf763ad6dcf0e36c3b0b212d429ef19c2cbf837",
     strip_prefix = "include/",
 )

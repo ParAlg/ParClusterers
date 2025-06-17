@@ -21,7 +21,8 @@ test --test_strategy=standalone
 # By default build in C++17 mode using the Homegrown scheduler for parallelism.
 # build --repo_env=CC=g++
 build --cxxopt=-std=c++17
-build --cxxopt=-mcx16        # 16 byte CAS
+# Apply -mcx16 only for x86_64
+build:x86_64 --cxxopt=-mcx16 # use 16 byte CAS
 build --cxxopt=-DHOMEGROWN   # use the homegrown scheduler
 build --cxxopt=-DLONG        # use 8 byte vertex identifiers
 build --cxxopt=-DAMORTIZEDPD # use amortized_bytepd encoding scheme for compressed graphs
